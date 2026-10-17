@@ -45,6 +45,18 @@ bash prepare-host.sh --prepare
 
 Ez kizárólag három új virtuális lemezfájlt hoz létre `/mnt/user/domains/FejesMover-Test` alatt. Meglévő célmappánál leáll; nem ír felül. Nem csatol fizikai lemezt és nem definiál/indít VM-et. Sikertelen létrehozásnál a részleges mappa megmarad ellenőrzésre.
 
+### Automatikus VM-létrehozás (egyelőre nem futtatott gazdagépen)
+
+Ha a meglévő libvirt `default` NAT-hálózat aktív, a kézi VM-definíció helyett:
+
+```bash
+bash prepare-host.sh --create-vm
+```
+
+Ez ugyanazt az előellenőrzést végzi, majd létrehozza a három lemezfájlt és definiál egy **kikapcsolt**, autostart nélküli `FejesMover-Test` VM-et. OVMF/EFI firmware-t a libvirt választja ki. USB és fizikai lemez nincs hozzárendelve. A hálózatot nem módosítja. Ha lemezek vagy azonos nevű VM már léteznek, leáll; a `--prepare` után ezért ne használd ugyanazon a könyvtáron. Válaszd az egyik módot.
+
+A külön tesztpendrive hozzáadása és bootprioritása még szükséges. A NAT-változat kezdetben VNC-ből, Unraid GUI bootmóddal használható; a vendég WebGUI-jának közvetlen LAN-elérését külön kell megoldani. A script gazdagépen történő futása és a libvirt általi elfogadása még nem igazolt. Hiba esetén nem indít automatikus takarítást.
+
 ## 2. Tesztpendrive előkészítése Windowson
 
 1. Válassz külön, üres tesztpendrive-ot; ellenőrizd a kapacitását és azonosítóját. Az USB Creator írása ezt a pendrive-ot törli.
