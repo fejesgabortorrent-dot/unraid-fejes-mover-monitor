@@ -20,7 +20,8 @@ mem_kib=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
 virsh -c qemu:///system list --all >/dev/null || { echo 'VM Manager/libvirt unavailable.' >&2; exit 1; }
 if virsh -c qemu:///system dominfo FejesMover-Test >/dev/null 2>&1; then echo 'VM name already exists; inspect it manually.' >&2; exit 1; fi
 if [[ "$mode" == --create-vm ]]; then
-  virsh -c qemu:///system net-list --name --state-active | awk '$0=="default" {found=1} END {exit !found}' || { echo 'An existing active libvirt default NAT network is required; no network will be changed.' >&2; exit 1; }
+  for firmware in /usr/share/qemu/ovmf-x64/OVMF_CODE-pure-efi.fd /usr/share/qemu/ovmf-x64/OVMF_VARS-pure-efi.fd; do [[ -r "$firmware" ]] || { echo "Required Unraid OVMF file missing: $firmware" >&2; exit 1; }; done
+  virsh -c qemu:///system net-list --name | awk '$0=="default" {found=1} END {exit !found}' || { echo 'An existing active libvirt default NAT network is required; no network will be changed.' >&2; exit 1; }
 fi
 printf 'Preflight PASS: free=%s KiB, available RAM=%s KiB, storage=%s\n' "$free_kib" "$mem_kib" "$fs"
 echo 'USB identity, licensing, network and per-device free space still need manual verification.'
@@ -41,9 +42,10 @@ cat > "$target/domain.xml" <<'XML'
   <memory unit='MiB'>4096</memory>
   <currentMemory unit='MiB'>4096</currentMemory>
   <vcpu placement='static'>2</vcpu>
-  <os firmware='efi'>
+  <os>
     <type arch='x86_64' machine='q35'>hvm</type>
-    <firmware><feature enabled='no' name='secure-boot'/></firmware>
+    <loader readonly='yes' type='pflash'>/usr/share/qemu/ovmf-x64/OVMF_CODE-pure-efi.fd</loader>
+    <nvram template='/usr/share/qemu/ovmf-x64/OVMF_VARS-pure-efi.fd'>/mnt/user/domains/FejesMover-Test/nvram.fd</nvram>
     <boot dev='hd'/>
     <bootmenu enable='yes'/>
   </os>

@@ -1,6 +1,6 @@
 # FejesMover elkülönített Unraid tesztlabor
 
-Állapot (2026-10-17): a csomag előkészítve; VM nincs létrehozva, Unraid nincs telepítve. A FejesNAS kezelőfelülete ebből a munkamenetből 502 / Connection refused választ adott.
+Állapot (2026-10-17): FejesNAS-on létrehozva és sikeresen elindítva, majd leállítva a FejesMover-Test VM. Unraid vendég OS és plugin tesztje még nem futott; külön bootpendrive és licenc hiányzik. Részletek: HOST-RESULTS-HU.md.
 
 ## Ami kell
 
@@ -53,9 +53,9 @@ Ha a meglévő libvirt `default` NAT-hálózat aktív, a kézi VM-definíció he
 bash prepare-host.sh --create-vm
 ```
 
-Ez ugyanazt az előellenőrzést végzi, majd létrehozza a három lemezfájlt és definiál egy **kikapcsolt**, autostart nélküli `FejesMover-Test` VM-et. OVMF/EFI firmware-t a libvirt választja ki. USB és fizikai lemez nincs hozzárendelve. A hálózatot nem módosítja. Ha lemezek vagy azonos nevű VM már léteznek, leáll; a `--prepare` után ezért ne használd ugyanazon a könyvtáron. Válaszd az egyik módot.
+Ez ugyanazt az előellenőrzést végzi, majd létrehozza a három lemezfájlt és definiál egy **kikapcsolt**, autostart nélküli `FejesMover-Test` VM-et. A script az Unraid ismert OVMF CODE és VARS fájljait ellenőrzi és használja. USB és fizikai lemez nincs hozzárendelve. A hálózatot nem módosítja. Ha lemezek vagy azonos nevű VM már léteznek, leáll; a `--prepare` után ezért ne használd ugyanazon a könyvtáron. Válaszd az egyik módot.
 
-A külön tesztpendrive hozzáadása és bootprioritása még szükséges. A NAT-változat kezdetben VNC-ből, Unraid GUI bootmóddal használható; a vendég WebGUI-jának közvetlen LAN-elérését külön kell megoldani. A script gazdagépen történő futása és a libvirt általi elfogadása még nem igazolt. Hiba esetén nem indít automatikus takarítást.
+A külön tesztpendrive hozzáadása és bootprioritása még szükséges. A NAT-változat kezdetben VNC-ből, Unraid GUI bootmóddal használható; a vendég WebGUI-jának közvetlen LAN-elérését külön kell megoldani. A FejesNAS Unraid 7.3.3 gazdagépén a létrehozás és a javított OVMF-beállítással az indítás sikerült. Más gazdagépen külön ellenőrzés szükséges. Hiba esetén nem indít automatikus takarítást.
 
 ## 2. Tesztpendrive előkészítése Windowson
 
