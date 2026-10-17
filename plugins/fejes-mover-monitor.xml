@@ -9,4 +9,6 @@
   <Beta>true</Beta>
   <MinVer>7.0.0</MinVer>
   <Category>Tools:Utilities</Category>
+  <DonateLink>https://paypal.me/FejesG</DonateLink>
+  <DonateText>Support FejesNAS development (optional)</DonateText>
 </Plugin>

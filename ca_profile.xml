@@ -3,4 +3,6 @@
   <Profile>FejesNAS utilities for Unraid. Fejes Mover Monitor provides a Hungarian dashboard and file activity view for the built-in Mover. Support and issue reporting are available through the project's GitHub Issues.</Profile>
   <Icon>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/icon.svg</Icon>
   <WebPage>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor</WebPage>
+  <DonateLink>https://paypal.me/FejesG</DonateLink>
+  <DonateText>Support FejesNAS development (optional)</DonateText>
 </CommunityApplications>
