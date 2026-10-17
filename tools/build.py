@@ -1,23 +1,28 @@
 from pathlib import Path
 import hashlib
 import xml.etree.ElementTree as ET
+from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.10.17'
+version='2026.10.17.1'
 files=sorted((ROOT/'src').glob('*.page'))
 def cdata(s):
     return '<![CDATA['+s.replace(']]>',']]]]><![CDATA[>')+']]>'
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.10.17.1
+- Hungarian, US English and German interfaces with a persistent language selector.
+- Correct unavailable/full cache readings, mounted-cache checks and refresh pause state.
+- Reject stale checksum manifests during package validation.
 ### 2026.10.17
 - First self-contained public package; Hungarian UI, cache pool required.
 - Optional legacy threshold settings, retained only on systems with the existing script.
 - Installer validates PHP before activation and preserves local backup files.
 </CHANGES>''']
 for f in files:
-    parts.append(f'<FILE Name="/tmp/fejes-mover-monitor-{version}/{f.name}"><INLINE>'+cdata(f.read_text(encoding='utf-8'))+'</INLINE></FILE>')
+    parts.append(f'<FILE Name="/tmp/fejes-mover-monitor-{version}/{f.name}"><INLINE>'+cdata(compile_page(f.read_text(encoding='utf-8')))+'</INLINE></FILE>')
 script=f'''#!/bin/bash
 set -euo pipefail
 src=/tmp/fejes-mover-monitor-{version}
@@ -47,5 +52,5 @@ parts.append('</PLUGIN>\n')
 manifest='\n'.join(parts)
 ET.fromstring(manifest)
 (ROOT/'fejes.mover.monitor.plg').write_text(manifest, encoding='utf-8', newline='\n')
-(ROOT/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(ROOT).as_posix()+'\n' for p in [ROOT/'fejes.mover.monitor.plg',*files]), encoding='utf-8', newline='\n')
+(ROOT/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(ROOT).as_posix()+'\n' for p in [ROOT/'fejes.mover.monitor.plg',*files,ROOT/'src/translations.json']), encoding='utf-8', newline='\n')
 print('Built self-contained manifest; XML parsed successfully.')

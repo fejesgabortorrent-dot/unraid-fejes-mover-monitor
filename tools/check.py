@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import sys
 import xml.etree.ElementTree as ET
+from localize import compile_page
 
 root = Path(__file__).resolve().parents[1]
 if not shutil.which('php'):
@@ -40,7 +41,7 @@ with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
         if 'Name' in node.attrib:
             target = sandbox / Path(node.attrib['Name']).name
             target.write_text(node.findtext('INLINE'), encoding='utf-8', newline='\n')
-            assert target.read_bytes() == (root / 'src' / target.name).read_bytes()
+            assert target.read_text(encoding='utf-8') == compile_page((root / 'src' / target.name).read_text(encoding='utf-8'))
     def script(method):
         node = next(n for n in nodes if n.attrib.get('Run') == '/bin/bash' and n.attrib.get('Method', '') == method)
         text = node.findtext('INLINE')

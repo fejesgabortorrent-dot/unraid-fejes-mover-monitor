@@ -5,7 +5,7 @@
   <Support>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues</Support>
   <Project>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor</Project>
   <Icon>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/icon.svg</Icon>
-  <Overview>Hungarian-language Mover activity dashboard and open-file monitor for Unraid 7.x. Requires a pool named cache. Shows process status, cache usage and recent Mover log lines without starting Mover. Includes an optional settings panel for an existing Filmek_Mover_Threshold script; no automation script or schedule is installed. Early public release: custom pool names, transfer ETA and English translation are not supported.</Overview>
+  <Overview>Hungarian, US English and German Mover activity dashboard and open-file monitor for Unraid 7.x. Requires a pool named cache. Shows process status, cache usage and recent Mover log lines without starting Mover. Includes an optional settings panel for an existing Filmek_Mover_Threshold script; no automation script or schedule is installed. Early public release: custom pool names, transfer ETA are not supported.</Overview>
   <Beta>true</Beta>
   <MinVer>7.0.0</MinVer>
   <Category>Tools:Utilities</Category>
