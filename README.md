@@ -1,5 +1,9 @@
 # Fejes Mover Monitor
 
+[![Támogasd a fejlesztést PayPalon](https://img.shields.io/badge/PayPal-T%C3%A1mogasd%20a%20fejleszt%C3%A9st-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/FejesG)
+
+*Önkéntes támogatás · Köszönöm, hogy segíted a FejesNAS fejlesztését!*
+
 Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 
 **Release candidate. Not submitted to Community Applications. Clean install, update, reboot and uninstall still require validation on a disposable Unraid system.**
