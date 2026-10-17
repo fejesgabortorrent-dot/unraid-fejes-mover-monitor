@@ -17,7 +17,7 @@ parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 - Installer validates PHP before activation and preserves local backup files.
 </CHANGES>''']
 for f in files:
-    parts.append(f'<FILE Name="/tmp/fejes-mover-monitor-{version}/{f.name}"><INLINE>'+cdata(f.read_text())+'</INLINE></FILE>')
+    parts.append(f'<FILE Name="/tmp/fejes-mover-monitor-{version}/{f.name}"><INLINE>'+cdata(f.read_text(encoding='utf-8'))+'</INLINE></FILE>')
 script=f'''#!/bin/bash
 set -euo pipefail
 src=/tmp/fejes-mover-monitor-{version}
@@ -46,6 +46,6 @@ parts.append('<FILE Run="/bin/bash" Method="remove"><INLINE>'+cdata(remove)+'</I
 parts.append('</PLUGIN>\n')
 manifest='\n'.join(parts)
 ET.fromstring(manifest)
-(ROOT/'fejes.mover.monitor.plg').write_text(manifest)
-(ROOT/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(ROOT))+'\n' for p in [ROOT/'fejes.mover.monitor.plg',*files]))
+(ROOT/'fejes.mover.monitor.plg').write_text(manifest, encoding='utf-8', newline='\n')
+(ROOT/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(ROOT).as_posix()+'\n' for p in [ROOT/'fejes.mover.monitor.plg',*files]), encoding='utf-8', newline='\n')
 print('Built self-contained manifest; XML parsed successfully.')
