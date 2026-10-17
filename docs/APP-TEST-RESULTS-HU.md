@@ -1,6 +1,6 @@
 # FejesMover alkalmazásteszt — 2026-10-17
 
-**Eredmény: 15/15 alkalmazásellenőrzés sikeres.**
+**Eredmény: 15/15 alkalmazásellenőrzés sikeres. Mindhárom oldaltípus előállított JavaScriptjének szintaxisa is megfelelő (Node.js --check).**
 
 Futtatás: Ubuntu 24.04, PHP CLI 8.3.6, ctype bővítmény. A PHP az Ubuntu hivatalos csomagjaiból elkülönítve futott; a NAS-ra nem telepítettünk csomagot. Teszt: `python3 tools/app_test.py`. A teszt a forrásoldalak másolatainak adatforrásait ideiglenes helyi fájlokra irányítja. Az eredeti forrás és a NAS állapota változatlan.
 
@@ -25,5 +25,7 @@ Futtatás: Ubuntu 24.04, PHP CLI 8.3.6, ctype bővítmény. A PHP az Ubuntu hiva
 A `tools/check.py` csomagteszt ismét sikeres: reprodukálható build, ellenőrzőösszegek, XML, PHP-szintaxis, elkülönített telepítés/ismételt telepítés, hibás PHP elutasítása, eltávolítás és idegen fájl megőrzése.
 
 ## Határok
+
+A teljes csomag- és alkalmazástesztet 2026-10-17-én ismét lefuttattuk; minden ellenőrzés sikeres.
 
 Ez végrehajtott PHP-alkalmazásteszt tesztadatokkal. Nem ellenőrzi a böngészős JavaScriptet, a vizuális elrendezést, az Unraid WebGUI integrációját, a valódi Mover-t, a flash fájlrendszer sajátosságait vagy az Unraid plugin managerének újraindítás utáni működését. Nem helyettesíti a külön Unraid elfogadási tesztet, és nem jelent Community Applications jóváhagyást.

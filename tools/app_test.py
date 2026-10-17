@@ -3,7 +3,7 @@ from pathlib import Path
 import base64
 import hashlib
 import json
-import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -11,7 +11,10 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 if not shutil.which('php'):
     raise SystemExit('PHP CLI required')
+if not shutil.which('node'):
+    raise SystemExit('Node.js is required for JavaScript syntax checks')
 checks = []
+checked_js = set()
 with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     lab = Path(directory)
     paths = {
@@ -41,6 +44,10 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
         result = subprocess.run(['php', '-d', 'display_errors=stderr', '-d', 'error_reporting=32767', str(wrapper)], capture_output=True, text=True)
         assert result.returncode == 0, result.stderr
         assert not result.stderr.strip(), result.stderr
+        for javascript in re.findall(r'<script>(.*?)</script>', result.stdout, re.S):
+            syntax = subprocess.run(['node', '--check'], input=javascript, text=True, capture_output=True)
+            assert syntax.returncode == 0, syntax.stderr
+            checked_js.add(name)
         return result.stdout
     def check(label, condition):
         assert condition, label
@@ -91,3 +98,6 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
 for label in checks:
     print('PASS:', label)
 print(f'{len(checks)} application fixture checks passed. Actual Unraid WebGUI/Mover/reboot remain untested.')
+
+assert len(checked_js) == 3, checked_js
+print('PASS: JavaScript syntax in rendered output of all three page types (Node --check).')
