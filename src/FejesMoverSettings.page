@@ -45,6 +45,26 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 ?>
 <style>
 #ms{max-width:1100px;margin:22px auto;color:#dce8f5;font:15px/1.6 Arial,sans-serif}#ms *{box-sizing:border-box}#ms .hero,#ms .box{background:linear-gradient(130deg,#182738,#101b27);border:1px solid #30465e;border-radius:18px;padding:26px;margin-bottom:20px}#ms .hero{display:flex;justify-content:space-between;align-items:center}#ms h1{font-size:30px;color:#fff;margin:4px 0}#ms h2{font-size:20px;color:#fff;margin:0 0 12px}#ms p{color:#a9bdd0;margin:8px 0}#ms .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}#ms .kicker{color:#5fc4ff;letter-spacing:2px;font-size:12px}#ms input[type=number]{width:130px;font-size:26px;padding:10px;background:#0c1621;color:#fff;border:1px solid #4b6784;border-radius:10px}#ms input[type=range]{width:100%;accent-color:#58baff;margin:22px 0}#ms .bar{height:20px;border-radius:10px;background:#263c50;position:relative;margin:25px 0 12px;overflow:hidden}#ms .fill{height:100%;background:#399fdf}#ms .marker{position:absolute;top:0;bottom:0;width:4px;background:#ffbc57}#ms .badge{display:inline-block;border:1px solid #328b75;color:#8de1c3;border-radius:20px;padding:5px 12px;margin:5px 8px 5px 0}#ms .notice{padding:16px;border-radius:12px;margin-bottom:20px;background:#153b32;color:#a2f1d1}#ms .error{background:#502a26;color:#ffd0c0}#ms button,#ms .link{display:inline-block;border:1px solid #4c83ae;border-radius:10px;padding:11px 18px;background:#1d6094;color:#fff;text-decoration:none;cursor:pointer;font-size:15px}#ms .secondary{background:transparent;margin-left:10px}#ms .preview{font-size:18px;color:#fff;min-height:58px}#ms small{color:#a9bdd0}@media(max-width:750px){#ms .grid{grid-template-columns:1fr}#ms .hero{display:block}}
+
+/* Keep settings panels consistent with the surrounding Unraid interface. */
+#ms{font:inherit;color:inherit;max-width:1100px;margin:20px auto;padding:0 16px}
+#ms .hero,#ms .box{background:transparent;border:1px solid #8885;border-radius:4px;padding:20px;margin-bottom:16px}
+#ms .hero{border-left:3px solid #ef7d00}
+#ms h1{font-size:24px;color:inherit;font-weight:600}
+#ms h2{font-size:17px;color:inherit;font-weight:600}
+#ms p,#ms small{color:inherit;opacity:.8}
+#ms .kicker{color:#ef7d00;letter-spacing:1px}
+#ms input[type=number]{font:inherit;font-size:22px;padding:7px 10px;background:transparent;color:inherit;border:1px solid #8887;border-radius:3px}
+#ms input[type=range]{accent-color:#ef7d00;margin:18px 0}
+#ms .bar{height:12px;border-radius:2px;background:#8883;margin:20px 0 10px}
+#ms .fill{background:#ef7d00}
+#ms .marker{background:currentColor}
+#ms .preview{font-size:16px;color:inherit}
+#ms button,#ms .link{font:inherit;padding:8px 14px;border-radius:3px;border:1px solid #ef7d00;background:#d96312;color:white}
+#ms .secondary{background:transparent;color:inherit;border-color:#8887}
+#ms .notice{border-radius:3px;border-left:3px solid #64b99b}
+#ms .notice.error{border-left-color:#ef967a}
+#ms :is(button,input,a):focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 </style>
 <div id="ms">
  <div class="hero"><div><div class="kicker">FEJESNAS / MOVER SETUP</div><h1>Hangold a működését</h1><p>Filmek automatika · cache → lemeztömb</p></div><a class="link secondary" href="/Tools/FejesMover">← Mover figyelő</a></div>
@@ -56,7 +76,7 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
  <div class="box"><h2>01 · Szabadhely-küszöb</h2><p>Ennyi szabad cache-hely alatt próbálja elindítani a beépített Movert.</p><label for="ms-threshold">Küszöb (GiB)</label><br><input id="ms-threshold" name="KUSZOB_GIB" type="number" min="1" max="<?=$msMax?>" required value="<?=$msValues['KUSZOB_GIB']?>"><input id="ms-slider" aria-label="Szabadhely-küszöb csúszka" type="range" min="1" max="<?=$msMax?>" value="<?=$msValues['KUSZOB_GIB']?>"><small>Nagyobb érték: hamarabb indulhat. Kisebb érték: tovább maradnak a fájlok a cache-en.</small></div>
  <div class="box"><h2>02 · Újrapróbálkozási idő</h2><p>Legalább ennyi idő teljen el két indítási próbálkozás között.</p><label for="ms-cooldown">Várakozás (perc)</label><br><input id="ms-cooldown" name="UJRA_PROBALKOZAS_MP" type="number" min="1" max="10080" required value="<?=$msValues['UJRA_PROBALKOZAS_MP']?>"><p id="ms-hours"></p><small>A script ellenőrzési ütemezése külön kezeli, mikor kerül sor a következő próbára.</small></div>
  </div>
- <div class="box"><h2>Élő beállítási előnézet</h2><p>Most szabad: <strong><?= $msFree!==false?number_format($msFree/1073741824,1,',',' '):'—'?> GiB</strong> · Cache kapacitás: <?= $msTotal?number_format($msTotal/1073741824,1,',',' '):'—'?> GiB</p><div class="bar"><div class="fill" style="width:<?=$msTotal&&$msFree!==false?100*(1-$msFree/$msTotal):0?>%"></div><div class="marker" id="ms-marker"></div></div><small>Kék: jelenlegi foglaltság · Sárga jel: a beállított indítási küszöb</small><p class="preview" id="ms-preview"></p></div>
+ <div class="box"><h2>Élő beállítási előnézet</h2><p>Most szabad: <strong><?= $msFree!==false?number_format($msFree/1073741824,1,',',' '):'—'?> GiB</strong> · Cache kapacitás: <?= $msTotal?number_format($msTotal/1073741824,1,',',' '):'—'?> GiB</p><div class="bar"><div class="fill" style="width:<?=$msTotal&&$msFree!==false?100*(1-$msFree/$msTotal):0?>%"></div><div class="marker" id="ms-marker"></div></div><small>Kitöltés: jelenlegi foglaltság · Függőleges jel: a beállított indítási küszöb</small><p class="preview" id="ms-preview"></p></div>
  <div class="box"><h2>A meglévő automatika ellenőrzései</h2><p>A backup- és paritásvédelmet a saját scripted valósítja meg; ezt a beállítóoldal nem tudja igazolni. Mentéskor a Mover PID-fájlját ellenőrzi.</p><p>A mentés nem indít Movert. Az új értékeket a következő scriptfutás használja; minden módosítás előtt biztonsági másolat készül.</p><button type="submit">Beállítások mentése</button><button type="reset" class="secondary">Szerkesztés visszavonása</button><p><small>Ütemezés módosítása: a meglévő User Scripts oldalon.</small></p></div>
  </form>
 </div>

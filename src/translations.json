@@ -83,7 +83,7 @@
   "Élő beállítási előnézet": {"en":"Live settings preview","de":"Live-Vorschau der Einstellungen"},
   "Most szabad: ": {"en":"Currently free: ","de":"Derzeit frei: "},
   "Cache kapacitás: ": {"en":"Cache capacity: ","de":"Cache-Kapazität: "},
-  "Kék: jelenlegi foglaltság · Sárga jel: a beállított indítási küszöb": {"en":"Blue: current usage · Yellow marker: configured start threshold","de":"Blau: aktuelle Belegung · Gelbe Markierung: eingestellter Startschwellenwert"},
+  "Kitöltés: jelenlegi foglaltság · Függőleges jel: a beállított indítási küszöb": {"en":"Fill: current usage · Vertical marker: configured start threshold","de":"Füllung: aktuelle Belegung · Senkrechte Markierung: eingestellter Startschwellenwert"},
   "A meglévő automatika ellenőrzései": {"en":"Existing automation checks","de":"Prüfungen der vorhandenen Automatisierung"},
   "A backup- és paritásvédelmet a saját scripted valósítja meg; ezt a beállítóoldal nem tudja igazolni. Mentéskor a Mover PID-fájlját ellenőrzi.": {"en":"Your own script implements backup and parity guards; this settings page cannot verify them. Saving checks the Mover PID file.","de":"Dein eigenes Skript setzt Sicherungs- und Paritätsschutz um; diese Einstellungsseite kann sie nicht verifizieren. Beim Speichern wird die Mover-PID-Datei geprüft."},
   "A mentés nem indít Movert. Az új értékeket a következő scriptfutás használja; minden módosítás előtt biztonsági másolat készül.": {"en":"Saving does not start Mover. The next script run uses the new values; a backup is created before each change.","de":"Speichern startet Mover nicht. Der nächste Skriptlauf verwendet die neuen Werte; vor jeder Änderung wird eine Sicherung erstellt."},
