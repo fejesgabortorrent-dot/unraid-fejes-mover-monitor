@@ -1,8 +1,34 @@
 # Fejes Mover Monitor
 
-Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
+## 🇭🇺 Magyar · 🇺🇸 English (US) · 🇩🇪 Deutsch
+
+**Three interface languages · Három kezelőfelületi nyelv · Drei Oberflächensprachen**
+
+[![Támogasd a fejlesztést PayPalon](https://img.shields.io/badge/PayPal-T%C3%A1mogasd%20a%20fejleszt%C3%A9st-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/FejesG)
+
+*Önkéntes támogatás · Optional support · Freiwillige Unterstützung*
+
+Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
 **Release candidate. Not submitted to Community Applications. Clean install, update, reboot and uninstall still require validation on a disposable Unraid system.**
+
+## Screenshots / Képernyőképek
+
+**Local browser demo with simulated data — not a live NAS.** These images show the actual compiled plugin pages in the isolated demo wrapper. Actual Unraid dashboard integration still requires acceptance testing.
+
+**Helyi demó, szimulált adatokkal.** A képek nem az élő NAS-ról készültek.
+
+### Mover Monitor / Figyelő
+
+![Mover Monitor — Hungarian demo](docs/images/monitor-hu-demo.png)
+
+### Dashboard card / Dashboard-kártya
+
+![Dashboard card — Hungarian demo](docs/images/dashboard-hu-demo.png)
+
+### Settings / Beállítások
+
+![Settings — Hungarian demo](docs/images/settings-hu-demo.png)
 
 ## Features
 
@@ -16,7 +42,7 @@ Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 
 - Unraid 7.0+ and its bundled PHP 8; the original local version was used on Unraid 7.3.3.
 - This first version monitors a pool named **cache** at `/mnt/cache`. Arbitrarily named pools and multi-pool selection are not supported yet.
-- The interface is in Hungarian. English translation is not included yet.
+- Use the 🌐 language selector on the dashboard, monitor or settings page: **Magyar / English (US) / Deutsch**. The choice is stored in a browser cookie for one year and shared by these pages. Hungarian is the default and the fallback for invalid selections. Switching language reloads the page and discards unsaved form edits; it never submits settings. Unraid menu names remain the static labels Mover Monitor / Mover Settings. Logs, filenames and existing script contents retain their original text.
 - Mover activity is inferred from `/var/run/mover.pid` and `/proc`. Custom Mover implementations may not be detected.
 - File positions are observations, not verified transfer progress. No transfer ETA or total progress is claimed.
 - The cache-to-array diagram is illustrative. Actual movement direction is controlled by each share's Unraid settings.

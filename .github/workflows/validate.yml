@@ -1,0 +1,35 @@
+name: Validate Mover Monitor
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify test runtimes
+        run: |
+          python3 --version
+          php --version
+          node --version
+          bash --version
+      - name: Check package, checksums and isolated installation
+        run: python3 tools/check.py
+      - name: Check all three interfaces and settings guards
+        run: python3 tools/app_test.py
+      - name: Check pause race and dashboard refresh states
+        run: node tools/refresh_test.js
+      - name: Require stale generated artifacts to fail
+        run: python3 tools/check_test.py
+      - name: Require validation to leave tracked files unchanged
+        run: git diff --exit-code
