@@ -4,7 +4,7 @@ Icon="fa-sliders"
 Tag="cogs"
 ---
 <?php
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 echo $fmc['banner'];
 if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
  echo '<div style="margin:24px"><h2>Mover beállítások</h2><p>A scriptszerkesztés ebben a módban tiltva. A bekapcsoláshoz válaszd a Haladó módot.</p><a href="/Tools/FejesMoverSetup">Mód és pool beállítása</a></div>';

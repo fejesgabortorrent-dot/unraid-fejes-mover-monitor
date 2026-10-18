@@ -20,6 +20,10 @@ checked_js = set()
 with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     lab = Path(directory)
     paths = {
+        '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php': str(lab/'FejesMoverRuntime.php'),
+        '/boot/config/plugins/fejes.mover.monitor/settings.json': str(lab/'config.json'),
+        '/boot/config/pools/': str(lab/'pools')+'/',
+        '/var/run/fejes-mover-config.lock': str(lab/'mode.lock'),
         '/var/local/emhttp/var.ini': str(lab / 'var.ini'),
         '/var/run/mover.pid': str(lab / 'mover.pid'),
         '/var/run/fejes-mover-settings.lock': str(lab / 'settings.lock'),
@@ -33,6 +37,10 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     (lab / 'var.ini').write_text('csrf_token="test-token"\n')
     (lab / 'syslog').write_text('Oct 17 mover: <script>alert("test")</script>\n')
     (lab / 'automation').mkdir()
+    (lab/'pools').mkdir()
+    (lab/'pools/cache.cfg').write_text('fixture\n')
+    (lab/'config.json').write_text('{"version":1,"mode":"advanced","pool":"cache"}')
+    (lab/'layout').mkdir()
     script = lab / 'automation/script'
     mounted = True
     free_bytes = 10 * 1073741824
@@ -47,11 +55,16 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
         source = source.replace('/proc/self/mountinfo', (lab / 'mountinfo').as_posix())
         for old, new in paths.items():
             source = source.replace(old, new.replace('\\', '/'))
+        runtime=(ROOT/'src/FejesMoverRuntime.php').read_text(encoding='utf-8')
+        runtime=runtime.replace('/proc/self/mountinfo',(lab/'mountinfo').as_posix())
+        for old,new in paths.items():runtime=runtime.replace(old,new.replace('\\','/'))
+        runtime=runtime.replace("'/mnt/'",json.dumps(lab.as_posix()+'/'))
+        (lab/'FejesMoverRuntime.php').write_text(runtime,encoding='utf-8',newline='\n')
         page = lab / name
         page.write_text(source, encoding='utf-8', newline='\n')
         encoded = base64.b64encode(json.dumps(post or {}).encode()).decode()
-        wrapper = lab / 'run.php'
-        wrapper.write_text('<?php $_COOKIE["fejes_mover_lang"]='+json.dumps(language)+'; $_SERVER["REQUEST_METHOD"]=' + json.dumps('POST' if post is not None else 'GET') + '; $_POST=json_decode(base64_decode(' + json.dumps(encoded) + '),true); include ' + json.dumps(str(page)) + '; if(isset($mytiles)) echo "TILE=".json_encode($mytiles);')
+        wrapper = lab / 'layout/run.php'
+        wrapper.write_text('<?php $_COOKIE["fejes_mover_lang"]='+json.dumps(language)+'; $_SERVER["REQUEST_METHOD"]=' + json.dumps('POST' if post is not None else 'GET') + '; $_POST=json_decode(base64_decode(' + json.dumps(encoded) + '),true); eval(substr(file_get_contents(' + json.dumps(str(page)) + '),5)); if(isset($mytiles)) echo "TILE=".json_encode($mytiles);')
         result = subprocess.run(['php', '-d', 'display_errors=stderr', '-d', 'error_reporting=32767', str(wrapper)], capture_output=True, text=True, encoding='utf-8')
         assert result.returncode == 0, result.stderr
         assert not result.stderr.strip(), result.stderr

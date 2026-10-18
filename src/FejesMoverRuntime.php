@@ -12,7 +12,10 @@ return (static function ($configWrite) {
         $lock = @fopen('/var/run/fejes-mover-config.lock', 'c');
         if (!$lock || !flock($lock, ($configWrite ? LOCK_EX : LOCK_SH)|LOCK_NB)) $error = true;
     }
+    $lockError = $error;
     $raw = @file_get_contents($configPath);
+    $readError = $raw === false && file_exists($configPath);
+    if ($readError) $error = true;
     $config = $raw === false ? [] : json_decode($raw, true);
     $validName = static fn($name) => is_string($name) && preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D', $name);
     $valid = is_array($config) && ($raw === false || (
@@ -52,7 +55,8 @@ return (static function ($configWrite) {
     $banner .= ' · <a href="/Tools/FejesMoverSetup">'.$esc($t('Mód és pool beállítása','Configure mode and pool','Modus und Pool einstellen')).'</a></div>';
     $token = @parse_ini_file('/var/local/emhttp/var.ini');
     return ['mode'=>$mode,'pool'=>$pool,'path'=>'/mnt/'.$pool,'mounted'=>$mounted,'pools'=>$pools,
-        'error'=>$error,'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
+        'error'=>$error,'lockError'=>$lockError,'readError'=>$readError,'configInvalid'=>!$valid,
+        'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
         'hash'=>hash('sha256',$raw === false ? '' : $raw),'lock'=>$lock,
         'token'=>is_array($token) ? ($token['csrf_token'] ?? '') : '',
         't'=>$t,'esc'=>$esc,'banner'=>$banner];

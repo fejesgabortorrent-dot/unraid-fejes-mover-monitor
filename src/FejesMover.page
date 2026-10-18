@@ -4,7 +4,7 @@ Icon="fa-exchange"
 Tag="cogs"
 ---
 <?php
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmEsc=$fmc['esc'];
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
@@ -26,7 +26,7 @@ $fmFiles[]=['path'=>$path,'pos'=>(int)($pos[1]??0),'size'=>$st['size'],'mode'=>i
 }}
 $fmTotal=$fmMounted?@disk_total_space($fmc['path']):false;$fmFree=$fmMounted?@disk_free_space($fmc['path']):false;
 $fmUsed=$fmTotal&&$fmFree!==false?round(100*(1-$fmFree/$fmTotal),1):null;
-$fmScript=$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script');preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
+$fmScript=$fmc['pool']==='cache'?$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script'):'';preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
 $fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');
 $fmTail=static function($path,$limit){$f=@fopen($path,'rb');if(!$f)return '';$sz=fstat($f)['size'];$offset=max(0,$sz-$limit);fseek($f,$offset);$s=stream_get_contents($f);fclose($f);if($offset){$nl=strpos($s,"\n");$s=$nl===false?'':substr($s,$nl+1);}return $s;};
 $fmLines=preg_split('/\r?\n/',$fmTail('/var/log/syslog',262144));$fmLines=array_filter($fmLines,static fn($s)=>preg_match('/\bmover(?:\[|:| )|Filmek Mover/i',$s));$fmLog=implode("\n",array_slice($fmLines,-30));
@@ -34,7 +34,7 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 }else{
 $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fmFree=375809638400;$fmUsed=65;$fmThreshold=null;$fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');$fmLog='DEMO · No live logs';$fmScriptLog='';
 }
-echo $fmc['banner'];
+
 ?>
 <style>
 #fm-monitor{max-width:1160px;margin:24px auto;padding:0 18px;font-size:15px}#fm-monitor h2{font-size:28px;margin:0 0 8px}#fm-monitor .fm-sub{opacity:.7;margin-bottom:24px}#fm-monitor .fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}#fm-monitor .fm-card{border:1px solid #7775;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fm-monitor .fm-label{opacity:.7;font-size:13px;margin-bottom:12px}#fm-monitor .fm-value{font-size:25px;line-height:1.4}#fm-monitor progress{width:100%;height:18px;accent-color:#64b99b;margin-top:14px}#fm-monitor pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:12px;line-height:1.6;background:transparent}#fm-monitor table{width:100%;table-layout:fixed}#fm-monitor th,#fm-monitor td{text-align:left;padding:10px 6px;overflow-wrap:anywhere;border-bottom:1px solid #8884}#fm-monitor th:first-child{width:58%}#fm-monitor .fm-note{font-size:13px;opacity:.75;line-height:1.6}#fm-monitor button{margin-bottom:18px;padding:9px 14px}#fm-error{color:#ef967a;min-height:20px}
@@ -57,7 +57,8 @@ echo $fmc['banner'];
 #fm-monitor button:focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 #fm-monitor .fm-note{font-size:12px}
 </style>
-<div id="fm-monitor" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<?=$fmc['banner']?>
 <h2>Mover figyelő</h2><p class="fm-sub">FejesNAS · Élő állapot · Csak megfigyelés</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Beállítások</a><button type="button" id="fm-toggle">Automatikus frissítés: BE (5 mp)</button> <span>Adatok ideje: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ LEMEZTÖMB</span></div><p class="fm-note">Cache / lemeztömb szemléltetés; a tényleges irány megosztásonként eltérhet · <?=$fmRun?'A mover aktív.':'Jelenleg várakozik.'?></p><div class="fm-grid">

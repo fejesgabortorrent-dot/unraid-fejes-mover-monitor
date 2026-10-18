@@ -5,11 +5,11 @@ Tag="cogs"
 ---
 <?php
 $fmcConfigWrite=true;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
-  if(!is_resource($fmc['lock'])||$fmc['error'])throw new RuntimeException('A módváltás most nem lehetséges. Töltsd újra az oldalt.');
+  if(!is_resource($fmc['lock'])||$fmc['lockError']||$fmc['readError'])throw new RuntimeException('A módváltás most nem lehetséges. Töltsd újra az oldalt.');
   if(!is_string($_POST['fmc_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fmc_csrf']))throw new RuntimeException('Lejárt munkamenet. Töltsd újra az oldalt.');
   if(!is_string($_POST['config_hash']??null)||!hash_equals($fmc['hash'],$_POST['config_hash']))throw new RuntimeException('A módbeállítás közben megváltozott. Töltsd újra az oldalt.');
   $newMode=$_POST['mode']??null;$newPool=$_POST['pool']??null;

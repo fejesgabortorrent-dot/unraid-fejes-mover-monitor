@@ -30,13 +30,31 @@ initializing it before mode branching. The regenerated PLG/checksums and
 installation/update, source matching, PHP lint, isolated install/reinstall,
 invalid-PHP rejection and uninstall preservation. No production paths were used.
 
-The older 41-check application suite and browser demo still need shared-runtime
-fixture adaptation. This is partial validation, not a release-ready claim.
+## PR #4 review corrections — 2026-10-18
+
+All four findings from review of `125075b` have been addressed:
+
+- Every page requires the shared helper through the absolute installed plugin
+  path, rather than `__DIR__`. Tests now evaluate page bodies from a separate
+  layout directory to model Unraid WebGUI execution.
+- The monitor mode/pool banner lives inside the replaced monitor fragment.
+  Dashboard polling updates the incoming banner with the readings in the same
+  synchronous update and keeps simulated status explicitly labeled DEMO.
+- Malformed configuration still disables automation editing, but setup may save
+  a fully validated replacement under its exclusive lock. Actual lock/read
+  failures continue to block the save.
+- Non-cache pools do not load or compare the cache-only legacy script threshold.
+
+Local validation after these fixes: **41 application checks + 31 mode safety
+checks passed**, together with rendered JavaScript syntax, pause/dashboard state
+tests, package/XML/PHP checks, reproducibility, isolated installer checks and
+stale-artifact rejection. The application fixtures and browser demo now stage
+the shared helper and configuration. This does not establish live Unraid
+acceptance or release readiness.
 
 Pending before treating this as a beta:
 
-- Adapt application fixtures and the local browser demo to stage the shared PHP
-  runtime, pool definitions and plugin configuration in temporary directories.
+- Exercise the updated browser demo end-to-end after the current review fixes.
 - Extend mode tests with concurrent mode/save locking and additional error paths.
 - Check all setup text and language selection; review demo mode data isolation.
 - Extend preflight tests to missing Unraid host markers (6.x/8.x already checked).

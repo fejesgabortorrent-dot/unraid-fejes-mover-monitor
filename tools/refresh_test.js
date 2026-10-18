@@ -42,13 +42,17 @@ async function main() {
 
   const d = environment();
   for (const id of ['fmd-status','fmd-percent','fmd-ring','fmd-free','fmd-updated']) d.elements[id] = {style: {}};
+  d.elements['fmd-mode']={replaceChildren(banner){this.banner=banner;}};
   vm.runInNewContext(script('FejesMover.Dashboard.page'), d.context);
   for (const [available, used, free, expected] of [['1','0','100','0%'], ['0','0','—','—'], ['1','100','0,0','100%'], ['0','0','—','—']]) {
     const poll = d.tick();
-    d.respond({dataset: {running: '0', uncertain: '0', available, used, free}});
+    const banner={mode:available==='1'?'observer':'demo',pool:used==='100'?'fast':'cache'};
+    d.respond({querySelector:()=>banner,dataset: {mode:banner.mode,pool:banner.pool,running: '0', uncertain: '0', available, used, free}});
     await poll;
     assert.equal(d.elements['fmd-percent'].textContent, expected);
     assert.equal(d.elements['fmd-free'].textContent, free);
+    assert.equal(d.elements['fmd-mode'].banner,banner);
+    assert.equal(d.elements['fmd-status'].textContent,banner.mode==='demo'?'DEMO':'● Várakozik');
     assert.match(d.elements['fmd-ring'].style.background, new RegExp(available === '1' ? used+'%' : '0%'));
   }
   console.log('PASS: dashboard refresh handles empty, missing, full and lost cache readings');

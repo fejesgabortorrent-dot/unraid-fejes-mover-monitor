@@ -27,6 +27,8 @@ jobs:
         run: python3 tools/check.py
       - name: Check all three interfaces and settings guards
         run: python3 tools/app_test.py
+      - name: Check mode, pool and configuration recovery guards
+        run: python3 tools/mode_test.py
       - name: Check pause race and dashboard refresh states
         run: node tools/refresh_test.js
       - name: Require stale generated artifacts to fail

@@ -23,7 +23,7 @@ $fmLanguageSelector="<label style=\"display:inline-block;margin:10px 12px;font-s
 $fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fmLang==='hu'?'selected':'',$fmLang==='en'?'selected':'',$fmLang==='de'?'selected':''],$fmLanguageSelector);
 if($fmLang==='en'){ ?>
 <?php
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 if($fmc['mode']!=='demo'){
 $fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
@@ -40,19 +40,19 @@ $fmcBanner=$fmc['banner'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover Monitor">
 <tr><td><span class="tile-header"><span class="tile-header-left"><i class="fa fa-exchange fa-2x"></i><div class="section"><h3 class="tile-header-main">MOVER MONITOR</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a href="/Tools/FejesMoverSettings" title="Mover Settings" style="margin-right:12px"><i class="fa fa-cog"></i></a><a href="/Tools/FejesMover" title="Detailed Mover Monitor"><i class="fa fa-external-link"></i></a></span></span></td></tr>
-<tr><td>{$fmcBanner}<div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache free: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Files and detailed status →</a></p><small id="fmd-updated">Data loaded · refresh every 10 sec</small></div></td></tr>
+<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache free: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Files and detailed status →</a></p><small id="fmd-updated">Data loaded · refresh every 10 sec</small></div></td></tr>
 </tbody>
 HTML;
 ?>
 <script>
-(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-status').textContent=run?'● Mover running':unknown?'⚠ Unverified status':'● Idle';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Updated: '+new Date().toLocaleTimeString('en-US');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Refresh failed · stale data';}finally{clearTimeout(t);busy=false;}},10000);})();
+(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Mover running':unknown?'⚠ Unverified status':'● Idle';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Updated: '+new Date().toLocaleTimeString('en-US');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Refresh failed · stale data';}finally{clearTimeout(t);busy=false;}},10000);})();
 </script>
 
 
 
 <?php } elseif($fmLang==='de'){ ?>
 <?php
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 if($fmc['mode']!=='demo'){
 $fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
@@ -69,19 +69,19 @@ $fmcBanner=$fmc['banner'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover-Monitor">
 <tr><td><span class="tile-header"><span class="tile-header-left"><i class="fa fa-exchange fa-2x"></i><div class="section"><h3 class="tile-header-main">MOVER-MONITOR</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a href="/Tools/FejesMoverSettings" title="Mover-Einstellungen" style="margin-right:12px"><i class="fa fa-cog"></i></a><a href="/Tools/FejesMover" title="Detaillierter Mover-Monitor"><i class="fa fa-external-link"></i></a></span></span></td></tr>
-<tr><td>{$fmcBanner}<div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache frei: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Dateien und detaillierter Status →</a></p><small id="fmd-updated">Daten geladen · Aktualisierung alle 10 Sek.</small></div></td></tr>
+<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache frei: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Dateien und detaillierter Status →</a></p><small id="fmd-updated">Daten geladen · Aktualisierung alle 10 Sek.</small></div></td></tr>
 </tbody>
 HTML;
 ?>
 <script>
-(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-status').textContent=run?'● Mover läuft':unknown?'⚠ Status nicht verifiziert':'● Leerlauf';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Aktualisiert: '+new Date().toLocaleTimeString('de-DE');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Aktualisierung fehlgeschlagen · veraltete Daten';}finally{clearTimeout(t);busy=false;}},10000);})();
+(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Mover läuft':unknown?'⚠ Status nicht verifiziert':'● Leerlauf';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Aktualisiert: '+new Date().toLocaleTimeString('de-DE');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Aktualisierung fehlgeschlagen · veraltete Daten';}finally{clearTimeout(t);busy=false;}},10000);})();
 </script>
 
 
 
 <?php } else{ ?>
 <?php
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 if($fmc['mode']!=='demo'){
 $fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
@@ -98,12 +98,12 @@ $fmcBanner=$fmc['banner'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover figyelő">
 <tr><td><span class="tile-header"><span class="tile-header-left"><i class="fa fa-exchange fa-2x"></i><div class="section"><h3 class="tile-header-main">MOVER FIGYELŐ</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a href="/Tools/FejesMoverSettings" title="Mover beállítások" style="margin-right:12px"><i class="fa fa-cog"></i></a><a href="/Tools/FejesMover" title="Részletes Mover figyelő"><i class="fa fa-external-link"></i></a></span></span></td></tr>
-<tr><td>{$fmcBanner}<div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache szabad: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Lemeztömb</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Fájlok és részletes állapot →</a></p><small id="fmd-updated">Adatok betöltve · frissítés 10 mp-enként</small></div></td></tr>
+<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache szabad: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Lemeztömb</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Fájlok és részletes állapot →</a></p><small id="fmd-updated">Adatok betöltve · frissítés 10 mp-enként</small></div></td></tr>
 </tbody>
 HTML;
 ?>
 <script>
-(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-status').textContent=run?'● Mover fut':unknown?'⚠ Nem ellenőrizhető':'● Várakozik';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Frissítve: '+new Date().toLocaleTimeString('hu-HU');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Sikertelen frissítés · elavult adatok';}finally{clearTimeout(t);busy=false;}},10000);})();
+(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Mover fut':unknown?'⚠ Nem ellenőrizhető':'● Várakozik';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Frissítve: '+new Date().toLocaleTimeString('hu-HU');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Sikertelen frissítés · elavult adatok';}finally{clearTimeout(t);busy=false;}},10000);})();
 </script>
 
 
@@ -123,7 +123,7 @@ $fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fm
 if($fmLang==='en'){ ?>
 <?php
 echo $fmLanguageSelector;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmEsc=$fmc['esc'];
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
@@ -145,7 +145,7 @@ $fmFiles[]=['path'=>$path,'pos'=>(int)($pos[1]??0),'size'=>$st['size'],'mode'=>i
 }}
 $fmTotal=$fmMounted?@disk_total_space($fmc['path']):false;$fmFree=$fmMounted?@disk_free_space($fmc['path']):false;
 $fmUsed=$fmTotal&&$fmFree!==false?round(100*(1-$fmFree/$fmTotal),1):null;
-$fmScript=$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script');preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
+$fmScript=$fmc['pool']==='cache'?$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script'):'';preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
 $fmGiB=static fn($n)=>number_format($n/1073741824,1,'.',',');
 $fmTail=static function($path,$limit){$f=@fopen($path,'rb');if(!$f)return '';$sz=fstat($f)['size'];$offset=max(0,$sz-$limit);fseek($f,$offset);$s=stream_get_contents($f);fclose($f);if($offset){$nl=strpos($s,"\n");$s=$nl===false?'':substr($s,$nl+1);}return $s;};
 $fmLines=preg_split('/\r?\n/',$fmTail('/var/log/syslog',262144));$fmLines=array_filter($fmLines,static fn($s)=>preg_match('/\bmover(?:\[|:| )|Filmek Mover/i',$s));$fmLog=implode("\n",array_slice($fmLines,-30));
@@ -153,7 +153,7 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 }else{
 $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fmFree=375809638400;$fmUsed=65;$fmThreshold=null;$fmGiB=static fn($n)=>number_format($n/1073741824,1,'.',',');$fmLog='DEMO · No live logs';$fmScriptLog='';
 }
-echo $fmc['banner'];
+
 ?>
 <style>
 #fm-monitor{max-width:1160px;margin:24px auto;padding:0 18px;font-size:15px}#fm-monitor h2{font-size:28px;margin:0 0 8px}#fm-monitor .fm-sub{opacity:.7;margin-bottom:24px}#fm-monitor .fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}#fm-monitor .fm-card{border:1px solid #7775;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fm-monitor .fm-label{opacity:.7;font-size:13px;margin-bottom:12px}#fm-monitor .fm-value{font-size:25px;line-height:1.4}#fm-monitor progress{width:100%;height:18px;accent-color:#64b99b;margin-top:14px}#fm-monitor pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:12px;line-height:1.6;background:transparent}#fm-monitor table{width:100%;table-layout:fixed}#fm-monitor th,#fm-monitor td{text-align:left;padding:10px 6px;overflow-wrap:anywhere;border-bottom:1px solid #8884}#fm-monitor th:first-child{width:58%}#fm-monitor .fm-note{font-size:13px;opacity:.75;line-height:1.6}#fm-monitor button{margin-bottom:18px;padding:9px 14px}#fm-error{color:#ef967a;min-height:20px}
@@ -176,7 +176,8 @@ echo $fmc['banner'];
 #fm-monitor button:focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 #fm-monitor .fm-note{font-size:12px}
 </style>
-<div id="fm-monitor" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<?=$fmc['banner']?>
 <h2>Mover Monitor</h2><p class="fm-sub">FejesNAS · Live status · Monitoring only</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Settings</a><button type="button" id="fm-toggle">Auto-refresh: ON (5 sec)</button> <span>Data timestamp: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ ARRAY</span></div><p class="fm-note">Cache / array illustration; actual direction may vary by share · <?=$fmRun?'Mover is active.':'Currently idle.'?></p><div class="fm-grid">
@@ -199,7 +200,7 @@ echo $fmc['banner'];
 <?php } elseif($fmLang==='de'){ ?>
 <?php
 echo $fmLanguageSelector;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmEsc=$fmc['esc'];
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
@@ -221,7 +222,7 @@ $fmFiles[]=['path'=>$path,'pos'=>(int)($pos[1]??0),'size'=>$st['size'],'mode'=>i
 }}
 $fmTotal=$fmMounted?@disk_total_space($fmc['path']):false;$fmFree=$fmMounted?@disk_free_space($fmc['path']):false;
 $fmUsed=$fmTotal&&$fmFree!==false?round(100*(1-$fmFree/$fmTotal),1):null;
-$fmScript=$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script');preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
+$fmScript=$fmc['pool']==='cache'?$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script'):'';preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
 $fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');
 $fmTail=static function($path,$limit){$f=@fopen($path,'rb');if(!$f)return '';$sz=fstat($f)['size'];$offset=max(0,$sz-$limit);fseek($f,$offset);$s=stream_get_contents($f);fclose($f);if($offset){$nl=strpos($s,"\n");$s=$nl===false?'':substr($s,$nl+1);}return $s;};
 $fmLines=preg_split('/\r?\n/',$fmTail('/var/log/syslog',262144));$fmLines=array_filter($fmLines,static fn($s)=>preg_match('/\bmover(?:\[|:| )|Filmek Mover/i',$s));$fmLog=implode("\n",array_slice($fmLines,-30));
@@ -229,7 +230,7 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 }else{
 $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fmFree=375809638400;$fmUsed=65;$fmThreshold=null;$fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');$fmLog='DEMO · No live logs';$fmScriptLog='';
 }
-echo $fmc['banner'];
+
 ?>
 <style>
 #fm-monitor{max-width:1160px;margin:24px auto;padding:0 18px;font-size:15px}#fm-monitor h2{font-size:28px;margin:0 0 8px}#fm-monitor .fm-sub{opacity:.7;margin-bottom:24px}#fm-monitor .fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}#fm-monitor .fm-card{border:1px solid #7775;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fm-monitor .fm-label{opacity:.7;font-size:13px;margin-bottom:12px}#fm-monitor .fm-value{font-size:25px;line-height:1.4}#fm-monitor progress{width:100%;height:18px;accent-color:#64b99b;margin-top:14px}#fm-monitor pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:12px;line-height:1.6;background:transparent}#fm-monitor table{width:100%;table-layout:fixed}#fm-monitor th,#fm-monitor td{text-align:left;padding:10px 6px;overflow-wrap:anywhere;border-bottom:1px solid #8884}#fm-monitor th:first-child{width:58%}#fm-monitor .fm-note{font-size:13px;opacity:.75;line-height:1.6}#fm-monitor button{margin-bottom:18px;padding:9px 14px}#fm-error{color:#ef967a;min-height:20px}
@@ -252,7 +253,8 @@ echo $fmc['banner'];
 #fm-monitor button:focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 #fm-monitor .fm-note{font-size:12px}
 </style>
-<div id="fm-monitor" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<?=$fmc['banner']?>
 <h2>Mover-Monitor</h2><p class="fm-sub">FejesNAS · Live-Status · Nur Überwachung</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Einstellungen</a><button type="button" id="fm-toggle">Automatische Aktualisierung: AN (5 Sek.)</button> <span>Datenstand: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ ARRAY</span></div><p class="fm-note">Cache-/Array-Darstellung; die tatsächliche Richtung kann je Freigabe abweichen · <?=$fmRun?'Mover ist aktiv.':'Derzeit im Leerlauf.'?></p><div class="fm-grid">
@@ -275,7 +277,7 @@ echo $fmc['banner'];
 <?php } else{ ?>
 <?php
 echo $fmLanguageSelector;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmEsc=$fmc['esc'];
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
@@ -297,7 +299,7 @@ $fmFiles[]=['path'=>$path,'pos'=>(int)($pos[1]??0),'size'=>$st['size'],'mode'=>i
 }}
 $fmTotal=$fmMounted?@disk_total_space($fmc['path']):false;$fmFree=$fmMounted?@disk_free_space($fmc['path']):false;
 $fmUsed=$fmTotal&&$fmFree!==false?round(100*(1-$fmFree/$fmTotal),1):null;
-$fmScript=$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script');preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
+$fmScript=$fmc['pool']==='cache'?$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script'):'';preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
 $fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');
 $fmTail=static function($path,$limit){$f=@fopen($path,'rb');if(!$f)return '';$sz=fstat($f)['size'];$offset=max(0,$sz-$limit);fseek($f,$offset);$s=stream_get_contents($f);fclose($f);if($offset){$nl=strpos($s,"\n");$s=$nl===false?'':substr($s,$nl+1);}return $s;};
 $fmLines=preg_split('/\r?\n/',$fmTail('/var/log/syslog',262144));$fmLines=array_filter($fmLines,static fn($s)=>preg_match('/\bmover(?:\[|:| )|Filmek Mover/i',$s));$fmLog=implode("\n",array_slice($fmLines,-30));
@@ -305,7 +307,7 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 }else{
 $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fmFree=375809638400;$fmUsed=65;$fmThreshold=null;$fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');$fmLog='DEMO · No live logs';$fmScriptLog='';
 }
-echo $fmc['banner'];
+
 ?>
 <style>
 #fm-monitor{max-width:1160px;margin:24px auto;padding:0 18px;font-size:15px}#fm-monitor h2{font-size:28px;margin:0 0 8px}#fm-monitor .fm-sub{opacity:.7;margin-bottom:24px}#fm-monitor .fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}#fm-monitor .fm-card{border:1px solid #7775;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fm-monitor .fm-label{opacity:.7;font-size:13px;margin-bottom:12px}#fm-monitor .fm-value{font-size:25px;line-height:1.4}#fm-monitor progress{width:100%;height:18px;accent-color:#64b99b;margin-top:14px}#fm-monitor pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:12px;line-height:1.6;background:transparent}#fm-monitor table{width:100%;table-layout:fixed}#fm-monitor th,#fm-monitor td{text-align:left;padding:10px 6px;overflow-wrap:anywhere;border-bottom:1px solid #8884}#fm-monitor th:first-child{width:58%}#fm-monitor .fm-note{font-size:13px;opacity:.75;line-height:1.6}#fm-monitor button{margin-bottom:18px;padding:9px 14px}#fm-error{color:#ef967a;min-height:20px}
@@ -328,7 +330,8 @@ echo $fmc['banner'];
 #fm-monitor button:focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 #fm-monitor .fm-note{font-size:12px}
 </style>
-<div id="fm-monitor" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<?=$fmc['banner']?>
 <h2>Mover figyelő</h2><p class="fm-sub">FejesNAS · Élő állapot · Csak megfigyelés</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Beállítások</a><button type="button" id="fm-toggle">Automatikus frissítés: BE (5 mp)</button> <span>Adatok ideje: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ LEMEZTÖMB</span></div><p class="fm-note">Cache / lemeztömb szemléltetés; a tényleges irány megosztásonként eltérhet · <?=$fmRun?'A mover aktív.':'Jelenleg várakozik.'?></p><div class="fm-grid">
@@ -364,7 +367,10 @@ return (static function ($configWrite) {
         $lock = @fopen('/var/run/fejes-mover-config.lock', 'c');
         if (!$lock || !flock($lock, ($configWrite ? LOCK_EX : LOCK_SH)|LOCK_NB)) $error = true;
     }
+    $lockError = $error;
     $raw = @file_get_contents($configPath);
+    $readError = $raw === false && file_exists($configPath);
+    if ($readError) $error = true;
     $config = $raw === false ? [] : json_decode($raw, true);
     $validName = static fn($name) => is_string($name) && preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D', $name);
     $valid = is_array($config) && ($raw === false || (
@@ -404,7 +410,8 @@ return (static function ($configWrite) {
     $banner .= ' · <a href="/Tools/FejesMoverSetup">'.$esc($t('Mód és pool beállítása','Configure mode and pool','Modus und Pool einstellen')).'</a></div>';
     $token = @parse_ini_file('/var/local/emhttp/var.ini');
     return ['mode'=>$mode,'pool'=>$pool,'path'=>'/mnt/'.$pool,'mounted'=>$mounted,'pools'=>$pools,
-        'error'=>$error,'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
+        'error'=>$error,'lockError'=>$lockError,'readError'=>$readError,'configInvalid'=>!$valid,
+        'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
         'hash'=>hash('sha256',$raw === false ? '' : $raw),'lock'=>$lock,
         'token'=>is_array($token) ? ($token['csrf_token'] ?? '') : '',
         't'=>$t,'esc'=>$esc,'banner'=>$banner];
@@ -423,7 +430,7 @@ $fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fm
 if($fmLang==='en'){ ?>
 <?php
 echo $fmLanguageSelector;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 echo $fmc['banner'];
 if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
  echo '<div style="margin:24px"><h2>Mover Settings</h2><p>Script editing is disabled in this mode. Select Advanced mode to enable it.</p><a href="/Tools/FejesMoverSetup">Configure mode and pool</a></div>';
@@ -514,7 +521,7 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 <?php } elseif($fmLang==='de'){ ?>
 <?php
 echo $fmLanguageSelector;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 echo $fmc['banner'];
 if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
  echo '<div style="margin:24px"><h2>Mover-Einstellungen</h2><p>Skriptbearbeitung ist in diesem Modus gesperrt. Zum Aktivieren den erweiterten Modus wählen.</p><a href="/Tools/FejesMoverSetup">Modus und Pool einstellen</a></div>';
@@ -605,7 +612,7 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 <?php } else{ ?>
 <?php
 echo $fmLanguageSelector;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 echo $fmc['banner'];
 if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
  echo '<div style="margin:24px"><h2>Mover beállítások</h2><p>A scriptszerkesztés ebben a módban tiltva. A bekapcsoláshoz válaszd a Haladó módot.</p><a href="/Tools/FejesMoverSetup">Mód és pool beállítása</a></div>';
@@ -709,11 +716,11 @@ if($fmLang==='en'){ ?>
 <?php
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
-  if(!is_resource($fmc['lock'])||$fmc['error'])throw new RuntimeException('Mode change is unavailable. Reload the page.');
+  if(!is_resource($fmc['lock'])||$fmc['lockError']||$fmc['readError'])throw new RuntimeException('Mode change is unavailable. Reload the page.');
   if(!is_string($_POST['fmc_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fmc_csrf']))throw new RuntimeException('Session expired. Reload the page.');
   if(!is_string($_POST['config_hash']??null)||!hash_equals($fmc['hash'],$_POST['config_hash']))throw new RuntimeException('Mode configuration changed. Reload the page.');
   $newMode=$_POST['mode']??null;$newPool=$_POST['pool']??null;
@@ -767,11 +774,11 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <?php
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
-  if(!is_resource($fmc['lock'])||$fmc['error'])throw new RuntimeException('Moduswechsel nicht möglich. Seite neu laden.');
+  if(!is_resource($fmc['lock'])||$fmc['lockError']||$fmc['readError'])throw new RuntimeException('Moduswechsel nicht möglich. Seite neu laden.');
   if(!is_string($_POST['fmc_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fmc_csrf']))throw new RuntimeException('Sitzung abgelaufen. Seite neu laden.');
   if(!is_string($_POST['config_hash']??null)||!hash_equals($fmc['hash'],$_POST['config_hash']))throw new RuntimeException('Die Moduskonfiguration wurde geändert. Seite neu laden.');
   $newMode=$_POST['mode']??null;$newPool=$_POST['pool']??null;
@@ -825,11 +832,11 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <?php
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
-$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
-  if(!is_resource($fmc['lock'])||$fmc['error'])throw new RuntimeException('A módváltás most nem lehetséges. Töltsd újra az oldalt.');
+  if(!is_resource($fmc['lock'])||$fmc['lockError']||$fmc['readError'])throw new RuntimeException('A módváltás most nem lehetséges. Töltsd újra az oldalt.');
   if(!is_string($_POST['fmc_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fmc_csrf']))throw new RuntimeException('Lejárt munkamenet. Töltsd újra az oldalt.');
   if(!is_string($_POST['config_hash']??null)||!hash_equals($fmc['hash'],$_POST['config_hash']))throw new RuntimeException('A módbeállítás közben megváltozott. Töltsd újra az oldalt.');
   $newMode=$_POST['mode']??null;$newPool=$_POST['pool']??null;

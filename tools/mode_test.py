@@ -24,6 +24,7 @@ with tempfile.TemporaryDirectory(prefix='fejes-modes-') as directory:
         (lab/'mountinfo').write_text('1 0 0:1 / /mnt/cache rw - btrfs /dev/a rw\n'+('2 0 0:2 / /mnt/fast rw - btrfs /dev/b rw\n' if fast else ''))
     mount()
     paths={
+        '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php':lab/'FejesMoverRuntime.php',
         '/boot/config/plugins/fejes.mover.monitor/settings.json':lab/'config/settings.json',
         '/boot/config/pools/':str(lab/'pools')+'/',
         '/var/run/fejes-mover-config.lock':lab/'config.lock',
@@ -48,8 +49,9 @@ with tempfile.TemporaryDirectory(prefix='fejes-modes-') as directory:
         source=source.replace('<?php',namespace,1)
         (lab/name).write_text(mapped(source),encoding='utf-8',newline='\n')
         encoded=base64.b64encode(json.dumps(post or {}).encode()).decode()
-        (lab/'run.php').write_text('<?php $_COOKIE["fejes_mover_lang"]='+json.dumps(language)+';$_SERVER["REQUEST_METHOD"]='+json.dumps('GET' if post is None else 'POST')+';$_POST=json_decode(base64_decode('+json.dumps(encoded)+'),true);include '+json.dumps(str(lab/name))+';',encoding='utf-8')
-        result=subprocess.run(['php','-d','display_errors=stderr','-d','error_reporting=32767',str(lab/'run.php')],capture_output=True,text=True,encoding='utf-8')
+        (lab/'layout').mkdir(exist_ok=True)
+        (lab/'layout/run.php').write_text('<?php $_COOKIE["fejes_mover_lang"]='+json.dumps(language)+';$_SERVER["REQUEST_METHOD"]='+json.dumps('GET' if post is None else 'POST')+';$_POST=json_decode(base64_decode('+json.dumps(encoded)+'),true);eval(substr(file_get_contents('+json.dumps(str(lab/name))+'),5));',encoding='utf-8')
+        result=subprocess.run(['php','-d','display_errors=stderr','-d','error_reporting=32767',str(lab/'layout/run.php')],capture_output=True,text=True,encoding='utf-8')
         assert result.returncode==0 and not result.stderr.strip(),result.stderr
         return result.stdout
     def check(label,condition):
@@ -80,6 +82,8 @@ with tempfile.TemporaryDirectory(prefix='fejes-modes-') as directory:
     choose('observer','fast')
     monitor=render('FejesMover.page')
     check('Configured custom pool is measured',metrics.read_text().splitlines()[-1]=='/mnt/fast' and 'data-available="1"' in monitor)
+    check('Custom pool never compares the cache-only script threshold','2 GiB alatt' not in monitor and 'A küszöb nem ellenőrizhető.' in monitor)
+    check('Mode banner is inside the refreshed monitor fragment',monitor.index('id="fm-monitor"')<monitor.index('class="fmc-mode"') and 'data-mode="observer"' in monitor and 'data-pool="fast"' in monitor)
     mount(False);metrics.unlink()
     monitor=render('FejesMover.page')
     check('Unmounted custom pool stays unavailable','data-available="0"' in monitor and not metrics.exists())
@@ -87,6 +91,9 @@ with tempfile.TemporaryDirectory(prefix='fejes-modes-') as directory:
     for payload in ['{broken','null','[]',json.dumps({'version':1,'mode':'root','pool':'cache'}),json.dumps({'version':1,'mode':'advanced','pool':'../cache'})]:
         config.write_text(payload)
         check(f'Corrupt configuration fails closed: {payload[:24]}','scriptszerkesztés ebben a módban tiltva' in render('FejesMoverSettings.page',attempted) and script.read_text()==original)
+        old=raw()
+        out=choose('observer')
+        check('Validated recovery replaces malformed configuration',json.loads(raw())=={'version':1,'mode':'observer','pool':'cache'} and 'elmentve' in out)
     config.unlink()
     out=choose('advanced','cache',advanced_ack='yes')
     check('Advanced explicit activation persists',json.loads(raw())['mode']=='advanced' and 'elmentve' in out)

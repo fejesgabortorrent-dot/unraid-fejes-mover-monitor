@@ -18,7 +18,7 @@ import threading
 from localize import compile_page
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGES = {'/Tools/FejesMover':'FejesMover.page', '/Tools/FejesMoverSettings':'FejesMoverSettings.page', '/Dashboard':'FejesMover.Dashboard.page'}
+PAGES = {'/Tools/FejesMover':'FejesMover.page', '/Tools/FejesMoverSettings':'FejesMoverSettings.page', '/Tools/FejesMoverSetup':'FejesMoverSetup.page', '/Dashboard':'FejesMover.Dashboard.page'}
 STATES = {'idle':'Várakozik', 'running':'Mover fut', 'full':'Cache megtelt', 'missing':'Cache nincs csatolva', 'stale':'Bizonytalan PID'}
 
 class Demo:
@@ -32,6 +32,8 @@ class Demo:
         (proc/'status').write_text('Pid:\t4242\nPPid:\t1\n')
         (proc/'cmdline').write_bytes(b'/usr/local/sbin/mover\0')
         (lab/'cache').mkdir()
+        (lab/'pools').mkdir()
+        (lab/'pools/cache.cfg').write_text('fixture\n')
 
     def render(self, name, state, language, post):
         lab=self.lab
@@ -44,6 +46,10 @@ class Demo:
         free=0 if state=='full' else 350*1073741824
         source=source.replace('namespace BrowserDemo;',f'namespace BrowserDemo; function disk_total_space($p){{return {1000*1073741824};}} function disk_free_space($p){{return {free};}}',1)
         replacements={
+            '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php':lab/'FejesMoverRuntime.php',
+            '/boot/config/plugins/fejes.mover.monitor/settings.json':lab/'config/settings.json',
+            '/boot/config/pools/':str(lab/'pools')+'/',
+            '/var/run/fejes-mover-config.lock':lab/'mode.lock',
             '/proc/self/mountinfo':lab/'mountinfo', '/var/local/emhttp/var.ini':lab/'var.ini',
             '/var/run/mover.pid':pid, '/var/run/fejes-mover-settings.lock':lab/'settings.lock',
             '/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script':lab/'automation/script',
@@ -52,7 +58,12 @@ class Demo:
             '/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.txt':lab/'script.log',
             '/mnt/cache':lab/'cache', '/proc/':str(lab/'proc')+'/',
         }
-        for old,new in replacements.items():source=source.replace(old,str(new).replace('\\','/'))
+        runtime=(ROOT/'src/FejesMoverRuntime.php').read_text(encoding='utf-8')
+        for old,new in replacements.items():
+            source=source.replace(old,str(new).replace('\\','/'))
+            runtime=runtime.replace(old,str(new).replace('\\','/'))
+        runtime=runtime.replace("'/mnt/'",json.dumps(lab.as_posix()+'/'))
+        (lab/'FejesMoverRuntime.php').write_text(runtime,encoding='utf-8',newline='\n')
         if os.name=='nt':source=source.replace('/bin/bash -n ','bash -n ')
         page=lab/name;page.write_text(source,encoding='utf-8',newline='\n')
         encoded=base64.b64encode(json.dumps(post or {}).encode()).decode()
