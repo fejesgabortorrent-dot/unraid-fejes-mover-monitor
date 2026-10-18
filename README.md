@@ -14,6 +14,10 @@ Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and G
 
 [Download the beta](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v0.1.0-beta.1) · [Installation, checksums and removal/recovery](docs/BETA-INSTALL.md)
 
+[Download the release installer (.plg)](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/download/v0.1.0-beta.1/fejes.mover.monitor.plg) — GitHub counts downloads through this release-asset link. Raw-file installations are not included in that asset counter. Downloads are not unique installations.
+
+**Tulajdonosi letöltésszámláló / Owner download counter:** [optional NAS-side helper](docs/GITHUB-DOWNLOADS-HU.md) checks GitHub using outbound requests and sends the current installer download total through existing Unraid notification agents when it increases. No public NAS endpoint, plugin telemetry, bot token in the package, or user installation tracking is required. It is configured separately by the project owner and is not installed by the plugin.
+
 Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Advanced editing requires explicit acknowledgment and an existing cache-only automation script. No mode change starts Mover. Live Unraid installation and reboot acceptance testing remain outstanding. Not submitted to Community Applications.
 
 ## Screenshots / Képernyőképek

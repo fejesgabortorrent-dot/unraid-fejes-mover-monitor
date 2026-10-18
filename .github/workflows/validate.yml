@@ -35,3 +35,5 @@ jobs:
         run: python3 tools/check_test.py
       - name: Require validation to leave tracked files unchanged
         run: git diff --exit-code
+      - name: Check owner-side GitHub download counter
+        run: python3 -m unittest discover -s tools -p github_downloads_test.py -v
