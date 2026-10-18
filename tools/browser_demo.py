@@ -2,7 +2,7 @@
 
 Run with PHP and Bash on PATH. No production paths are read or written.
 """
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -14,6 +14,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import threading
 from localize import compile_page
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,7 +66,11 @@ def run(port):
     if not shutil.which('php') or not shutil.which('bash'):raise SystemExit('PHP and Bash must be on PATH')
     with tempfile.TemporaryDirectory(prefix='fejes-browser-demo-') as directory:
         demo=Demo(Path(directory))
+        render_lock=threading.Lock()
         class Handler(BaseHTTPRequestHandler):
+            def setup(self):
+                super().setup()
+                self.connection.settimeout(15)
             def do_GET(self):self.handle_page(False)
             def do_POST(self):self.handle_page(True)
             def handle_page(self, is_post):
@@ -86,13 +91,15 @@ def run(port):
                     length=int(self.headers.get('Content-Length','0'))
                     if length>16384:self.send_error(413);return
                     post={k:v[-1] for k,v in parse_qs(self.rfile.read(length).decode(),keep_blank_values=True).items()}
-                try:body=demo.render(PAGES[route.path],state,language,post)
+                try:
+                    with render_lock:
+                        body=demo.render(PAGES[route.path],state,language,post)
                 except Exception as error:self.send_error(500,str(error));return
                 options=''.join(f'<option value="{key}"'+(' selected' if key==state else '')+f'>{label}</option>' for key,label in STATES.items())
                 banner='<aside><strong>🧪 TESZTFELÜLET / DEMO / TESTUMGEBUNG</strong><p>Szimulált adatok · Simulated data · Simulierte Daten</p><nav><a href="/Tools/FejesMover">Figyelő / Monitor</a><a href="/Dashboard">Dashboard</a><a href="/Tools/FejesMoverSettings">Beállítások / Settings</a></nav><label>Tesztállapot: <select aria-label="Tesztállapot" onchange="location.assign(location.pathname+\'?state=\'+this.value)">'+options+'</select></label><small>A mentés kizárólag a tesztpéldányt módosítja. / Saves affect demo files only.</small></aside>'
                 document='<!doctype html><html lang="'+language+'"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fejes Mover · DEMO</title><style>body{margin:0;background:#1b1b1b;color:#e3e3e3;font:15px/1.5 Arial,sans-serif}a{color:#ef9b4f}aside{padding:14px 20px;background:#252525;border-bottom:2px solid #ef7d00}aside p{margin:6px 0}nav{display:flex;gap:20px;flex-wrap:wrap;margin:10px 0}select{padding:7px;background:#292929;color:#fff;border:1px solid #777;border-radius:3px}aside small{display:block;margin-top:8px;opacity:.8}body>table{width:min(700px,95%);margin:30px auto}button{cursor:pointer}</style>'+banner+body+'</html>'
                 data=document.encode('utf-8');self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(data)));self.send_header('Cache-Control','no-store');self.send_header('Set-Cookie',f'fm_demo_state={state}; Path=/; SameSite=Lax; HttpOnly');self.end_headers();self.wfile.write(data)
-        server=HTTPServer(('127.0.0.1',port),Handler)
+        server=ThreadingHTTPServer(('127.0.0.1',port),Handler)
         print(f'Demo ready: http://127.0.0.1:{port}/Tools/FejesMover',flush=True)
         try:server.serve_forever()
         finally:server.server_close()
