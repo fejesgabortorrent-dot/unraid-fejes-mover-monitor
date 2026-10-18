@@ -11,6 +11,7 @@ import sys
 
 from torrent_preflight import assess, read_snapshot
 from wire_integrity_cron import ORIGINAL, REPLACEMENT, rewrite_cron
+from wire_mover_gate import rewrite_launcher
 
 ROOT = Path('/boot/config/plugins/dynamix.file.integrity')
 LAUNCHER = Path('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script')
@@ -44,6 +45,11 @@ def status(container='binhex-qbittorrentvpn', reserve_gib=20):
               'integrity_config': 'unknown', 'integrity_active': 'unknown',
               'legacy_launcher_present': LAUNCHER.is_file(),
               'mover_gate': 'manual_integration_required'}
+    try:
+        launcher = LAUNCHER.read_text()
+        result['mover_gate'] = 'wired' if rewrite_launcher(launcher) == launcher else 'original'
+    except ERRORS:
+        result['mover_gate'] = 'unknown'
     # No media filenames, trackers, subprocess output or protected paths in reports.
     try:
         configured = (ROOT / 'integrity-check.cron').read_text()
@@ -105,7 +111,7 @@ def run_mover(container):
                            capture_output=True, timeout=5)
             # Reject accidental recursion if this wrapper was copied into the
             # legacy script. The original script must remain at LAUNCHER.
-            if 'fejes_service.py' in LAUNCHER.read_text():
+            if any(marker in LAUNCHER.read_text() for marker in ('fejes_service.py', 'BEGIN FEJES MOVER LOCK')):
                 raise ValueError('Recursive launcher')
             return subprocess.run(['bash', str(LAUNCHER)]).returncode
     except BlockingIOError:

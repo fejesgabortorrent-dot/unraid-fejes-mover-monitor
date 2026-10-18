@@ -1,8 +1,48 @@
 # Torrent, Mover és File Integrity — 2026-10-18
 
+## A megvizsgált Mover-script bekötése
+
+A teljes élő `Filmek_Mover_Threshold` scriptet 2026-10-18-án beolvastuk.
+A `tools/wire_mover_gate.py` ezt az áttekintett változatot fogadja el; a két
+számérték változhat, más forrásváltozás új áttekintést igényel. A biztonsági
+ellenőrzés nem fogadja el a rossz helyre áthelyezett vagy részleges kaput sem.
+
+```bash
+python3 tools/wire_mover_gate.py          # csak ellenőrzés
+python3 tools/wire_mover_gate.py --apply  # bekötés, nem indítás
+python3 tools/wire_mover_gate.py --remove # saját kiegészítések visszavonása
+```
+
+A bekötő megtartja a 300 GiB küszöböt és 360 perces várakozást, illetve a
+beállítóoldalon később mentett értékeket is. A meglévő backup-, paritás-,
+Mover-PID- és várakozásellenőrzés után, közvetlenül az időbélyeg írása előtt
+fut a torrentkapu. Hiba vagy félkész/elfoglalt torrent esetén a script
+halasztással kilép; az időbélyeg változatlan. Küszöb feletti szabad helynél
+nem kérdezi a torrent API-t, és az eredeti időbélyeg-visszaállítás megmarad.
+A script elejére közös folyamatközi zár és cache-mountellenőrzés kerül.
+
+A bekötés előtt friss torrentellenőrzés, a ténylegesen telepített kapu próbája,
+konzervatív hátralévőméret-ellenőrzés és legalább 20 GiB számítási tartalék
+szükséges. Az élő előellenőrzéskor nem látszott közvetlen kapacitásgond.
+Ez pillanatkép, nem későbbi kapacitásgarancia. A globális kapu új nagy letöltéseknél tartósan
+halaszthat; nincs automatikus felülbírálás vagy szelektív mozgatás.
+
+A bekötő a beállítóoldal és a védett indítás zárait használja. Forrásmentés,
+`bash -n`, visszaolvasás és atomi fájlcsere védi a módosítást. Idempotens,
+nem telepít második időzítést és soha nem futtatja a Mover-scriptet. A plugin
+eltávolítása a felismert kiegészítéseket offline eltávolítja, a segédeket és
+mentéseket megőrzi. A külön `fejes_service.py run-mover` wrappert ne használd
+az így bekötött script előtt: a két zár egymásba ágyazása helyett a meglévő
+User Scripts időzítés marad az indítási útvonal.
+
+A nyolc új teszt tényleges bash-futtatással ellenőrzi a halasztás/időbélyeg,
+küszöb, várakozás, nem felcsatolt cache és kész állapot viselkedését izolált
+fájlrendszerben, valamint az idempotens bekötést és offline visszavonást.
+**A NAS-on az alkalmazást és visszaellenőrzést még el kell végezni.**
+
 ## Közös csomag — fejlesztési állapot
 
-A 2026.10.18-as munkaváltozat PLG-je már tartalmazza mind a négy közös
+A 2026.10.18-as munkaváltozat PLG-je már tartalmazza mind az öt közös
 Python-segédet. A **Tools → FejesMover védelem** oldalon kézzel kérhető
 állapotellenőrzés: torrentblokkolók száma, a valóban felcsatolt cache szabad
 helye, a hátralévő letöltések felső becslése és a File Integrity mentett/aktív
@@ -41,8 +81,9 @@ részei maradnak. Torrent miatti halasztás nem futtatja a scriptet és nem
 fogyasztja el a várakozási időt. A wrapper nem másolható a meglévő script
 helyére; ezt rekurzióvédelem is ellenőrzi.
 
-**Az éles Mover-ütemezés még nincs erre átirányítva.** Ehhez a teljes aktuális
-NAS-script és a hívó ütemezés ellenőrzése szükséges. Az eredeti ütemezést és
+**Az éles Mover-ütemezés még nincs erre átirányítva.** A teljes aktuális
+NAS-scriptet már áttekintettük; a fenti bekötő alkalmazása és az indítási
+útvonal élő ellenőrzése szükséges. Az eredeti ütemezést és
 egy második wrappert együtt engedélyezni tilos: az eredeti megkerülné a kaput.
 A globális halasztás nem szelektív fájlkizárás. A pillanatkép után induló új
 letöltéseket nem zárja ki, és a kézzel indított Movert sem szabályozza.

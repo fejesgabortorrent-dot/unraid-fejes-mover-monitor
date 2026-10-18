@@ -1,6 +1,6 @@
 # Release candidate status — 2026-10-18
 
-This candidate replaces the earlier archive-based packaging proposal with a self-contained PLG. All four runtime pages now have a source file under `src/`, embedded exactly by `tools/build.py`. Four protection helpers are embedded from `tools/` and installed alongside the pages. No missing GitHub Release archive is referenced. The older files under `plugin/` are historical development files, not the build source.
+This candidate replaces the earlier archive-based packaging proposal with a self-contained PLG. All four runtime pages now have a source file under `src/`, embedded exactly by `tools/build.py`. Five protection helpers are embedded from `tools/` and installed alongside the pages. No missing GitHub Release archive is referenced. The older files under `plugin/` are historical development files, not the build source.
 
 Community Applications status: **not submitted**. No acceptance is claimed.
 
@@ -8,7 +8,7 @@ Community Applications status: **not submitted**. No acceptance is claimed.
 
 Run `python3 tools/check.py` with Python 3 and PHP CLI. It checks deterministic generation, all published checksums, XML metadata and PHP syntax. It stages the PLG inline pages into a temporary directory and runs the install and remove scripts against that directory. It checks repeat installation, rejection of invalid Python/PHP before activation, helper retention, and preservation of unrelated files on removal.
 
-Current isolated validation: 30 Python unit tests, 20 application fixture checks, PHP lint on four pages, JavaScript syntax checks on the three scripted page types, and the packaging lifecycle check. Shared protection diagnostics and the CSRF-protected wiring action are covered. Offline cron removal, reload rollback, active cron verification, conservative capacity estimates, and guarded launch rejection/concurrency are covered.
+Current isolated validation: 38 Python unit tests, 20 application fixture checks, PHP lint on four pages, JavaScript syntax checks on the three scripted page types, and the packaging lifecycle check. Shared protection diagnostics and the CSRF-protected wiring action are covered. Offline cron removal, reload rollback, active cron verification, conservative capacity estimates, and guarded launch rejection/concurrency are covered.
 
 This is an isolated Linux packaging test, not an Unraid acceptance test. It does not emulate Unraid's plugin manager or WebGUI.
 
@@ -22,7 +22,7 @@ Use a disposable licensed Unraid 7.x system and test disks. Do not use productio
 - Verify unavailable `cache` is shown honestly, and test systems without the optional legacy script.
 - Verify settings CSRF rejection, conflicting edits, backups and recovery with a disposable legacy script fixture. Confirm the script uses minutes for `UJRA_PROBALKOZAS_MP` before enabling this editor.
 - Verify the shared protection page and Python/Docker/API dependencies on Unraid.
-- Review the complete live legacy launcher and its scheduler before redirecting it to `fejes_service.py run-mover`; this is still not wired on the NAS.
+- The current live legacy launcher was reviewed on 2026-10-18. Test `wire_mover_gate.py` in check-only mode, then apply on the NAS and verify the existing User Scripts path calls the modified file. No live gate installation is claimed yet.
 - Test static watcher exclusion cleanup and large-download cache pressure; these are not automated by this candidate.
 - Verify update, reboot persistence, uninstall and rollback, including restoration of the original File Integrity cron command.
 - Record actual results and Unraid version before merging/publishing the candidate.

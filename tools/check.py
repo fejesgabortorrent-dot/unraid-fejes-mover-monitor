@@ -46,11 +46,14 @@ with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
         harness = sandbox / 'unwire.py'
         harness.write_text('import sys\nsys.dont_write_bytecode=True\nfrom pathlib import Path\nsys.path.insert(0, '+repr(str(helper_destination))+')\nimport wire_integrity_cron as w\nw.ROOT=Path('+repr(str(sandbox/'absent-integrity'))+')\nw.main(remove=True)\n')
         text = text.replace('python3 "$tools/wire_integrity_cron.py" --remove', 'python3 '+str(harness))
+        mover_harness = sandbox / 'unwire-mover.py'
+        mover_harness.write_text('import sys\nsys.dont_write_bytecode=True\nfrom pathlib import Path\nsys.path.insert(0, '+repr(str(helper_destination))+')\nimport wire_mover_gate as w\nw.LAUNCHER=Path('+repr(str(sandbox/'absent-launcher'))+')\nw.main(["--remove"])\n')
+        text = text.replace('python3 "$tools/wire_mover_gate.py" --remove', 'python3 '+str(mover_harness))
         subprocess.run(['bash', '-n'], input=text, text=True, check=True)
         return subprocess.run(['bash'], input=text, text=True, capture_output=True)
     assert script('').returncode == 0, 'Clean install failed'
     helper_bytes = {p.name:p.read_bytes() for p in helper_destination.iterdir()}
-    assert len(helper_bytes) == 4, 'Protection helpers missing'
+    assert len(helper_bytes) == 5, 'Protection helpers missing'
     assert all((p.stat().st_mode & 0o777) == 0o700 for p in helper_destination.iterdir())
     installed = {p.name: p.read_bytes() for p in destination.iterdir()}
     assert script('').returncode == 0, 'Repeated install failed'

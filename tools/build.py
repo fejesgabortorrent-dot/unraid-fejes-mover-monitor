@@ -6,7 +6,7 @@ BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
 version='2026.10.18'
 files=sorted((ROOT/'src').glob('*.page'))
-helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py')]
+helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py')]
 def cdata(s):
     return '<![CDATA['+s.replace(']]>',']]]]><![CDATA[>')+']]>'
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
@@ -58,6 +58,9 @@ dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 tools=/boot/config/plugins/fejes.mover.monitor/tools
 # Restore the owned cron integration before removing UI. Helpers stay available
 # for separately configured launchers and for recovery. No API/hashing required.
+if [[ -f "$tools/wire_mover_gate.py" ]]; then
+  python3 "$tools/wire_mover_gate.py" --remove
+fi
 if [[ -f "$tools/wire_integrity_cron.py" ]]; then
   python3 "$tools/wire_integrity_cron.py" --remove
 fi

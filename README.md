@@ -25,7 +25,7 @@ Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 - The cache-to-array diagram is illustrative. Actual movement direction is controlled by each share's Unraid settings.
 - The optional threshold panel requires the pre-existing script at `/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script`. It is not distributed here. Without it, monitoring still works and settings explain that the optional automation is unavailable.
 - The settings panel changes only `KUSZOB_GIB` and `UJRA_PROBALKOZAS_MP`, after CSRF, version, range, lock and shell-syntax checks. It saves a backup first. The legacy UI interprets `UJRA_PROBALKOZAS_MP` as minutes; check your script's semantics before using this panel with a different script.
-- Installation does not change schedules or start work. The protection page can explicitly redirect an existing File Integrity job, retaining its schedule and checks. Its standalone `run-mover` command gates the existing legacy launcher; it does not replace its backup/parity safeguards. Existing User Scripts wiring still needs a separate review of the full live script.
+- Installation does not change schedules or start work. The protection page can explicitly redirect an existing File Integrity job, retaining its schedule and checks. Its standalone `run-mover` command gates the existing legacy launcher; it does not replace its backup/parity safeguards. The opt-in `wire_mover_gate.py --apply` installer now supports the reviewed legacy script: it adds the gate before the attempt timestamp, with a launch lock, mount check and backup. Unknown source changes are rejected. It changes no schedule and starts no Mover.
 - The global Mover gate defers for unfinished/busy torrents or unavailable data. Cache pressure is reported, never used to bypass protection. It cannot keep cache draining indefinitely during large downloads; capacity planning and selective Mover exclusions remain separate work.
 
 ## Planned installation after Unraid acceptance testing
@@ -44,7 +44,7 @@ Open **Tools → Mover figyelő** or **Tools → FejesMover védelem**. Plugin u
 
 ## Uninstall
 
-Remove `fejes.mover.monitor` through Unraid's Plugins page. Before removing its four pages, it restores the original File Integrity command if the recognized integrated schedule is present. Reload failure rolls the cron file back and stops removal. Existing automation, configuration, backups and helper files are preserved; externally wired launchers therefore retain their dependencies. Unreviewed cron formats stop removal for inspection.
+Remove `fejes.mover.monitor` through Unraid's Plugins page. Before removing its four pages, it removes its recognized additions from the legacy launcher and restores the original File Integrity command if the recognized integrated schedule is present. Reload failure rolls the cron file back and stops removal. Existing automation, configuration, backups and helper files are preserved; externally wired launchers therefore retain their dependencies. Unreviewed cron formats stop removal for inspection.
 
 ## Privacy and support
 

@@ -64,7 +64,7 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
  <button type="submit" name="fp_action" value="wire">Meglévő ütemezés bekötése / újraellenőrzése</button>
  <p class="muted">A File Integrity saját beállításainak mentése felülírhatja a bekötést. Utána itt ellenőrizd az aktív állapotot.</p></section>
 </form>
-<section><h3>Mover-indító és eseményfigyelő</h3><p>A csomag tartalmazza a védett Mover-indítót. A jelenlegi User Scripts automatika bekötése külön telepítési lépés; az állapotellenőrzés nem igazolja ezt.</p>
+<section><h3>Mover-indító és eseményfigyelő</h3><p>Az ellenőrzött indítóscript védelme: <strong><?=$fpEsc($fpLabel($fpReport['mover_gate']??'unknown'))?></strong></p><p>A csomag tartalmazza a védett Mover-indítót és a külön bekötősegédet. A bekötő az áttekintett User Scripts fájlt módosítja mentéssel, megtartva a meglévő ütemezést. A felület nem indít Movert. Az állapot a beolvasott scriptet igazolja, más indítási útvonalat nem.</p>
 <p>Helyhiánynál sincs automatikus védelmi felülbírálás. Félkész letöltés mellett a globális indító halaszt; a figyelmeztetés kapacitásrendezést igényel. A kézzel vagy más ütemezésből indított Moverre ez a kapu nem vonatkozik.</p>
 <p>Az eseményfigyelő korábbi statikus kizárásai külön beállítások. A csomag ezeket nem oldja fel automatikusan, és a letöltés közben már futó hash-elést sem állítja le.</p></section>
 </div>
