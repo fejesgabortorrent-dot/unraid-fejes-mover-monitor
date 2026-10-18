@@ -5,6 +5,7 @@ Tag="cogs"
 ---
 <?php
 $fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmEsc=$fmc['esc'];
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';

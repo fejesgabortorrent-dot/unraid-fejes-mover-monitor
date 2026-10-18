@@ -124,6 +124,7 @@ if($fmLang==='en'){ ?>
 <?php
 echo $fmLanguageSelector;
 $fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmEsc=$fmc['esc'];
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
@@ -199,6 +200,7 @@ echo $fmc['banner'];
 <?php
 echo $fmLanguageSelector;
 $fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmEsc=$fmc['esc'];
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
@@ -274,6 +276,7 @@ echo $fmc['banner'];
 <?php
 echo $fmLanguageSelector;
 $fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmEsc=$fmc['esc'];
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
