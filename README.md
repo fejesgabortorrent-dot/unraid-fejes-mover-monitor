@@ -10,7 +10,11 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**Release candidate. Not submitted to Community Applications. Clean install, update, reboot and uninstall still require validation on a disposable Unraid system.**
+**Experimental beta 0.1.0-beta.1 · Unraid 7.x · Not production-validated.**
+
+[Download the beta](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v0.1.0-beta.1) · [Installation, checksums and removal/recovery](docs/BETA-INSTALL.md)
+
+Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Advanced editing requires explicit acknowledgment and an existing cache-only automation script. No mode change starts Mover. Live Unraid installation and reboot acceptance testing remain outstanding. Not submitted to Community Applications.
 
 ## Screenshots / Képernyőképek
 
@@ -41,7 +45,7 @@ Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and G
 ## Requirements and limits
 
 - Unraid 7.0+ and its bundled PHP 8; the original local version was used on Unraid 7.3.3.
-- This first version monitors a pool named **cache** at `/mnt/cache`. Arbitrarily named pools and multi-pool selection are not supported yet.
+- Observe one configured Unraid pool at a time using mode/pool setup. The default is `cache`; unmounted pools remain unavailable. The optional legacy script editor remains cache-only.
 - Use the 🌐 language selector on the dashboard, monitor or settings page: **Magyar / English (US) / Deutsch**. The choice is stored in a browser cookie for one year and shared by these pages. Hungarian is the default and the fallback for invalid selections. Switching language reloads the page and discards unsaved form edits; it never submits settings. Unraid menu names remain the static labels Mover Monitor / Mover Settings. Logs, filenames and existing script contents retain their original text.
 - Mover activity is inferred from `/var/run/mover.pid` and `/proc`. Custom Mover implementations may not be detected.
 - File positions are observations, not verified transfer progress. No transfer ETA or total progress is claimed.
@@ -50,14 +54,14 @@ Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and G
 - The settings panel changes only `KUSZOB_GIB` and `UJRA_PROBALKOZAS_MP`, after CSRF, version, range, lock and shell-syntax checks. It saves a backup first. The legacy UI interprets `UJRA_PROBALKOZAS_MP` as minutes; check your script's semantics before using this panel with a different script.
 - The plugin does not install a scheduler, start Mover, move files or provide backup/parity guards itself. Those remain the responsibility of Unraid and any existing automation.
 
-## Planned installation after Unraid acceptance testing
+## Experimental beta installation
 
-Do not install this candidate on a production NAS yet.
+Use a test Unraid 7.x system. Read [the installation and recovery guide](docs/BETA-INSTALL.md) and verify the release checksums first. This beta has not been accepted on live Unraid.
 
 In Unraid, open **Plugins → Install Plugin**, then enter:
 
 ```
-https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg
+https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v0.1.0-beta.1/fejes.mover.monitor.plg
 ```
 
 The manifest contains the runtime pages. It does not rely on files from the author's NAS. The installer checks PHP syntax before activating them.
