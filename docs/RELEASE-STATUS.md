@@ -12,6 +12,12 @@ Current isolated validation: 38 Python unit tests, 20 application fixture checks
 
 This is an isolated Linux packaging test, not an Unraid acceptance test. It does not emulate Unraid's plugin manager or WebGUI.
 
+The [USB-free simulation](SIMULATION.md) additionally executes the real reviewed
+launcher and torrent assessor through 12 scenarios, with checksummed synthetic
+file movement and timestamp assertions. GitHub Actions now runs the unit,
+application, package lifecycle and simulation checks on pushes and pull requests.
+The workflow retains the generated simulation HTML/JSON for review.
+
 ## Remaining Unraid acceptance tests
 
 Use a disposable licensed Unraid 7.x system and test disks. Do not use production disks or the production USB flash device.

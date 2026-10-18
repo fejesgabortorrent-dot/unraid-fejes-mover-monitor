@@ -10,6 +10,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install PHP CLI for real page fixtures and package checks
+        run: sudo apt-get update && sudo apt-get install -y php-cli
+      - name: Run Python, PHP application and JavaScript checks
+        run: python3 -m unittest discover -s tools -p '*_test.py'
+      - name: Verify reproducible package and isolated install/update/remove
+        run: python3 tools/check.py
       - name: Run real guard and launcher with synthetic boundaries
         run: python3 tools/simulate.py --output simulation-report
       - name: Save reviewable HTML and JSON evidence

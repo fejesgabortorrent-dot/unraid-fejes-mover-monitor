@@ -60,12 +60,12 @@ state; unfinished, stopped downloads, checks and moves return 10. API failures,
 unknown states and invalid snapshots return 20. Both nonzero results mean defer.
 The optional `--json` report includes host paths and must be kept private.
 
-This standalone tool is **not installed by the PLG** and does not change the
+This tool **is bundled and installed by the PLG**. Running it alone does not change the
 legacy launcher, Unraid Mover or Dynamix File Integrity. It cannot enforce
 per-file Mover exclusions or prevent a torrent starting after its snapshot.
 See [torrent / Mover / File Integrity integration notes](docs/TORRENT-INTEGRITY-HU.md)
 before wiring it into an existing script. The live launcher must be reviewed
-first; it is not included in this repository.
+first; the reviewed source is retained only as an isolated test fixture.
 
 Run its isolated tests with `python3 tools/torrent_preflight_test.py`.
 
@@ -73,8 +73,8 @@ Run its isolated tests with `python3 tools/torrent_preflight_test.py`.
 generated File Integrity schedule against the same live torrent snapshot.
 Without `--check-only`, it runs that schedule with literal folder/share
 exclusions passed to Bunker. Run `python3 tools/integrity_preflight_test.py`
-for its isolated tests. This tool is also standalone and is not automatically
-installed, scheduled or enabled by the PLG.
+for its isolated tests. This tool is bundled and installed by the PLG, but is not
+automatically scheduled or enabled. Wiring the existing schedule is explicit.
 
 ## Build
 
