@@ -4,6 +4,18 @@ Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 
 **Release candidate. Not submitted to Community Applications. Clean install, update, reboot and uninstall still require validation on a disposable Unraid system.**
 
+## Interactive interface preview
+
+Download [the self-contained demo](docs/demo/index.html) and open it in your
+browser. It presents the planned interface in **Magyar / English / Deutsch**:
+pool capacity, protection states, threshold controls, nine scenarios, dry-check
+history and light/dark themes. It works offline and does not connect to a NAS.
+This is an interface concept, not the installed Unraid UI. Its decisions are
+illustrative JavaScript; the separate Python simulation tests the actual guard.
+See [demo instructions](docs/demo/README.md).
+
+![FejesMover interactive interface concept — synthetic data](docs/demo/preview.jpg)
+
 ## Features
 
 - Dashboard tile with Mover process status and cache usage.
@@ -11,10 +23,13 @@ Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 - Recent Mover-related syslog lines, escaped before display.
 - Polling only while the page is visible, with timeouts and stale-data notices.
 - Optional settings page for an existing `Filmek_Mover_Threshold` User Scripts automation.
+- Shared protection page: read-only torrent/cache diagnostics and explicit wiring of the existing File Integrity schedule.
+- Bundled torrent and scheduled integrity helpers, plus an opt-in guarded legacy Mover launcher.
 
 ## Requirements and limits
 
 - Unraid 7.0+ and its bundled PHP 8; the original local version was used on Unraid 7.3.3.
+- Python 3 is required at installation. Protection checks additionally require Docker CLI, a local qBittorrent API on port 8080 and curl in `binhex-qbittorrentvpn`.
 - This first version monitors a pool named **cache** at `/mnt/cache`. Arbitrarily named pools and multi-pool selection are not supported yet.
 - The interface is in Hungarian. English translation is not included yet.
 - Mover activity is inferred from `/var/run/mover.pid` and `/proc`. Custom Mover implementations may not be detected.
@@ -22,7 +37,8 @@ Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 - The cache-to-array diagram is illustrative. Actual movement direction is controlled by each share's Unraid settings.
 - The optional threshold panel requires the pre-existing script at `/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script`. It is not distributed here. Without it, monitoring still works and settings explain that the optional automation is unavailable.
 - The settings panel changes only `KUSZOB_GIB` and `UJRA_PROBALKOZAS_MP`, after CSRF, version, range, lock and shell-syntax checks. It saves a backup first. The legacy UI interprets `UJRA_PROBALKOZAS_MP` as minutes; check your script's semantics before using this panel with a different script.
-- The plugin does not install a scheduler, start Mover, move files or provide backup/parity guards itself. Those remain the responsibility of Unraid and any existing automation.
+- Installation does not change schedules or start work. The protection page can explicitly redirect an existing File Integrity job, retaining its schedule and checks. Its standalone `run-mover` command gates the existing legacy launcher; it does not replace its backup/parity safeguards. The opt-in `wire_mover_gate.py --apply` installer now supports the reviewed legacy script: it adds the gate before the attempt timestamp, with a launch lock, mount check and backup. Unknown source changes are rejected. It changes no schedule and starts no Mover.
+- The global Mover gate defers for unfinished/busy torrents or unavailable data. Cache pressure is reported, never used to bypass protection. It cannot keep cache draining indefinitely during large downloads; capacity planning and selective Mover exclusions remain separate work.
 
 ## Planned installation after Unraid acceptance testing
 
@@ -36,17 +52,41 @@ https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monit
 
 The manifest contains the runtime pages. It does not rely on files from the author's NAS. The installer checks PHP syntax before activating them.
 
-Open **Tools → Mover figyelő** or the dashboard tile. Plugin updates use the manifest URL above.
+Open **Tools → Mover figyelő** or **Tools → FejesMover védelem**. Plugin updates use the manifest URL above. The manifest now includes the Python helpers; no separate helper download is required.
 
 ## Uninstall
 
-Remove `fejes.mover.monitor` through Unraid's Plugins page. Its three runtime pages are removed. Existing local automation scripts and `/boot/config/plugins/fejes.mover.monitor/backups` are preserved.
+Remove `fejes.mover.monitor` through Unraid's Plugins page. Before removing its four pages, it removes its recognized additions from the legacy launcher and restores the original File Integrity command if the recognized integrated schedule is present. Reload failure rolls the cron file back and stops removal. Existing automation, configuration, backups and helper files are preserved; externally wired launchers therefore retain their dependencies. Unreviewed cron formats stop removal for inspection.
 
 ## Privacy and support
 
 No telemetry, credentials, server logs or user files are shipped in this repository. Live file paths and syslog excerpts are shown only inside the authenticated Unraid interface. Redact personal filenames before posting screenshots.
 
 Report problems at [GitHub Issues](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues). Include your Unraid version, pool name and reproduction steps. Do not attach credentials or full private logs.
+
+## Optional torrent preflight for an external Mover launcher
+
+`python3 tools/torrent_preflight.py` performs a read-only qBittorrent check.
+It returns 0 only when every reported torrent is complete and in a known seed
+state; unfinished, stopped downloads, checks and moves return 10. API failures,
+unknown states and invalid snapshots return 20. Both nonzero results mean defer.
+The optional `--json` report includes host paths and must be kept private.
+
+This tool **is bundled and installed by the PLG**. Running it alone does not change the
+legacy launcher, Unraid Mover or Dynamix File Integrity. It cannot enforce
+per-file Mover exclusions or prevent a torrent starting after its snapshot.
+See [torrent / Mover / File Integrity integration notes](docs/TORRENT-INTEGRITY-HU.md)
+before wiring it into an existing script. The live launcher must be reviewed
+first; the reviewed source is retained only as an isolated test fixture.
+
+Run its isolated tests with `python3 tools/torrent_preflight_test.py`.
+
+`python3 tools/integrity_preflight.py --check-only` validates the installed
+generated File Integrity schedule against the same live torrent snapshot.
+Without `--check-only`, it runs that schedule with literal folder/share
+exclusions passed to Bunker. Run `python3 tools/integrity_preflight_test.py`
+for its isolated tests. This tool is bundled and installed by the PLG, but is not
+automatically scheduled or enabled. Wiring the existing schedule is explicit.
 
 ## Build
 
@@ -66,8 +106,18 @@ MIT. Copyright 2026 FejesNAS contributors.
 
 See [release status and remaining acceptance tests](docs/RELEASE-STATUS.md). Earlier packaging and testing notes describe the previous archive-based prototype; this candidate uses the self-contained manifest and `src/` files.
 
+## USB-free Mover simulation
+
+Run `python3 tools/simulate.py --output /tmp/fejes-demo-report` on Linux.
+The real reviewed launcher and torrent assessor run against 12 synthetic NAS
+scenarios, including an actual checksummed test-file move. Open the generated
+`index.html` for the visual report. No root, USB or Unraid license is needed.
+See [instructions and limits](docs/SIMULATION.md). GitHub Actions also runs it
+and retains HTML/JSON evidence. This does not replace live Unraid acceptance.
+
 ## Optional support
 
 Fejes Mover Monitor is free and open source. If you find it useful, you can [support FejesNAS development via PayPal](https://paypal.me/FejesG). Support is voluntary and does not unlock features or guarantee support or development timelines.
 
 A Fejes Mover Monitor ingyenes és nyílt forráskódú. Ha hasznosnak találod, [támogathatod a FejesNAS fejlesztéseit PayPalon](https://paypal.me/FejesG). A támogatás önkéntes.
+

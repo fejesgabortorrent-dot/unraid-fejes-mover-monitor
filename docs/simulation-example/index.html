@@ -1,0 +1,25 @@
+<!doctype html><html lang="hu"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>FejesMover • Szimuláció</title><style>
+body{font:16px system-ui;background:#101820;color:#edf4f6;max-width:1100px;margin:40px auto;padding:20px}
+h1{color:#ff983f}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:16px;border-bottom:1px solid #34434d}
+pre{white-space:pre-wrap;font-size:12px}p{line-height:1.6}strong{color:#79e2b0}details{max-width:480px}
+</style><h1>FejesMover / Szimuláció</h1><p>Valódi védelmi kód, szintetikus NAS-állapotok.
+A mozgatás kizárólag ideiglenes tesztfájlokon történik. Ez nem élő Unraid-integrációs teszt.</p><p><strong>12 / 12 sikeres forgatókönyv</strong></p><table><thead><tr><th>Helyzet</th><th>Ellenőrzés</th><th>Tesztfájl</th><th>Bizonyíték</th></tr></thead><tbody><tr><td>Kevés hely, kész torrentek</td><td>PASS</td><td>Áthelyezve</td><td><details><summary>Napló</summary><pre>Real torrent assessor: no_torrent_blocker
+[Filmek Mover] Cache: 100.0 GiB szabad | küszöb: 300 GiB | MOVER INDÍTÁS
+SIMULATION: synthetic file moved
+</pre></details></td></tr><tr><td>Elegendő szabad hely</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>[Filmek Mover] Cache: 633.0 GiB szabad | küszöb: 300 GiB | OK
+</pre></details></td></tr><tr><td>Pontosan 300 GiB szabad</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>[Filmek Mover] Cache: 300.0 GiB szabad | küszöb: 300 GiB | OK
+</pre></details></td></tr><tr><td>Aktív letöltés</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>Real torrent assessor: defer
+[Filmek Mover] Torrentellenorzes halasztast kert | Mover nem indul | Varakozasi idobelyeg valtozatlan
+</pre></details></td></tr><tr><td>99,95%-os megakadt letöltés</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>Real torrent assessor: defer
+[Filmek Mover] Torrentellenorzes halasztast kert | Mover nem indul | Varakozasi idobelyeg valtozatlan
+</pre></details></td></tr><tr><td>100%-os torrent ellenőrzése</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>Real torrent assessor: defer
+[Filmek Mover] Torrentellenorzes halasztast kert | Mover nem indul | Varakozasi idobelyeg valtozatlan
+</pre></details></td></tr><tr><td>Nem elérhető torrent API</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>SIMULATED API unavailable
+[Filmek Mover] Torrentellenorzes halasztast kert | Mover nem indul | Varakozasi idobelyeg valtozatlan
+</pre></details></td></tr><tr><td>Appdata-mentés fut</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>[Filmek Mover] Cache: 100.0 GiB szabad | Appdata mentes fut | Mover halasztva
+</pre></details></td></tr><tr><td>Paritásművelet fut</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>[Filmek Mover] Cache: 100.0 GiB szabad | Paritasmuvelet fut | Mover halasztva
+</pre></details></td></tr><tr><td>Mover már fut</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>[Filmek Mover] Cache: 100.0 GiB szabad | küszöb: 300 GiB | Mover már fut
+</pre></details></td></tr><tr><td>Újrapróbálkozási várakozás</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>[Filmek Mover] Cache: 100.0 GiB szabad | küszöb: 300 GiB | várakozás aktív, még kb. 360 perc
+</pre></details></td></tr><tr><td>Cache nincs felcsatolva</td><td>PASS</td><td>Halasztva</td><td><details><summary>Napló</summary><pre>[Filmek Mover] HIBA: A cache pool nincs felcsatolva
+</pre></details></td></tr></tbody></table></html>
