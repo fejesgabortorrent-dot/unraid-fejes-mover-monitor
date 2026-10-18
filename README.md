@@ -94,6 +94,15 @@ MIT. Copyright 2026 FejesNAS contributors.
 
 See [release status and remaining acceptance tests](docs/RELEASE-STATUS.md). Earlier packaging and testing notes describe the previous archive-based prototype; this candidate uses the self-contained manifest and `src/` files.
 
+## USB-free Mover simulation
+
+Run `python3 tools/simulate.py --output /tmp/fejes-demo-report` on Linux.
+The real reviewed launcher and torrent assessor run against 12 synthetic NAS
+scenarios, including an actual checksummed test-file move. Open the generated
+`index.html` for the visual report. No root, USB or Unraid license is needed.
+See [instructions and limits](docs/SIMULATION.md). GitHub Actions also runs it
+and retains HTML/JSON evidence. This does not replace live Unraid acceptance.
+
 ## Optional support
 
 Fejes Mover Monitor is free and open source. If you find it useful, you can [support FejesNAS development via PayPal](https://paypal.me/FejesG). Support is voluntary and does not unlock features or guarantee support or development timelines.

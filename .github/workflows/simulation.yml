@@ -1,0 +1,20 @@
+name: Isolated Mover simulation
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  simulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run real guard and launcher with synthetic boundaries
+        run: python3 tools/simulate.py --output simulation-report
+      - name: Save reviewable HTML and JSON evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fejes-mover-simulation
+          path: simulation-report/
