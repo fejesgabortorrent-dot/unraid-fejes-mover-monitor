@@ -1,11 +1,17 @@
 import pathlib
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import wire_integrity_cron as wire
 
 
 class WiringTest(unittest.TestCase):
+    def test_reload_uses_explicit_bash_for_unraid_script(self):
+        with patch.object(wire.subprocess, "run") as run:
+            wire.reload_cron()
+        run.assert_called_once_with(["bash", "/usr/local/sbin/update_cron"], check=True)
+
     def test_preserves_schedule_and_does_not_duplicate_jobs(self):
         source = "# Generated file integrity check schedule:\n0 5 * * 0 " + wire.ORIGINAL + " &> /dev/null\n\n"
         updated = wire.rewrite_cron(source)

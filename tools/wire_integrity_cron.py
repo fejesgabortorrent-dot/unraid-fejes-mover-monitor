@@ -45,6 +45,11 @@ def atomic_write(path, text, mode):
             os.unlink(temp)
 
 
+def reload_cron():
+    # Unraid versions may ship this script without a valid #! interpreter line.
+    subprocess.run(["bash", "/usr/local/sbin/update_cron"], check=True)
+
+
 def main():
     cron = ROOT / "integrity-check.cron"
     with open("/var/run/fejes-integrity-cron.lock", "w") as lock:
@@ -55,7 +60,8 @@ def main():
             raise ValueError("Preflight tools are not installed")
         subprocess.run(["python3", str(GUARD), "--check-only"], check=True)
         if source == changed:
-            print("Existing cron job already uses the preflight; no change.")
+            reload_cron()
+            print("Existing cron job already uses the preflight; system cron reloaded.")
             return 0
         # Do not use .cron suffix for backups: Unraid must not schedule backups.
         backup = ROOT / ("integrity-cron-before-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f") + ".txt")
@@ -65,10 +71,10 @@ def main():
         mode = cron.stat().st_mode & 0o777
         atomic_write(cron, changed, mode)
         try:
-            subprocess.run(["/usr/local/sbin/update_cron"], check=True)
+            reload_cron()
         except (OSError, subprocess.SubprocessError):
             atomic_write(cron, source, mode)
-            subprocess.run(["/usr/local/sbin/update_cron"], check=True)
+            reload_cron()
             raise
         print("Existing File Integrity schedule now uses the preflight.")
         print("Backup:", backup)
@@ -80,5 +86,6 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
-        print("Cron integration did not complete:", type(exc).__name__)
+        print("Cron integration did not complete:", type(exc).__name__,
+              "errno=" + str(getattr(exc, "errno", None)))
         sys.exit(20)
