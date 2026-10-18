@@ -108,8 +108,9 @@ a futás közbeni összehangolás külön fejlesztés és élő teszt feladata.
    A scheduled verify és az eseményfigyelő külön útvonal, mindkettőt vizsgálni kell.
    A beolvasott bunker külön `-E` (megosztás) és `-F` (mappa) argumentummal fogad
    kizárásokat, míg a megvizsgált ütemezett generátor ezeket nem adta át. A pontos
-   argumentumformát és a szelekció hatókörét a bunker forrásából még ellenőrizni
-   kell; a watcher `folders` beállításától nem állítható, hogy a cron is védett.
+   argumentumformát a bunker forrásából ellenőriztük: vesszővel elválasztott
+   mintákat vesz át, és sed ERE-ként használja őket. A watcher `folders`
+   beállításától nem állítható, hogy a cron is védett.
 3. A kizárt tartalom befejezése után a kizárást fel kell oldani, a kész adatot
    pedig hash-elni kell. Statikus kizárás nem maradhat elfelejtve.
 4. A közös torrentmappákat és a meglévő hashértékeket külön kell kezelni.
@@ -120,13 +121,55 @@ a futás közbeni összehangolás külön fejlesztés és élő teszt feladata.
 Az ellenőrző ezeket **nem automatizálja**, és a jelenlegi watcher-konfigurációt
 sem módosítja. A GitHub-változás nem jelent kész NAS-telepítést.
 
+## Az ütemezett ellenőrzés külön előellenőrzője
+
+```bash
+python3 tools/integrity_preflight.py --check-only
+```
+
+Az új indító beolvassa a meglévő generált `integrity-check.sh` scriptet és a
+File Integrity konfigurációját. Az éppen félkész vagy elfoglalt torrentek
+bind mounttal feloldott mappaneveit hozzáadja a statikus mappakizárásokhoz.
+A bunkernek `-F`, a megosztáskizárásokhoz `-E` argumentumot ad át, idézőjelezve
+és a sed reguláris kifejezései számára literálisan escape-elve. Egyszerű
+betű/szám/pont/kötőjel/aláhúzás/plusz/szóköz mappaneveket támogat; más mintánál
+halaszt. Egyforma nevű mappák más helyen is kimaradhatnak: ez konzervatív
+túl-kizárás. Egyedi fájlmaszkot tartalmazó konfigurációt nem támogat.
+
+Csak a megvizsgált generált shell-formátumot fogadja el. Megőrzi az eredeti
+paritásfeltételt, heti lemezrotációt, nice/ionice és értesítési argumentumokat.
+A kész torrentek nem okoznak globális halasztást; az aktív tartalommappákat
+kizárja, a többi lemezterület ellenőrizhető marad. A statikus `folders`
+kizárásokat a letöltés elkészülte önmagában nem törli: a korábban átmenetileg
+felvett bejegyzéseket külön, ellenőrzötten fel kell oldani.
+
+`--check-only` esetén csak API-olvasás és `bash -n` történik; nincs hash-elés,
+konfiguráció- vagy időzítésmódosítás. Enélkül az eredeti ütemezett script
+módosított példányát adja a bash stdin-jére; az eredeti scriptet nem írja át.
+Ez a funkció nem fájltörlés, nem új checksum-baseline írása, és nem automatikus
+korrupciójavítás. A meglévő ütemezés és értesítések mögöttes bunker-viselkedését
+nem változtatja meg. Az eredeti script háttérfeladatai tovább futhatnak az
+indító kilépése után, ugyanúgy, mint a plugin generált scriptjénél.
+
+Telepítéskor a két Python-fájlt egy mappába kell tenni. A cron bekötés külön
+lépés: egy már létező ütemezés mellé nem szabad másodikat engedélyezni.
+Az eredeti ütemezést és generált scriptet menteni kell. Ha később az ütemezés,
+lemezkiosztás vagy plugin formátuma változik, az integrációt újra ellenőrizni
+kell. A wrapper nem tudja megakadályozni, hogy a pillanatkép után új írás
+kezdődjön; az eseményfigyelő és az ideiglenes letöltési hely továbbra is külön
+kezelendő. Éles ütemezésbe még nincs bekötve.
+
 ## Ellenőrzés
 
 ```bash
 python3 tools/torrent_preflight_test.py
+python3 tools/integrity_preflight_test.py
 ```
 
 A tesztek hálózat és NAS-módosítás nélkül futnak. Lefedik a kész seedeket,
 megállított és közel kész letöltést, ellenőrzést/áthelyezést, közös tartalomutat,
 mountfeloldást, hibás adatot, időtúllépést és a privát kimenet elkerülését.
 Éles Unraid-, Mover- és File Integrity-integrációs teszt még szükséges.
+Az ütemezett indító további 8 tesztje ellenőrzi a sed-kizárások tényleges
+illeszkedését, a meglévő parancsok megőrzését, hibánál a végrehajtás tiltását,
+és hogy az ellenőrző mód nem indít hash-elést vagy ír át konfigurációt.

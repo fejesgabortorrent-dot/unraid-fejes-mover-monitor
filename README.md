@@ -65,6 +65,13 @@ first; it is not included in this repository.
 
 Run its isolated tests with `python3 tools/torrent_preflight_test.py`.
 
+`python3 tools/integrity_preflight.py --check-only` validates the installed
+generated File Integrity schedule against the same live torrent snapshot.
+Without `--check-only`, it runs that schedule with literal folder/share
+exclusions passed to Bunker. Run `python3 tools/integrity_preflight_test.py`
+for its isolated tests. This tool is also standalone and is not automatically
+installed, scheduled or enabled by the PLG.
+
 ## Build
 
 ```
