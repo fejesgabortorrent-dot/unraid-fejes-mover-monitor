@@ -55,11 +55,29 @@ A lista diagnosztikai adat: önmagában nem léptet életbe semmilyen kizárást
 Az alap szöveges kimenet nem ír ki fájlneveket; a JSON személyes útvonalakat
 tartalmazhat, ezért nyilvános hibajegybe változatlanul ne kerüljön.
 
+### A leállított, közös mappájú torrent korlátja
+
+Az élő felmérésben egy megállított félkész torrent ugyanazt a mappát használta,
+mint az aktív változat. Ez a konzervatív ellenőrző mindaddig halasztást ad,
+amíg a megállított bejegyzés félkésznek jelzi magát, akkor is, ha a másik
+időközben elkészül. Nem szabad változtatás nélkül automatikus indítási kapuként
+bekötni olyan rendszeren, ahol ilyen bejegyzés marad: az tartós Mover-halasztást
+és szabadhelyhiányt okozhat. A közös tartalom kezelését előbb rendezni kell;
+az ellenőrző ezt nem oldja meg automatikus torrent- vagy fájltörléssel.
+
 ## Beillesztés a meglévő indítóba
 
 Az élő indítót előbb be kell olvasni és ellenőrizni. Az alábbi csak beillesztési
 minta, nem önálló telepítő. Az ellenőrző útvonala a tényleges telepítés helye
 legyen; a jelenlegi PLG nem telepíti ezt a Python-fájlt.
+
+A később beolvasott élő indító szabadhely-küszöböt, backup PID-et, paritásállapotot,
+Mover PID-fájlt és percben számolt újrapróbálkozási időt vizsgál. Az indítási
+időbélyeget közvetlenül a Mover meghívása előtt írja. Ezeket a bekötésnél meg
+kell tartani, a torrent miatti halasztás pedig nem fogyaszthatja el az
+újrapróbálkozási időablakot. A beolvasott verzió nem tartalmaz külön scrub-őrt,
+folyamatok közötti indítási zárat vagy a cache mount tényleges ellenőrzését;
+ezek meglétét a figyelő UI-ja sem állíthatja.
 
 ```bash
 # A meglévő backup-, paritás-, scrub-, mount- és zárolásellenőrzések megtartandók.
@@ -88,6 +106,10 @@ a futás közbeni összehangolás külön fejlesztés és élő teszt feladata.
    indít. Ez a megvizsgált telepítés viselkedése, nem általános verziógarancia.
 2. A kizárásnak a még változó tartalmat kell védenie, nem a teljes médiamegosztást.
    A scheduled verify és az eseményfigyelő külön útvonal, mindkettőt vizsgálni kell.
+   A beolvasott bunker külön `-E` (megosztás) és `-F` (mappa) argumentummal fogad
+   kizárásokat, míg a megvizsgált ütemezett generátor ezeket nem adta át. A pontos
+   argumentumformát és a szelekció hatókörét a bunker forrásából még ellenőrizni
+   kell; a watcher `folders` beállításától nem állítható, hogy a cron is védett.
 3. A kizárt tartalom befejezése után a kizárást fel kell oldani, a kész adatot
    pedig hash-elni kell. Statikus kizárás nem maradhat elfelejtve.
 4. A közös torrentmappákat és a meglévő hashértékeket külön kell kezelni.
