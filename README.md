@@ -14,6 +14,8 @@ This is an interface concept, not the installed Unraid UI. Its decisions are
 illustrative JavaScript; the separate Python simulation tests the actual guard.
 See [demo instructions](docs/demo/README.md).
 
+![FejesMover interactive interface concept — synthetic data](docs/demo/preview.jpg)
+
 ## Features
 
 - Dashboard tile with Mover process status and cache usage.
