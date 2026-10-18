@@ -1,5 +1,59 @@
 # Torrent, Mover és File Integrity — 2026-10-18
 
+## Közös csomag — fejlesztési állapot
+
+A 2026.10.18-as munkaváltozat PLG-je már tartalmazza mind a négy közös
+Python-segédet. A **Tools → FejesMover védelem** oldalon kézzel kérhető
+állapotellenőrzés: torrentblokkolók száma, a valóban felcsatolt cache szabad
+helye, a hátralévő letöltések felső becslése és a File Integrity mentett/aktív
+cron-bekötése. A GET megnyitás nem indít Docker-lekérést. A POST műveletekhez
+CSRF-ellenőrzés tartozik. A felület csak rögzített ellenőrző és cron-bekötő
+parancsokat enged; Movert nem indít.
+
+A kapacitásbecslés minden `amount_left` értéket összegzi. Ez közös tartalomnál
+vagy már a tömbre töltött adatoknál túlbecslés. Hiányzó adatnál nem állítja,
+hogy minden elfér. A 20 GiB számítási tartalék nem lefoglalt hely, és nem
+írja át a meglévő Mover-küszöböt. Helyhiány sem ad felmentést a védelem alól.
+
+Telepítéskor a Python és PHP források ellenőrzése megelőzi a runtime-fájlok
+cseréjét. A segédek a korábbi kézi telepítés helyére kerülnek, változásuk előtt
+mentéssel; a PLG önmagában nem köt át időzítést. A közös oldalon külön gomb
+alkalmazza a már tesztelt, idempotens File Integrity-bekötést.
+
+Eltávolítás előtt a `wire_integrity_cron.py --remove` API-kapcsolat nélkül
+visszaállítja a felismert saját cron-bekötést az eredeti indítóra. Mentést
+készít, újratölti az Unraid cront, hiba esetén visszagörget és megállítja az
+eltávolítást. A segédek és mentések megmaradnak, mert külön bekötött indító
+is hivatkozhat rájuk. Más ütemezést és a watcher kizárásait nem írja át.
+
+A védett Mover-belépési pont:
+
+```bash
+python3 /boot/config/plugins/fejes.mover.monitor/tools/fejes_service.py status
+python3 /boot/config/plugins/fejes.mover.monitor/tools/fejes_service.py run-mover
+```
+
+A második parancs **indításra jogosult**: folyamatok közötti zár, ellenőrzött
+torrentpillanatkép, felcsatolt cache és hiányzó Mover PID után az eredeti
+`Filmek_Mover_Threshold/script` fájlt futtatja. A teljes meglévő script marad,
+így a backup-/paritás-/küszöb-/várakozásellenőrzések és időbélyegek annak
+részei maradnak. Torrent miatti halasztás nem futtatja a scriptet és nem
+fogyasztja el a várakozási időt. A wrapper nem másolható a meglévő script
+helyére; ezt rekurzióvédelem is ellenőrzi.
+
+**Az éles Mover-ütemezés még nincs erre átirányítva.** Ehhez a teljes aktuális
+NAS-script és a hívó ütemezés ellenőrzése szükséges. Az eredeti ütemezést és
+egy második wrappert együtt engedélyezni tilos: az eredeti megkerülné a kaput.
+A globális halasztás nem szelektív fájlkizárás. A pillanatkép után induló új
+letöltéseket nem zárja ki, és a kézzel indított Movert sem szabályozza.
+
+A watcher statikus kizárásainak befejezés utáni feloldása, a kész adatok első
+hash-elése, a cache folyamatos ürítése nagy aktív letöltés közben, valamint a
+NAS-os telepítés/eltávolítás/reboot elfogadási próba továbbra is hátravan.
+
+Az alábbi eredeti feljegyzések a különálló segédek vizsgálatát és élő próbáit
+őrzik. A csomagolásra vonatkozó korábbi korlátokat a fenti állapot váltja fel.
+
 ## Mi derült ki az élő vizsgálatból?
 
 - A qBittorrentben az ideiglenes letöltési mappa ki volt kapcsolva. A félkész

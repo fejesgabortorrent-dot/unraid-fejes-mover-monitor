@@ -11,10 +11,13 @@ Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 - Recent Mover-related syslog lines, escaped before display.
 - Polling only while the page is visible, with timeouts and stale-data notices.
 - Optional settings page for an existing `Filmek_Mover_Threshold` User Scripts automation.
+- Shared protection page: read-only torrent/cache diagnostics and explicit wiring of the existing File Integrity schedule.
+- Bundled torrent and scheduled integrity helpers, plus an opt-in guarded legacy Mover launcher.
 
 ## Requirements and limits
 
 - Unraid 7.0+ and its bundled PHP 8; the original local version was used on Unraid 7.3.3.
+- Python 3 is required at installation. Protection checks additionally require Docker CLI, a local qBittorrent API on port 8080 and curl in `binhex-qbittorrentvpn`.
 - This first version monitors a pool named **cache** at `/mnt/cache`. Arbitrarily named pools and multi-pool selection are not supported yet.
 - The interface is in Hungarian. English translation is not included yet.
 - Mover activity is inferred from `/var/run/mover.pid` and `/proc`. Custom Mover implementations may not be detected.
@@ -22,7 +25,8 @@ Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 - The cache-to-array diagram is illustrative. Actual movement direction is controlled by each share's Unraid settings.
 - The optional threshold panel requires the pre-existing script at `/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script`. It is not distributed here. Without it, monitoring still works and settings explain that the optional automation is unavailable.
 - The settings panel changes only `KUSZOB_GIB` and `UJRA_PROBALKOZAS_MP`, after CSRF, version, range, lock and shell-syntax checks. It saves a backup first. The legacy UI interprets `UJRA_PROBALKOZAS_MP` as minutes; check your script's semantics before using this panel with a different script.
-- The plugin does not install a scheduler, start Mover, move files or provide backup/parity guards itself. Those remain the responsibility of Unraid and any existing automation.
+- Installation does not change schedules or start work. The protection page can explicitly redirect an existing File Integrity job, retaining its schedule and checks. Its standalone `run-mover` command gates the existing legacy launcher; it does not replace its backup/parity safeguards. Existing User Scripts wiring still needs a separate review of the full live script.
+- The global Mover gate defers for unfinished/busy torrents or unavailable data. Cache pressure is reported, never used to bypass protection. It cannot keep cache draining indefinitely during large downloads; capacity planning and selective Mover exclusions remain separate work.
 
 ## Planned installation after Unraid acceptance testing
 
@@ -36,11 +40,11 @@ https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monit
 
 The manifest contains the runtime pages. It does not rely on files from the author's NAS. The installer checks PHP syntax before activating them.
 
-Open **Tools → Mover figyelő** or the dashboard tile. Plugin updates use the manifest URL above.
+Open **Tools → Mover figyelő** or **Tools → FejesMover védelem**. Plugin updates use the manifest URL above. The manifest now includes the Python helpers; no separate helper download is required.
 
 ## Uninstall
 
-Remove `fejes.mover.monitor` through Unraid's Plugins page. Its three runtime pages are removed. Existing local automation scripts and `/boot/config/plugins/fejes.mover.monitor/backups` are preserved.
+Remove `fejes.mover.monitor` through Unraid's Plugins page. Before removing its four pages, it restores the original File Integrity command if the recognized integrated schedule is present. Reload failure rolls the cron file back and stops removal. Existing automation, configuration, backups and helper files are preserved; externally wired launchers therefore retain their dependencies. Unreviewed cron formats stop removal for inspection.
 
 ## Privacy and support
 

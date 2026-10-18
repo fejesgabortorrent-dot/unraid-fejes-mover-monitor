@@ -23,6 +23,7 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
         '/var/run/fejes-mover-settings.lock': str(lab / 'settings.lock'),
         '/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script': str(lab / 'automation/script'),
         '/boot/config/plugins/fejes.mover.monitor/backups': str(lab / 'backups'),
+        '/boot/config/plugins/fejes.mover.monitor/tools/': str(lab / 'helpers') + '/',
         '/var/log/syslog': str(lab / 'syslog'),
         '/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.txt': str(lab / 'script.log'),
         '/mnt/cache': str(lab / 'cache'),
@@ -58,6 +59,20 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     check('Syslog HTML is escaped', '&lt;script&gt;' in page and '<script>alert("test")</script>' not in page)
     settings = render('FejesMoverSettings.page')
     check('Missing optional automation is handled', 'A script nincs telepítve' in settings)
+    protection = render('FejesMoverProtection.page')
+    check('Common protection page renders without API calls', 'Összehangolt védelem' in protection and 'Állapot ellenőrzése' in protection)
+    rejected = render('FejesMoverProtection.page', {'fp_csrf':'wrong', 'fp_action':'wire'})
+    check('Protection actions reject invalid CSRF', 'Lejárt munkamenet' in rejected)
+    rejected = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'run-mover'})
+    check('Protection UI cannot start Mover', 'Ismeretlen művelet' in rejected)
+    (lab / 'helpers').mkdir()
+    (lab / 'helpers/fejes_service.py').write_text('import json\nprint(json.dumps('+repr({'torrent':'defer','checked_torrents':7,'blocking_torrents':2,'cache_free_bytes':1073741824,'remaining_upper_bound_bytes':2147483648,'pressure':'warning','integrity_config':'wired','integrity_active':'not_verified'})+'))\n')
+    snapshot = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'check'})
+    check('Authenticated protection check renders returned diagnostics', 'Halasztás: félkész' in snapshot and '1,0 GiB' in snapshot and 'Az aktív bekötés nem igazolt' in snapshot)
+    marker = lab / 'wired'
+    (lab / 'helpers/wire_integrity_cron.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').touch()\n')
+    wired = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'wire'})
+    check('Authenticated wiring invokes only the fixed helper', marker.exists() and 'bekötése lefutott' in wired)
     dashboard = render('FejesMover.Dashboard.page')
     check('Dashboard tile renders without PHP warnings', 'TILE=' in dashboard and 'MOVER FIGYEL' in dashboard)
     (lab / 'mover.pid').write_text('4242')
