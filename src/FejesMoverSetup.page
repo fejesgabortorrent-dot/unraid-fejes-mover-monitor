@@ -1,0 +1,60 @@
+Menu="Utilities"
+Title="Mover · Mód és pool"
+Icon="fa-sliders"
+Tag="cogs"
+---
+<?php
+$fmcConfigWrite=true;
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  if(!is_resource($fmc['lock'])||$fmc['error'])throw new RuntimeException('A módváltás most nem lehetséges. Töltsd újra az oldalt.');
+  if(!is_string($_POST['fmc_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fmc_csrf']))throw new RuntimeException('Lejárt munkamenet. Töltsd újra az oldalt.');
+  if(!is_string($_POST['config_hash']??null)||!hash_equals($fmc['hash'],$_POST['config_hash']))throw new RuntimeException('A módbeállítás közben megváltozott. Töltsd újra az oldalt.');
+  $newMode=$_POST['mode']??null;$newPool=$_POST['pool']??null;
+  if(!is_string($newMode)||!in_array($newMode,['demo','observer','advanced'],true))throw new RuntimeException('Érvénytelen működési mód.');
+  if(!is_string($newPool)||!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D',$newPool))throw new RuntimeException('Érvénytelen pool.');
+  if($newMode!=='demo'&&!array_key_exists($newPool,$fmc['pools']))throw new RuntimeException('Csak Unraidban beállított pool választható.');
+  if($newMode==='advanced'&&($_POST['advanced_ack']??'')!=='yes')throw new RuntimeException('A Haladó módhoz külön jóváhagyás szükséges.');
+  // The existing automation is explicitly hard-coded for cache. Do not imply it
+  // follows the monitor pool selector or reinterpret a custom script.
+  if($newMode==='advanced'&&$newPool!=='cache')throw new RuntimeException('A meglévő script szerkesztése csak cache pool mellett engedélyezett.');
+  $saved=['version'=>1,'mode'=>$newMode,'pool'=>$newPool];
+  $data=json_encode($saved,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)."\n";
+  if($data!==$fmc['raw']){
+   $dir=dirname($fmc['pathConfig']);
+   if(!is_dir($dir)&&!@mkdir($dir,0700,true))throw new RuntimeException('A módbeállítás mentése sikertelen.');
+   $tmp=tempnam($dir,'.settings-');
+   if(!$tmp)throw new RuntimeException('A módbeállítás mentése sikertelen.');
+   try{
+    if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$fmc['pathConfig']))throw new RuntimeException('A módbeállítás mentése sikertelen.');
+   }finally{if(is_file($tmp))unlink($tmp);}
+   if(file_get_contents($fmc['pathConfig'])!==$data)throw new RuntimeException('A módbeállítás visszaellenőrzése sikertelen.');
+  }
+  $fmcMessage='A mód és a figyelt pool elmentve. Ez nem indít Movert.';
+  $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
+ }catch(Throwable $e){$fmcError=$e->getMessage();}
+}
+?>
+<style>
+#fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
+</style>
+<main id="fmc-setup"><h1>Működési mód és figyelt pool</h1>
+<p>Unraid 7.x · A telepítés alapértelmezése: Megfigyelő mód. A módváltás nem indít mozgatást.</p>
+<?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
+<?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
+<form method="post" action="/Tools/FejesMoverSetup">
+<input type="hidden" name="csrf_token" value="<?=$fmcEsc($fmc['token'])?>"><input type="hidden" name="fmc_csrf" value="<?=$fmcEsc($fmc['token'])?>"><input type="hidden" name="config_hash" value="<?=$fmcEsc($fmc['hash'])?>">
+<fieldset><legend>Működési mód</legend><div class="fmc-options">
+<label class="fmc-option"><input type="radio" name="mode" value="demo" <?=$fmc['mode']==='demo'?'checked':''?>> <strong>Demó</strong><p>Szimulált adatok. Nem olvassa az élő Mover-folyamatokat, naplókat vagy az automatika scriptjét. A scriptszerkesztés tiltva.</p></label>
+<label class="fmc-option"><input type="radio" name="mode" value="observer" <?=$fmc['mode']==='observer'?'checked':''?>> <strong>Megfigyelő</strong><p>Valódi állapotokat olvas. Az automatika scriptjének módosítása tiltva. Ajánlott alapbeállítás.</p></label>
+<label class="fmc-option"><input type="radio" name="mode" value="advanced" <?=$fmc['mode']==='advanced'?'checked':''?>> <strong>Haladó</strong><p>Bekapcsolja a meglévő Filmek_Mover_Threshold script paraméterszerkesztőjét. Csak cache pool mellett. Nem telepít és nem indít automatikát.</p></label>
+</div></fieldset>
+<fieldset><legend>Figyelt pool</legend><label for="fmc-pool">Unraid pool</label> <select id="fmc-pool" name="pool">
+<?php $poolOptions=$fmc['pools'];if(!$poolOptions)$poolOptions=['cache'=>false];foreach($poolOptions as $name=>$mounted):?>
+<option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · nem csatolt'?></option>
+<?php endforeach?></select><p>A lista az Unraid poolbeállításaiból származik. A nem csatolt pool kapacitása ismeretlen marad.</p></fieldset>
+<fieldset><legend>Haladó mód jóváhagyása</legend><label><input type="checkbox" name="advanced_ack" value="yes"> Értem, hogy a Haladó mód a meglévő automatika scriptjét is módosíthatja.</label><p>A mód- és poolválasztás kizárólag a bővítmény saját beállítását menti. Az automatika csak külön mentéskor változik, biztonsági másolattal.</p></fieldset>
+<button type="submit">Mód és pool mentése</button> <a href="/Tools/FejesMover">Vissza a Mover figyelőhöz</a>
+</form></main>

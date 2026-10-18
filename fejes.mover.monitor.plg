@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.17.1" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
+<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.18.1" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
 <CHANGES>
+### 2026.10.18.1 (beta)
+- Unraid 7.x preflight; observer mode by default, demo and explicit advanced opt-in.
+- Select a configured Unraid pool for observation; legacy script editor remains cache-only.
+- Persist plugin mode/pool independently; never start Mover from the setup page.
 ### 2026.10.17.1
 - Hungarian, US English and German interfaces with a persistent language selector.
 - Correct unavailable/full cache readings, mounted-cache checks and refresh pause state.
@@ -10,7 +14,7 @@
 - Optional legacy threshold settings, retained only on systems with the existing script.
 - Installer validates PHP before activation and preserves local backup files.
 </CHANGES>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.17.1/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.18.1/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
 ---
 <?php
 $fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
@@ -19,18 +23,24 @@ $fmLanguageSelector="<label style=\"display:inline-block;margin:10px 12px;font-s
 $fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fmLang==='hu'?'selected':'',$fmLang==='en'?'selected':'',$fmLang==='de'?'selected':''],$fmLanguageSelector);
 if($fmLang==='en'){ ?>
 <?php
-$fmdMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+if($fmc['mode']!=='demo'){
+$fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
 $fmdCmd=$fmdPid?str_replace(chr(0),' ',@file_get_contents("/proc/$fmdPid/cmdline")?:''):'';
 $fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])mover(?: |$)~',$fmdCmd);
-$fmdTotal=$fmdMounted?@disk_total_space('/mnt/cache'):false;$fmdFree=$fmdMounted?@disk_free_space('/mnt/cache'):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
+$fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,'.',','):'—';
 $fmdStatus=$fmdRun?'● Mover running':($fmdRaw?'⚠ Unverified status':'● Idle');$fmdColor=$fmdRun?'#f2b84b':($fmdRaw?'#ef967a':'#64b99b');
+}else{
+$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='#ef7d00';
+}
+$fmcBanner=$fmc['banner'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover Monitor">
 <tr><td><span class="tile-header"><span class="tile-header-left"><i class="fa fa-exchange fa-2x"></i><div class="section"><h3 class="tile-header-main">MOVER MONITOR</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a href="/Tools/FejesMoverSettings" title="Mover Settings" style="margin-right:12px"><i class="fa fa-cog"></i></a><a href="/Tools/FejesMover" title="Detailed Mover Monitor"><i class="fa fa-external-link"></i></a></span></span></td></tr>
-<tr><td><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache free: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Files and detailed status →</a></p><small id="fmd-updated">Data loaded · refresh every 10 sec</small></div></td></tr>
+<tr><td>{$fmcBanner}<div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache free: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Files and detailed status →</a></p><small id="fmd-updated">Data loaded · refresh every 10 sec</small></div></td></tr>
 </tbody>
 HTML;
 ?>
@@ -42,18 +52,24 @@ HTML;
 
 <?php } elseif($fmLang==='de'){ ?>
 <?php
-$fmdMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+if($fmc['mode']!=='demo'){
+$fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
 $fmdCmd=$fmdPid?str_replace(chr(0),' ',@file_get_contents("/proc/$fmdPid/cmdline")?:''):'';
 $fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])mover(?: |$)~',$fmdCmd);
-$fmdTotal=$fmdMounted?@disk_total_space('/mnt/cache'):false;$fmdFree=$fmdMounted?@disk_free_space('/mnt/cache'):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
+$fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,',',' '):'—';
 $fmdStatus=$fmdRun?'● Mover läuft':($fmdRaw?'⚠ Status nicht verifiziert':'● Leerlauf');$fmdColor=$fmdRun?'#f2b84b':($fmdRaw?'#ef967a':'#64b99b');
+}else{
+$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='#ef7d00';
+}
+$fmcBanner=$fmc['banner'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover-Monitor">
 <tr><td><span class="tile-header"><span class="tile-header-left"><i class="fa fa-exchange fa-2x"></i><div class="section"><h3 class="tile-header-main">MOVER-MONITOR</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a href="/Tools/FejesMoverSettings" title="Mover-Einstellungen" style="margin-right:12px"><i class="fa fa-cog"></i></a><a href="/Tools/FejesMover" title="Detaillierter Mover-Monitor"><i class="fa fa-external-link"></i></a></span></span></td></tr>
-<tr><td><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache frei: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Dateien und detaillierter Status →</a></p><small id="fmd-updated">Daten geladen · Aktualisierung alle 10 Sek.</small></div></td></tr>
+<tr><td>{$fmcBanner}<div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache frei: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Dateien und detaillierter Status →</a></p><small id="fmd-updated">Daten geladen · Aktualisierung alle 10 Sek.</small></div></td></tr>
 </tbody>
 HTML;
 ?>
@@ -65,18 +81,24 @@ HTML;
 
 <?php } else{ ?>
 <?php
-$fmdMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+if($fmc['mode']!=='demo'){
+$fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
 $fmdCmd=$fmdPid?str_replace(chr(0),' ',@file_get_contents("/proc/$fmdPid/cmdline")?:''):'';
 $fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])mover(?: |$)~',$fmdCmd);
-$fmdTotal=$fmdMounted?@disk_total_space('/mnt/cache'):false;$fmdFree=$fmdMounted?@disk_free_space('/mnt/cache'):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
+$fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,',',' '):'—';
 $fmdStatus=$fmdRun?'● Mover fut':($fmdRaw?'⚠ Nem ellenőrizhető':'● Várakozik');$fmdColor=$fmdRun?'#f2b84b':($fmdRaw?'#ef967a':'#64b99b');
+}else{
+$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='#ef7d00';
+}
+$fmcBanner=$fmc['banner'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover figyelő">
 <tr><td><span class="tile-header"><span class="tile-header-left"><i class="fa fa-exchange fa-2x"></i><div class="section"><h3 class="tile-header-main">MOVER FIGYELŐ</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a href="/Tools/FejesMoverSettings" title="Mover beállítások" style="margin-right:12px"><i class="fa fa-cog"></i></a><a href="/Tools/FejesMover" title="Részletes Mover figyelő"><i class="fa fa-external-link"></i></a></span></span></td></tr>
-<tr><td><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache szabad: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Lemeztömb</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Fájlok és részletes állapot →</a></p><small id="fmd-updated">Adatok betöltve · frissítés 10 mp-enként</small></div></td></tr>
+<tr><td>{$fmcBanner}<div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache szabad: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Lemeztömb</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Fájlok és részletes állapot →</a></p><small id="fmd-updated">Adatok betöltve · frissítés 10 mp-enként</small></div></td></tr>
 </tbody>
 HTML;
 ?>
@@ -88,7 +110,7 @@ HTML;
 
 <?php } ?>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.17.1/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.18.1/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Monitor"
 Icon="fa-exchange"
 Tag="cogs"
@@ -101,7 +123,9 @@ $fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fm
 if($fmLang==='en'){ ?>
 <?php
 echo $fmLanguageSelector;
-$fmMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+if($fmc['mode']!=='demo'){
+$fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
 $fmEsc=static fn($s)=>htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
 $fmRaw=trim($fmRead('/var/run/mover.pid'));$fmPid=ctype_digit($fmRaw)?(int)$fmRaw:0;
@@ -118,13 +142,17 @@ $st=@stat($fd);if(!$st||(($st['mode']&0170000)!==0100000))continue;
 $info=$fmRead("/proc/$p/fdinfo/".basename($fd));preg_match('/^pos:\s+(\d+)/m',$info,$pos);preg_match('/^flags:\s+([0-7]+)/m',$info,$fl);
 $fmFiles[]=['path'=>$path,'pos'=>(int)($pos[1]??0),'size'=>$st['size'],'mode'=>isset($fl[1])?(octdec($fl[1])&3):-1];if(count($fmFiles)>=40)break 2;
 }}
-$fmTotal=$fmMounted?@disk_total_space('/mnt/cache'):false;$fmFree=$fmMounted?@disk_free_space('/mnt/cache'):false;
+$fmTotal=$fmMounted?@disk_total_space($fmc['path']):false;$fmFree=$fmMounted?@disk_free_space($fmc['path']):false;
 $fmUsed=$fmTotal&&$fmFree!==false?round(100*(1-$fmFree/$fmTotal),1):null;
 $fmScript=$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script');preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
 $fmGiB=static fn($n)=>number_format($n/1073741824,1,'.',',');
 $fmTail=static function($path,$limit){$f=@fopen($path,'rb');if(!$f)return '';$sz=fstat($f)['size'];$offset=max(0,$sz-$limit);fseek($f,$offset);$s=stream_get_contents($f);fclose($f);if($offset){$nl=strpos($s,"\n");$s=$nl===false?'':substr($s,$nl+1);}return $s;};
 $fmLines=preg_split('/\r?\n/',$fmTail('/var/log/syslog',262144));$fmLines=array_filter($fmLines,static fn($s)=>preg_match('/\bmover(?:\[|:| )|Filmek Mover/i',$s));$fmLog=implode("\n",array_slice($fmLines,-30));
 $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.txt',8192);
+}else{
+$fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fmFree=375809638400;$fmUsed=65;$fmThreshold=null;$fmGiB=static fn($n)=>number_format($n/1073741824,1,'.',',');$fmLog='DEMO · No live logs';$fmScriptLog='';
+}
+echo $fmc['banner'];
 ?>
 <style>
 #fm-monitor{max-width:1160px;margin:24px auto;padding:0 18px;font-size:15px}#fm-monitor h2{font-size:28px;margin:0 0 8px}#fm-monitor .fm-sub{opacity:.7;margin-bottom:24px}#fm-monitor .fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}#fm-monitor .fm-card{border:1px solid #7775;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fm-monitor .fm-label{opacity:.7;font-size:13px;margin-bottom:12px}#fm-monitor .fm-value{font-size:25px;line-height:1.4}#fm-monitor progress{width:100%;height:18px;accent-color:#64b99b;margin-top:14px}#fm-monitor pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:12px;line-height:1.6;background:transparent}#fm-monitor table{width:100%;table-layout:fixed}#fm-monitor th,#fm-monitor td{text-align:left;padding:10px 6px;overflow-wrap:anywhere;border-bottom:1px solid #8884}#fm-monitor th:first-child{width:58%}#fm-monitor .fm-note{font-size:13px;opacity:.75;line-height:1.6}#fm-monitor button{margin-bottom:18px;padding:9px 14px}#fm-error{color:#ef967a;min-height:20px}
@@ -160,7 +188,7 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 <p class="fm-note">Snapshot of files opened by Mover and its child processes. File position does not confirm transfer completion. Remaining data, speed and completion time cannot be reliably determined from this source.</p></section>
 <section class="fm-card"><h3>Recent Mover log entries</h3><pre><?=$fmEsc($fmLog?:'No Mover entries in the last 256 KiB of syslog. This alone is not an error; earlier runs or detailed file logs may be unavailable.')?></pre></section>
 <?php if($fmScriptLog):?><section class="fm-card"><h3>Filmek Mover · latest script log</h3><pre><?=$fmEsc($fmScriptLog)?></pre></section><?php endif?>
-<p class="fm-note">The monitor reads processes, cache free space and existing logs. Existing Unraid settings and any custom script control transfers. This release monitors a pool named cache. Refresh runs only while the page is open.</p></div>
+<p class="fm-note">A figyelő a folyamatokat, a cache szabad helyét és a meglévő naplókat olvassa. A mozgatást a meglévő Unraid-beállítások és esetleges saját scripted vezérlik. Monitors the selected Unraid pool. Frissítés csak a lap megnyitása közben történik.</p></div>
 <script>
 (()=>{let enabled=true,busy=false;if(window.fejesMoverTimer)clearInterval(window.fejesMoverTimer);function bind(){const button=document.getElementById('fm-toggle');button.textContent='Auto-refresh: '+(enabled?'ON (5 sec)':'PAUSED');button.onclick=()=>{enabled=!enabled;bind();};}bind();window.fejesMoverTimer=setInterval(async()=>{if(!enabled||busy||document.hidden)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch(location.href,{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),part=doc.getElementById('fm-monitor');if(!part)throw Error();document.getElementById('fm-monitor').replaceWith(part);bind();}catch(e){document.getElementById('fm-error').textContent='Refresh failed. Displayed data is stale; check the connection or sign-in status.';}finally{clearTimeout(t);busy=false;}},5000);})();
 </script>
@@ -170,7 +198,9 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 <?php } elseif($fmLang==='de'){ ?>
 <?php
 echo $fmLanguageSelector;
-$fmMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+if($fmc['mode']!=='demo'){
+$fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
 $fmEsc=static fn($s)=>htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
 $fmRaw=trim($fmRead('/var/run/mover.pid'));$fmPid=ctype_digit($fmRaw)?(int)$fmRaw:0;
@@ -187,13 +217,17 @@ $st=@stat($fd);if(!$st||(($st['mode']&0170000)!==0100000))continue;
 $info=$fmRead("/proc/$p/fdinfo/".basename($fd));preg_match('/^pos:\s+(\d+)/m',$info,$pos);preg_match('/^flags:\s+([0-7]+)/m',$info,$fl);
 $fmFiles[]=['path'=>$path,'pos'=>(int)($pos[1]??0),'size'=>$st['size'],'mode'=>isset($fl[1])?(octdec($fl[1])&3):-1];if(count($fmFiles)>=40)break 2;
 }}
-$fmTotal=$fmMounted?@disk_total_space('/mnt/cache'):false;$fmFree=$fmMounted?@disk_free_space('/mnt/cache'):false;
+$fmTotal=$fmMounted?@disk_total_space($fmc['path']):false;$fmFree=$fmMounted?@disk_free_space($fmc['path']):false;
 $fmUsed=$fmTotal&&$fmFree!==false?round(100*(1-$fmFree/$fmTotal),1):null;
 $fmScript=$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script');preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
 $fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');
 $fmTail=static function($path,$limit){$f=@fopen($path,'rb');if(!$f)return '';$sz=fstat($f)['size'];$offset=max(0,$sz-$limit);fseek($f,$offset);$s=stream_get_contents($f);fclose($f);if($offset){$nl=strpos($s,"\n");$s=$nl===false?'':substr($s,$nl+1);}return $s;};
 $fmLines=preg_split('/\r?\n/',$fmTail('/var/log/syslog',262144));$fmLines=array_filter($fmLines,static fn($s)=>preg_match('/\bmover(?:\[|:| )|Filmek Mover/i',$s));$fmLog=implode("\n",array_slice($fmLines,-30));
 $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.txt',8192);
+}else{
+$fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fmFree=375809638400;$fmUsed=65;$fmThreshold=null;$fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');$fmLog='DEMO · No live logs';$fmScriptLog='';
+}
+echo $fmc['banner'];
 ?>
 <style>
 #fm-monitor{max-width:1160px;margin:24px auto;padding:0 18px;font-size:15px}#fm-monitor h2{font-size:28px;margin:0 0 8px}#fm-monitor .fm-sub{opacity:.7;margin-bottom:24px}#fm-monitor .fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}#fm-monitor .fm-card{border:1px solid #7775;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fm-monitor .fm-label{opacity:.7;font-size:13px;margin-bottom:12px}#fm-monitor .fm-value{font-size:25px;line-height:1.4}#fm-monitor progress{width:100%;height:18px;accent-color:#64b99b;margin-top:14px}#fm-monitor pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:12px;line-height:1.6;background:transparent}#fm-monitor table{width:100%;table-layout:fixed}#fm-monitor th,#fm-monitor td{text-align:left;padding:10px 6px;overflow-wrap:anywhere;border-bottom:1px solid #8884}#fm-monitor th:first-child{width:58%}#fm-monitor .fm-note{font-size:13px;opacity:.75;line-height:1.6}#fm-monitor button{margin-bottom:18px;padding:9px 14px}#fm-error{color:#ef967a;min-height:20px}
@@ -229,7 +263,7 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 <p class="fm-note">Momentaufnahme der von Mover und seinen Kindprozessen geöffneten Dateien. Die Dateiposition bestätigt keinen abgeschlossenen Transfer. Restmenge, Geschwindigkeit und Endzeit lassen sich aus dieser Quelle nicht zuverlässig bestimmen.</p></section>
 <section class="fm-card"><h3>Letzte Mover-Protokolleinträge</h3><pre><?=$fmEsc($fmLog?:'Keine Mover-Einträge in den letzten 256 KiB des Systemprotokolls. Dies allein ist kein Fehler; frühere Läufe oder detaillierte Dateiprotokolle sind möglicherweise nicht verfügbar.')?></pre></section>
 <?php if($fmScriptLog):?><section class="fm-card"><h3>Filmek Mover · letztes Skriptprotokoll</h3><pre><?=$fmEsc($fmScriptLog)?></pre></section><?php endif?>
-<p class="fm-note">Der Monitor liest Prozesse, freien Cache-Speicher und vorhandene Protokolle. Vorhandene Unraid-Einstellungen und eigene Skripte steuern die Übertragung. Diese Version überwacht einen Pool namens cache. Die Aktualisierung erfolgt nur bei geöffneter Seite.</p></div>
+<p class="fm-note">A figyelő a folyamatokat, a cache szabad helyét és a meglévő naplókat olvassa. A mozgatást a meglévő Unraid-beállítások és esetleges saját scripted vezérlik. Überwacht den ausgewählten Unraid-Pool. Frissítés csak a lap megnyitása közben történik.</p></div>
 <script>
 (()=>{let enabled=true,busy=false;if(window.fejesMoverTimer)clearInterval(window.fejesMoverTimer);function bind(){const button=document.getElementById('fm-toggle');button.textContent='Automatische Aktualisierung: '+(enabled?'AN (5 Sek.)':'PAUSIERT');button.onclick=()=>{enabled=!enabled;bind();};}bind();window.fejesMoverTimer=setInterval(async()=>{if(!enabled||busy||document.hidden)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch(location.href,{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),part=doc.getElementById('fm-monitor');if(!part)throw Error();document.getElementById('fm-monitor').replaceWith(part);bind();}catch(e){document.getElementById('fm-error').textContent='Aktualisierung fehlgeschlagen. Die angezeigten Daten sind veraltet; Verbindung oder Anmeldung prüfen.';}finally{clearTimeout(t);busy=false;}},5000);})();
 </script>
@@ -239,7 +273,9 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 <?php } else{ ?>
 <?php
 echo $fmLanguageSelector;
-$fmMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+if($fmc['mode']!=='demo'){
+$fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
 $fmEsc=static fn($s)=>htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
 $fmRaw=trim($fmRead('/var/run/mover.pid'));$fmPid=ctype_digit($fmRaw)?(int)$fmRaw:0;
@@ -256,13 +292,17 @@ $st=@stat($fd);if(!$st||(($st['mode']&0170000)!==0100000))continue;
 $info=$fmRead("/proc/$p/fdinfo/".basename($fd));preg_match('/^pos:\s+(\d+)/m',$info,$pos);preg_match('/^flags:\s+([0-7]+)/m',$info,$fl);
 $fmFiles[]=['path'=>$path,'pos'=>(int)($pos[1]??0),'size'=>$st['size'],'mode'=>isset($fl[1])?(octdec($fl[1])&3):-1];if(count($fmFiles)>=40)break 2;
 }}
-$fmTotal=$fmMounted?@disk_total_space('/mnt/cache'):false;$fmFree=$fmMounted?@disk_free_space('/mnt/cache'):false;
+$fmTotal=$fmMounted?@disk_total_space($fmc['path']):false;$fmFree=$fmMounted?@disk_free_space($fmc['path']):false;
 $fmUsed=$fmTotal&&$fmFree!==false?round(100*(1-$fmFree/$fmTotal),1):null;
 $fmScript=$fmRead('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script');preg_match('/^KUSZOB_GIB=(\d+)/m',$fmScript,$fmMatch);$fmThreshold=$fmMatch[1]??null;
 $fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');
 $fmTail=static function($path,$limit){$f=@fopen($path,'rb');if(!$f)return '';$sz=fstat($f)['size'];$offset=max(0,$sz-$limit);fseek($f,$offset);$s=stream_get_contents($f);fclose($f);if($offset){$nl=strpos($s,"\n");$s=$nl===false?'':substr($s,$nl+1);}return $s;};
 $fmLines=preg_split('/\r?\n/',$fmTail('/var/log/syslog',262144));$fmLines=array_filter($fmLines,static fn($s)=>preg_match('/\bmover(?:\[|:| )|Filmek Mover/i',$s));$fmLog=implode("\n",array_slice($fmLines,-30));
 $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.txt',8192);
+}else{
+$fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fmFree=375809638400;$fmUsed=65;$fmThreshold=null;$fmGiB=static fn($n)=>number_format($n/1073741824,1,',',' ');$fmLog='DEMO · No live logs';$fmScriptLog='';
+}
+echo $fmc['banner'];
 ?>
 <style>
 #fm-monitor{max-width:1160px;margin:24px auto;padding:0 18px;font-size:15px}#fm-monitor h2{font-size:28px;margin:0 0 8px}#fm-monitor .fm-sub{opacity:.7;margin-bottom:24px}#fm-monitor .fm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}#fm-monitor .fm-card{border:1px solid #7775;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fm-monitor .fm-label{opacity:.7;font-size:13px;margin-bottom:12px}#fm-monitor .fm-value{font-size:25px;line-height:1.4}#fm-monitor progress{width:100%;height:18px;accent-color:#64b99b;margin-top:14px}#fm-monitor pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:12px;line-height:1.6;background:transparent}#fm-monitor table{width:100%;table-layout:fixed}#fm-monitor th,#fm-monitor td{text-align:left;padding:10px 6px;overflow-wrap:anywhere;border-bottom:1px solid #8884}#fm-monitor th:first-child{width:58%}#fm-monitor .fm-note{font-size:13px;opacity:.75;line-height:1.6}#fm-monitor button{margin-bottom:18px;padding:9px 14px}#fm-error{color:#ef967a;min-height:20px}
@@ -298,7 +338,7 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 <p class="fm-note">A mover és gyermekfolyamatai nyitott fájljainak pillanatképe. A fájlpozíció nem igazolja a mozgatás befejezését. A teljes hátralévő mennyiség, sebesség és befejezési idő ebből az adatforrásból nem állapítható meg megbízhatóan.</p></section>
 <section class="fm-card"><h3>Legutóbbi mover-naplóbejegyzések</h3><pre><?=$fmEsc($fmLog?:'A rendszernapló utolsó 256 KiB-os részében nincs mover-bejegyzés. Ez önmagában nem hiba; a korábbi futások vagy a részletes fájlnaplózás nem feltétlenül érhetők el.')?></pre></section>
 <?php if($fmScriptLog):?><section class="fm-card"><h3>Filmek Mover · legutóbbi scriptnapló</h3><pre><?=$fmEsc($fmScriptLog)?></pre></section><?php endif?>
-<p class="fm-note">A figyelő a folyamatokat, a cache szabad helyét és a meglévő naplókat olvassa. A mozgatást a meglévő Unraid-beállítások és esetleges saját scripted vezérlik. Ez a kiadás cache nevű poolt figyel. Frissítés csak a lap megnyitása közben történik.</p></div>
+<p class="fm-note">A figyelő a folyamatokat, a cache szabad helyét és a meglévő naplókat olvassa. A mozgatást a meglévő Unraid-beállítások és esetleges saját scripted vezérlik. A kiválasztott Unraid poolt figyeli. Frissítés csak a lap megnyitása közben történik.</p></div>
 <script>
 (()=>{let enabled=true,busy=false;if(window.fejesMoverTimer)clearInterval(window.fejesMoverTimer);function bind(){const button=document.getElementById('fm-toggle');button.textContent='Automatikus frissítés: '+(enabled?'BE (5 mp)':'SZÜNET');button.onclick=()=>{enabled=!enabled;bind();};}bind();window.fejesMoverTimer=setInterval(async()=>{if(!enabled||busy||document.hidden)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch(location.href,{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),part=doc.getElementById('fm-monitor');if(!part)throw Error();document.getElementById('fm-monitor').replaceWith(part);bind();}catch(e){document.getElementById('fm-error').textContent='A frissítés sikertelen. A kijelzett adatok elavultak; ellenőrizd a kapcsolatot vagy a bejelentkezést.';}finally{clearTimeout(t);busy=false;}},5000);})();
 </script>
@@ -307,7 +347,67 @@ $fmScriptLog=$fmTail('/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.tx
 
 <?php } ?>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.17.1/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.18.1/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
+// Shared, fail-closed runtime configuration. No settings or automation writes here.
+return (static function ($configWrite) {
+    $language = $_COOKIE['fejes_mover_lang'] ?? 'hu';
+    if (!is_string($language) || !in_array($language, ['hu','en','de'], true)) $language = 'hu';
+    $t = static fn($hu,$en,$de) => ['hu'=>$hu,'en'=>$en,'de'=>$de][$language];
+    $esc = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8');
+    $configPath = '/boot/config/plugins/fejes.mover.monitor/settings.json';
+    $error = false;
+    $lock = null;
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+        $lock = @fopen('/var/run/fejes-mover-config.lock', 'c');
+        if (!$lock || !flock($lock, ($configWrite ? LOCK_EX : LOCK_SH)|LOCK_NB)) $error = true;
+    }
+    $raw = @file_get_contents($configPath);
+    $config = $raw === false ? [] : json_decode($raw, true);
+    $validName = static fn($name) => is_string($name) && preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D', $name);
+    $valid = is_array($config) && ($raw === false || (
+        ($config['version'] ?? null) === 1 &&
+        in_array($config['mode'] ?? null, ['demo','observer','advanced'], true) &&
+        $validName($config['pool'] ?? null)
+    ));
+    if (!$valid) $error = true;
+    $mode = !$error && isset($config['mode']) ? $config['mode'] : 'observer';
+    $pool = !$error && isset($config['pool']) ? $config['pool'] : 'cache';
+    $mounts = [];
+    foreach (explode("\n", @file_get_contents('/proc/self/mountinfo') ?: '') as $line) {
+        $fields = explode(' ', $line);
+        $mount = $fields[4] ?? '';
+        if ($mount !== '') $mounts[$mount] = true;
+    }
+    $pools = [];
+    // Use Unraid pool definitions; never accept a path supplied by the browser.
+    foreach (glob('/boot/config/pools/*.cfg') ?: [] as $file) {
+        $name = basename($file, '.cfg');
+        if ($validName($name)) $pools[$name] = isset($mounts['/mnt/'.$name]);
+    }
+    if (!$pools && isset($mounts['/mnt/cache'])) $pools['cache'] = true;
+    ksort($pools);
+    $mounted = isset($pools[$pool]) && $pools[$pool];
+    $modeText = [
+        'demo'=>$t('Demó','Demo','Demo'),
+        'observer'=>$t('Megfigyelő','Observer','Beobachter'),
+        'advanced'=>$t('Haladó','Advanced','Erweitert'),
+    ][$mode];
+    $banner = '<div class="fmc-mode" style="margin:12px 16px;padding:12px;border:1px solid #8885;border-left:3px solid #ef7d00;border-radius:3px">';
+    $banner .= '<strong>'.$esc($t('Mód: ','Mode: ','Modus: ').$modeText).'</strong> · ';
+    $banner .= $mode === 'demo'
+        ? $esc($t('Szimulált adatok. Nincs élő megfigyelés vagy scriptmentés.','Simulated data. No live monitoring or script saves.','Simulierte Daten. Keine Live-Überwachung oder Skriptspeicherung.'))
+        : $esc($t('Figyelt pool: ','Monitored pool: ','Überwachter Pool: ').$pool);
+    if ($error) $banner .= '<p role="alert">'.$esc($t('A konfiguráció nem olvasható biztonságosan. A szerkesztés tiltva.','Configuration cannot be safely read. Editing is disabled.','Konfiguration kann nicht sicher gelesen werden. Bearbeitung gesperrt.')).'</p>';
+    $banner .= ' · <a href="/Tools/FejesMoverSetup">'.$esc($t('Mód és pool beállítása','Configure mode and pool','Modus und Pool einstellen')).'</a></div>';
+    $token = @parse_ini_file('/var/local/emhttp/var.ini');
+    return ['mode'=>$mode,'pool'=>$pool,'path'=>'/mnt/'.$pool,'mounted'=>$mounted,'pools'=>$pools,
+        'error'=>$error,'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
+        'hash'=>hash('sha256',$raw === false ? '' : $raw),'lock'=>$lock,
+        'token'=>is_array($token) ? ($token['csrf_token'] ?? '') : '',
+        't'=>$t,'esc'=>$esc,'banner'=>$banner];
+})(!empty($fmcConfigWrite));
+]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.18.1/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Settings"
 Icon="fa-sliders"
 Tag="cogs"
@@ -320,7 +420,13 @@ $fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fm
 if($fmLang==='en'){ ?>
 <?php
 echo $fmLanguageSelector;
-$msMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+echo $fmc['banner'];
+if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
+ echo '<div style="margin:24px"><h2>Mover Settings</h2><p>Script editing is disabled in this mode. Select Advanced mode to enable it.</p><a href="/Tools/FejesMoverSetup">Configure mode and pool</a></div>';
+ return;
+}
+$msMounted=$fmc['mounted'];
 $msToken=(parse_ini_file('/var/local/emhttp/var.ini')['csrf_token']??'');
 $msPath='/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script';
 $msEsc=fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');
@@ -405,7 +511,13 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 <?php } elseif($fmLang==='de'){ ?>
 <?php
 echo $fmLanguageSelector;
-$msMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+echo $fmc['banner'];
+if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
+ echo '<div style="margin:24px"><h2>Mover-Einstellungen</h2><p>Skriptbearbeitung ist in diesem Modus gesperrt. Zum Aktivieren den erweiterten Modus wählen.</p><a href="/Tools/FejesMoverSetup">Modus und Pool einstellen</a></div>';
+ return;
+}
+$msMounted=$fmc['mounted'];
 $msToken=(parse_ini_file('/var/local/emhttp/var.ini')['csrf_token']??'');
 $msPath='/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script';
 $msEsc=fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');
@@ -490,7 +602,13 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 <?php } else{ ?>
 <?php
 echo $fmLanguageSelector;
-$msMounted=(static function(){foreach(explode("\n",@file_get_contents('/proc/self/mountinfo')?:'') as $line){$fields=explode(' ',$line);if(($fields[4]??'')==='/mnt/cache')return true;}return false;})();
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+echo $fmc['banner'];
+if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
+ echo '<div style="margin:24px"><h2>Mover beállítások</h2><p>A scriptszerkesztés ebben a módban tiltva. A bekapcsoláshoz válaszd a Haladó módot.</p><a href="/Tools/FejesMoverSetup">Mód és pool beállítása</a></div>';
+ return;
+}
+$msMounted=$fmc['mounted'];
 $msToken=(parse_ini_file('/var/local/emhttp/var.ini')['csrf_token']??'');
 $msPath='/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script';
 $msEsc=fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');
@@ -574,15 +692,203 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 
 <?php } ?>
 ]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.18.1/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
+Title="Mover · Mód és pool"
+Icon="fa-sliders"
+Tag="cogs"
+---
+<?php
+$fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
+$fmLang=is_string($fmCookie)&&in_array($fmCookie,['hu','en','de'],true)?$fmCookie:'hu';
+$fmLanguageSelector="<label style=\"display:inline-block;margin:10px 12px;font-size:14px\">🌐 <select aria-label=\"Language / Nyelv / Sprache\" onchange=\"document.cookie='fejes_mover_lang='+this.value+'; Path=/; Max-Age=31536000; SameSite=Lax';location.assign(location.pathname)\"><option value=\"hu\" HU_SELECTED>Magyar</option><option value=\"en\" EN_SELECTED>English (US)</option><option value=\"de\" DE_SELECTED>Deutsch</option></select></label>";
+$fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fmLang==='hu'?'selected':'',$fmLang==='en'?'selected':'',$fmLang==='de'?'selected':''],$fmLanguageSelector);
+if($fmLang==='en'){ ?>
+<?php
+echo $fmLanguageSelector;
+$fmcConfigWrite=true;
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  if(!is_resource($fmc['lock'])||$fmc['error'])throw new RuntimeException('Mode change is unavailable. Reload the page.');
+  if(!is_string($_POST['fmc_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fmc_csrf']))throw new RuntimeException('Session expired. Reload the page.');
+  if(!is_string($_POST['config_hash']??null)||!hash_equals($fmc['hash'],$_POST['config_hash']))throw new RuntimeException('Mode configuration changed. Reload the page.');
+  $newMode=$_POST['mode']??null;$newPool=$_POST['pool']??null;
+  if(!is_string($newMode)||!in_array($newMode,['demo','observer','advanced'],true))throw new RuntimeException('Invalid operating mode.');
+  if(!is_string($newPool)||!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D',$newPool))throw new RuntimeException('Invalid pool.');
+  if($newMode!=='demo'&&!array_key_exists($newPool,$fmc['pools']))throw new RuntimeException('Only a configured Unraid pool can be selected.');
+  if($newMode==='advanced'&&($_POST['advanced_ack']??'')!=='yes')throw new RuntimeException('Advanced mode requires explicit acknowledgment.');
+  // The existing automation is explicitly hard-coded for cache. Do not imply it
+  // follows the monitor pool selector or reinterpret a custom script.
+  if($newMode==='advanced'&&$newPool!=='cache')throw new RuntimeException('The existing script editor is only available with the cache pool.');
+  $saved=['version'=>1,'mode'=>$newMode,'pool'=>$newPool];
+  $data=json_encode($saved,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)."\n";
+  if($data!==$fmc['raw']){
+   $dir=dirname($fmc['pathConfig']);
+   if(!is_dir($dir)&&!@mkdir($dir,0700,true))throw new RuntimeException('Failed to save mode configuration.');
+   $tmp=tempnam($dir,'.settings-');
+   if(!$tmp)throw new RuntimeException('Failed to save mode configuration.');
+   try{
+    if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$fmc['pathConfig']))throw new RuntimeException('Failed to save mode configuration.');
+   }finally{if(is_file($tmp))unlink($tmp);}
+   if(file_get_contents($fmc['pathConfig'])!==$data)throw new RuntimeException('Mode configuration verification failed.');
+  }
+  $fmcMessage='Mode and monitored pool saved. This does not start Mover.';
+  $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
+ }catch(Throwable $e){$fmcError=$e->getMessage();}
+}
+?>
+<style>
+#fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
+</style>
+<main id="fmc-setup"><h1>Operating mode and monitored pool</h1>
+<p>Unraid 7.x · Default installation: Observer mode. Changing mode never starts a transfer.</p>
+<?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
+<?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
+<form method="post" action="/Tools/FejesMoverSetup">
+<input type="hidden" name="csrf_token" value="<?=$fmcEsc($fmc['token'])?>"><input type="hidden" name="fmc_csrf" value="<?=$fmcEsc($fmc['token'])?>"><input type="hidden" name="config_hash" value="<?=$fmcEsc($fmc['hash'])?>">
+<fieldset><legend>Operating mode</legend><div class="fmc-options">
+<label class="fmc-option"><input type="radio" name="mode" value="demo" <?=$fmc['mode']==='demo'?'checked':''?>> <strong>Demo</strong><p>Simulated data. No live Mover processes, logs or automation script are read. Script editing is disabled.</p></label>
+<label class="fmc-option"><input type="radio" name="mode" value="observer" <?=$fmc['mode']==='observer'?'checked':''?>> <strong>Observer</strong><p>Reads real status. Automation script changes are disabled. Recommended default.</p></label>
+<label class="fmc-option"><input type="radio" name="mode" value="advanced" <?=$fmc['mode']==='advanced'?'checked':''?>> <strong>Advanced</strong><p>Enables the parameter editor for an existing Filmek_Mover_Threshold script. Cache pool only. Does not install or start automation.</p></label>
+</div></fieldset>
+<fieldset><legend>Monitored pool</legend><label for="fmc-pool">Unraid pool</label> <select id="fmc-pool" name="pool">
+<?php $poolOptions=$fmc['pools'];if(!$poolOptions)$poolOptions=['cache'=>false];foreach($poolOptions as $name=>$mounted):?>
+<option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · not mounted'?></option>
+<?php endforeach?></select><p>The list comes from Unraid pool configuration. Unmounted pool capacity remains unavailable.</p></fieldset>
+<fieldset><legend>Advanced mode acknowledgment</legend><label><input type="checkbox" name="advanced_ack" value="yes"> I understand that Advanced mode can modify the existing automation script.</label><p>Mode and pool selection only save plugin configuration. Automation changes require a separate save with a backup.</p></fieldset>
+<button type="submit">Save mode and pool</button> <a href="/Tools/FejesMover">Back to Mover Monitor</a>
+</form></main>
+
+<?php } elseif($fmLang==='de'){ ?>
+<?php
+echo $fmLanguageSelector;
+$fmcConfigWrite=true;
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  if(!is_resource($fmc['lock'])||$fmc['error'])throw new RuntimeException('Moduswechsel nicht möglich. Seite neu laden.');
+  if(!is_string($_POST['fmc_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fmc_csrf']))throw new RuntimeException('Sitzung abgelaufen. Seite neu laden.');
+  if(!is_string($_POST['config_hash']??null)||!hash_equals($fmc['hash'],$_POST['config_hash']))throw new RuntimeException('Die Moduskonfiguration wurde geändert. Seite neu laden.');
+  $newMode=$_POST['mode']??null;$newPool=$_POST['pool']??null;
+  if(!is_string($newMode)||!in_array($newMode,['demo','observer','advanced'],true))throw new RuntimeException('Ungültiger Betriebsmodus.');
+  if(!is_string($newPool)||!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D',$newPool))throw new RuntimeException('Ungültiger Pool.');
+  if($newMode!=='demo'&&!array_key_exists($newPool,$fmc['pools']))throw new RuntimeException('Nur konfigurierte Unraid-Pools sind auswählbar.');
+  if($newMode==='advanced'&&($_POST['advanced_ack']??'')!=='yes')throw new RuntimeException('Der erweiterte Modus erfordert eine ausdrückliche Bestätigung.');
+  // The existing automation is explicitly hard-coded for cache. Do not imply it
+  // follows the monitor pool selector or reinterpret a custom script.
+  if($newMode==='advanced'&&$newPool!=='cache')throw new RuntimeException('Der vorhandene Skripteditor ist nur mit dem Pool cache verfügbar.');
+  $saved=['version'=>1,'mode'=>$newMode,'pool'=>$newPool];
+  $data=json_encode($saved,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)."\n";
+  if($data!==$fmc['raw']){
+   $dir=dirname($fmc['pathConfig']);
+   if(!is_dir($dir)&&!@mkdir($dir,0700,true))throw new RuntimeException('Moduskonfiguration konnte nicht gespeichert werden.');
+   $tmp=tempnam($dir,'.settings-');
+   if(!$tmp)throw new RuntimeException('Moduskonfiguration konnte nicht gespeichert werden.');
+   try{
+    if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$fmc['pathConfig']))throw new RuntimeException('Moduskonfiguration konnte nicht gespeichert werden.');
+   }finally{if(is_file($tmp))unlink($tmp);}
+   if(file_get_contents($fmc['pathConfig'])!==$data)throw new RuntimeException('Prüfung der Moduskonfiguration fehlgeschlagen.');
+  }
+  $fmcMessage='Modus und überwachter Pool gespeichert. Mover wird nicht gestartet.';
+  $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
+ }catch(Throwable $e){$fmcError=$e->getMessage();}
+}
+?>
+<style>
+#fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
+</style>
+<main id="fmc-setup"><h1>Betriebsmodus und überwachter Pool</h1>
+<p>Unraid 7.x · Standard: Beobachtermodus. Ein Moduswechsel startet keine Übertragung.</p>
+<?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
+<?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
+<form method="post" action="/Tools/FejesMoverSetup">
+<input type="hidden" name="csrf_token" value="<?=$fmcEsc($fmc['token'])?>"><input type="hidden" name="fmc_csrf" value="<?=$fmcEsc($fmc['token'])?>"><input type="hidden" name="config_hash" value="<?=$fmcEsc($fmc['hash'])?>">
+<fieldset><legend>Betriebsmodus</legend><div class="fmc-options">
+<label class="fmc-option"><input type="radio" name="mode" value="demo" <?=$fmc['mode']==='demo'?'checked':''?>> <strong>Demo</strong><p>Simulierte Daten. Keine aktiven Mover-Prozesse, Protokolle oder Automatisierungsskripte werden gelesen. Skriptbearbeitung gesperrt.</p></label>
+<label class="fmc-option"><input type="radio" name="mode" value="observer" <?=$fmc['mode']==='observer'?'checked':''?>> <strong>Beobachter</strong><p>Liest den tatsächlichen Status. Änderungen am Automatisierungsskript sind gesperrt. Empfohlener Standard.</p></label>
+<label class="fmc-option"><input type="radio" name="mode" value="advanced" <?=$fmc['mode']==='advanced'?'checked':''?>> <strong>Erweitert</strong><p>Aktiviert den Parametereditor für ein vorhandenes Filmek_Mover_Threshold-Skript. Nur mit Pool cache. Installiert oder startet keine Automatisierung.</p></label>
+</div></fieldset>
+<fieldset><legend>Überwachter Pool</legend><label for="fmc-pool">Unraid-Pool</label> <select id="fmc-pool" name="pool">
+<?php $poolOptions=$fmc['pools'];if(!$poolOptions)$poolOptions=['cache'=>false];foreach($poolOptions as $name=>$mounted):?>
+<option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · nicht eingehängt'?></option>
+<?php endforeach?></select><p>Die Liste stammt aus der Unraid-Poolkonfiguration. Die Kapazität nicht eingehängter Pools bleibt unbekannt.</p></fieldset>
+<fieldset><legend>Bestätigung des erweiterten Modus</legend><label><input type="checkbox" name="advanced_ack" value="yes"> Ich verstehe, dass der erweiterte Modus das vorhandene Automatisierungsskript ändern kann.</label><p>Modus- und Poolauswahl speichern nur die Plugin-Konfiguration. Änderungen an der Automatisierung erfordern separates Speichern mit Sicherung.</p></fieldset>
+<button type="submit">Modus und Pool speichern</button> <a href="/Tools/FejesMover">Zurück zum Mover-Monitor</a>
+</form></main>
+
+<?php } else{ ?>
+<?php
+echo $fmLanguageSelector;
+$fmcConfigWrite=true;
+$fmc=require __DIR__.'/FejesMoverRuntime.php';
+$fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  if(!is_resource($fmc['lock'])||$fmc['error'])throw new RuntimeException('A módváltás most nem lehetséges. Töltsd újra az oldalt.');
+  if(!is_string($_POST['fmc_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fmc_csrf']))throw new RuntimeException('Lejárt munkamenet. Töltsd újra az oldalt.');
+  if(!is_string($_POST['config_hash']??null)||!hash_equals($fmc['hash'],$_POST['config_hash']))throw new RuntimeException('A módbeállítás közben megváltozott. Töltsd újra az oldalt.');
+  $newMode=$_POST['mode']??null;$newPool=$_POST['pool']??null;
+  if(!is_string($newMode)||!in_array($newMode,['demo','observer','advanced'],true))throw new RuntimeException('Érvénytelen működési mód.');
+  if(!is_string($newPool)||!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D',$newPool))throw new RuntimeException('Érvénytelen pool.');
+  if($newMode!=='demo'&&!array_key_exists($newPool,$fmc['pools']))throw new RuntimeException('Csak Unraidban beállított pool választható.');
+  if($newMode==='advanced'&&($_POST['advanced_ack']??'')!=='yes')throw new RuntimeException('A Haladó módhoz külön jóváhagyás szükséges.');
+  // The existing automation is explicitly hard-coded for cache. Do not imply it
+  // follows the monitor pool selector or reinterpret a custom script.
+  if($newMode==='advanced'&&$newPool!=='cache')throw new RuntimeException('A meglévő script szerkesztése csak cache pool mellett engedélyezett.');
+  $saved=['version'=>1,'mode'=>$newMode,'pool'=>$newPool];
+  $data=json_encode($saved,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)."\n";
+  if($data!==$fmc['raw']){
+   $dir=dirname($fmc['pathConfig']);
+   if(!is_dir($dir)&&!@mkdir($dir,0700,true))throw new RuntimeException('A módbeállítás mentése sikertelen.');
+   $tmp=tempnam($dir,'.settings-');
+   if(!$tmp)throw new RuntimeException('A módbeállítás mentése sikertelen.');
+   try{
+    if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$fmc['pathConfig']))throw new RuntimeException('A módbeállítás mentése sikertelen.');
+   }finally{if(is_file($tmp))unlink($tmp);}
+   if(file_get_contents($fmc['pathConfig'])!==$data)throw new RuntimeException('A módbeállítás visszaellenőrzése sikertelen.');
+  }
+  $fmcMessage='A mód és a figyelt pool elmentve. Ez nem indít Movert.';
+  $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
+ }catch(Throwable $e){$fmcError=$e->getMessage();}
+}
+?>
+<style>
+#fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
+</style>
+<main id="fmc-setup"><h1>Működési mód és figyelt pool</h1>
+<p>Unraid 7.x · A telepítés alapértelmezése: Megfigyelő mód. A módváltás nem indít mozgatást.</p>
+<?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
+<?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
+<form method="post" action="/Tools/FejesMoverSetup">
+<input type="hidden" name="csrf_token" value="<?=$fmcEsc($fmc['token'])?>"><input type="hidden" name="fmc_csrf" value="<?=$fmcEsc($fmc['token'])?>"><input type="hidden" name="config_hash" value="<?=$fmcEsc($fmc['hash'])?>">
+<fieldset><legend>Működési mód</legend><div class="fmc-options">
+<label class="fmc-option"><input type="radio" name="mode" value="demo" <?=$fmc['mode']==='demo'?'checked':''?>> <strong>Demó</strong><p>Szimulált adatok. Nem olvassa az élő Mover-folyamatokat, naplókat vagy az automatika scriptjét. A scriptszerkesztés tiltva.</p></label>
+<label class="fmc-option"><input type="radio" name="mode" value="observer" <?=$fmc['mode']==='observer'?'checked':''?>> <strong>Megfigyelő</strong><p>Valódi állapotokat olvas. Az automatika scriptjének módosítása tiltva. Ajánlott alapbeállítás.</p></label>
+<label class="fmc-option"><input type="radio" name="mode" value="advanced" <?=$fmc['mode']==='advanced'?'checked':''?>> <strong>Haladó</strong><p>Bekapcsolja a meglévő Filmek_Mover_Threshold script paraméterszerkesztőjét. Csak cache pool mellett. Nem telepít és nem indít automatikát.</p></label>
+</div></fieldset>
+<fieldset><legend>Figyelt pool</legend><label for="fmc-pool">Unraid pool</label> <select id="fmc-pool" name="pool">
+<?php $poolOptions=$fmc['pools'];if(!$poolOptions)$poolOptions=['cache'=>false];foreach($poolOptions as $name=>$mounted):?>
+<option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · nem csatolt'?></option>
+<?php endforeach?></select><p>A lista az Unraid poolbeállításaiból származik. A nem csatolt pool kapacitása ismeretlen marad.</p></fieldset>
+<fieldset><legend>Haladó mód jóváhagyása</legend><label><input type="checkbox" name="advanced_ack" value="yes"> Értem, hogy a Haladó mód a meglévő automatika scriptjét is módosíthatja.</label><p>A mód- és poolválasztás kizárólag a bővítmény saját beállítását menti. Az automatika csak külön mentéskor változik, biztonsági másolattal.</p></fieldset>
+<button type="submit">Mód és pool mentése</button> <a href="/Tools/FejesMover">Vissza a Mover figyelőhöz</a>
+</form></main>
+
+<?php } ?>
+]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.10.17.1
+src=/tmp/fejes-mover-monitor-2026.10.18.1
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverSettings.page; do
+test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
+php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+).' >&2; exit 1; }
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverRuntime.php FejesMoverSettings.page FejesMoverSetup.page; do
   php -l "$src/$name" >/dev/null
  done
 install -d -m 0755 "$dst"
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverSettings.page; do
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverRuntime.php FejesMoverSettings.page FejesMoverSetup.page; do
   install -m 0644 "$src/$name" "$dst/$name"
  done
 printf '%s\n' 'Fejes Mover Monitor installed. Open Tools / Mover figyelo.'
@@ -591,7 +897,7 @@ printf '%s\n' 'Fejes Mover Monitor installed. Open Tools / Mover figyelo.'
 set -euo pipefail
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 # Remove only runtime files owned by this plugin. Preserve settings and backups.
-for name in FejesMover.page FejesMover.Dashboard.page FejesMoverSettings.page; do
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverRuntime.php FejesMoverSettings.page FejesMoverSetup.page; do
   rm -f -- "$dst/$name"
 done
 rmdir "$dst" 2>/dev/null || true
