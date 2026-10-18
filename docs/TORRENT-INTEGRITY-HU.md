@@ -159,11 +159,28 @@ kell. A wrapper nem tudja megakadályozni, hogy a pillanatkép után új írás
 kezdődjön; az eseményfigyelő és az ideiglenes letöltési hely továbbra is külön
 kezelendő. Éles ütemezésbe még nincs bekötve.
 
+### A meglévő cron-bejegyzés bekötése
+
+A két előellenőrző telepítése és sikeres élő `--check-only` teszt után a
+`tools/wire_integrity_cron.py` a meglévő egyetlen cron-sort irányítja a helperre.
+Nem hoz létre második ütemezést, nem módosítja a plugin PHP-forrását, és nem
+indít azonnali hash-elést. A cron időmezői és kimeneti átirányítása megmaradnak.
+Módosítás előtt újabb check-only teszt és kis `.txt` konfigurációs mentés készül;
+a mentés szándékosan nem `.cron` végű, így nem lesz belőle második feladat.
+Az `update_cron` hibája esetén az eredeti bejegyzést visszaállítja és újratölti.
+
+Ez a bejegyzés a plugin által generált fájlban él. A File Integrity GUI-ban
+végzett későbbi mentés vagy pluginváltozás felülírhatja: akkor a bekötést újra
+ellenőrizni és szükség esetén ezzel az idempotens eszközzel újra alkalmazni kell.
+Nem állítunk be ennek elfedésére háttérben ismétlődő fájlátírást. A bekötés nem
+jelent GUI-módosításokat is túlélő, teljes pluginintegrációt.
+
 ## Ellenőrzés
 
 ```bash
 python3 tools/torrent_preflight_test.py
 python3 tools/integrity_preflight_test.py
+python3 tools/wire_integrity_cron_test.py
 ```
 
 A tesztek hálózat és NAS-módosítás nélkül futnak. Lefedik a kész seedeket,
