@@ -41,18 +41,31 @@ with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
         if 'Name' in node.attrib:
             target = sandbox / Path(node.attrib['Name']).name
             target.write_text(node.findtext('INLINE'), encoding='utf-8', newline='\n')
-            assert target.read_text(encoding='utf-8') == compile_page((root / 'src' / target.name).read_text(encoding='utf-8'))
+            source=(root / 'src' / target.name).read_text(encoding='utf-8')
+            assert target.read_text(encoding='utf-8') == (compile_page(source) if target.suffix=='.page' else source)
+    (sandbox/'unraid-version').write_text('version="7.3.3"\n')
+    (sandbox/'emhttp').mkdir()
+    (sandbox/'boot-config').mkdir()
     def script(method):
         node = next(n for n in nodes if n.attrib.get('Run') == '/bin/bash' and n.attrib.get('Method', '') == method)
         text = node.findtext('INLINE')
         text = text.replace('/tmp/fejes-mover-monitor-' + plugin.attrib['version'], sandbox.as_posix())
         text = text.replace('/usr/local/emhttp/plugins/fejes.mover.monitor', destination.as_posix())
+        text = text.replace('/etc/unraid-version', (sandbox/'unraid-version').as_posix())
+        text = text.replace('/usr/local/emhttp', (sandbox/'emhttp').as_posix())
+        text = text.replace('/boot/config', (sandbox/'boot-config').as_posix())
         subprocess.run(['bash', '-n'], input=text, text=True, check=True)
         return subprocess.run(['bash'], input=text, text=True, capture_output=True)
+    (sandbox/'unraid-version').write_text('version="6.12.0"\n')
+    assert script('').returncode != 0 and not destination.exists(), 'Unsupported OS must fail before install'
+    (sandbox/'unraid-version').write_text('version="7.3.3"\n')
     assert script('').returncode == 0, 'Clean install failed'
     installed = {p.name: p.read_bytes() for p in destination.iterdir()}
     assert script('').returncode == 0, 'Repeated install failed'
     assert installed == {p.name: p.read_bytes() for p in destination.iterdir()}
+    (sandbox/'unraid-version').write_text('version="8.0.0"\n')
+    assert script('').returncode != 0 and installed == {p.name:p.read_bytes() for p in destination.iterdir()}, 'Unsupported update changed runtime'
+    (sandbox/'unraid-version').write_text('version="7.3.3"\n')
     page = sandbox / 'FejesMover.page'
     page.write_text('<?php function broken( {')
     assert script('').returncode != 0, 'Invalid PHP must be rejected'
