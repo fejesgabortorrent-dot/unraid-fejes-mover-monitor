@@ -157,7 +157,7 @@ Az eredeti ütemezést és generált scriptet menteni kell. Ha később az ütem
 lemezkiosztás vagy plugin formátuma változik, az integrációt újra ellenőrizni
 kell. A wrapper nem tudja megakadályozni, hogy a pillanatkép után új írás
 kezdődjön; az eseményfigyelő és az ideiglenes letöltési hely továbbra is külön
-kezelendő. Éles ütemezésbe még nincs bekötve.
+kezelendő. Az élő ütemezés bekötésének eredménye alább szerepel.
 
 ### A meglévő cron-bejegyzés bekötése
 
@@ -168,6 +168,26 @@ indít azonnali hash-elést. A cron időmezői és kimeneti átirányítása meg
 Módosítás előtt újabb check-only teszt és kis `.txt` konfigurációs mentés készül;
 a mentés szándékosan nem `.cron` végű, így nem lesz belőle második feladat.
 Az `update_cron` hibája esetén az eredeti bejegyzést visszaállítja és újratölti.
+
+Az élő gépen az `update_cron` első sora nem érvényes shebang volt (`#/bin/bash`),
+ezért az eszköz kifejezetten `bash /usr/local/sbin/update_cron` formában hívja.
+A segéd a plugincronokat `crontab -c /etc/cron.d -` paranccsal tölti be; a sima
+`crontab -l` ezért nem megfelelő igazolás ezen a rendszeren. Az aktív
+`/etc/cron.d/root` bejegyzést külön ellenőriztük.
+
+### Élő próba eredménye — 2026-10-18
+
+- A két segédfájl rögzített commitból, SHA-256 ellenőrzéssel lett telepítve.
+- A NAS-os `--check-only` sikeres, öt mappakizárással; nem indított hash-elést.
+- Az eseményfigyelőben öt átmeneti mappakizárás van, kis konfigurációs mentéssel.
+- A meglévő vasárnap 05:00-s bejegyzés már az előellenőrzőt hívja;
+  az `/etc/cron.d/root` aktív sora ezt igazolta. Második feladat nem lett hozzáadva.
+- Teljes ütemezett hashfutás, pluginbeállítás-mentés utáni újrabekötés és reboot
+  még nem lett tesztelve. Ez nem teljes Unraid-elfogadási teszt.
+- Az öt statikus átmeneti kizárás befejezés utáni feloldása még hátravan.
+- A Mover globális indítási kapuja nincs bekötve. Ehhez a cache kapacitását,
+  a hátralévő letöltést és a megállított félkész bejegyzéseket fel kell mérni,
+  nehogy a halasztás miatt a cache megteljen.
 
 Ez a bejegyzés a plugin által generált fájlban él. A File Integrity GUI-ban
 végzett későbbi mentés vagy pluginváltozás felülírhatja: akkor a bekötést újra
@@ -186,7 +206,9 @@ python3 tools/wire_integrity_cron_test.py
 A tesztek hálózat és NAS-módosítás nélkül futnak. Lefedik a kész seedeket,
 megállított és közel kész letöltést, ellenőrzést/áthelyezést, közös tartalomutat,
 mountfeloldást, hibás adatot, időtúllépést és a privát kimenet elkerülését.
-Éles Unraid-, Mover- és File Integrity-integrációs teszt még szükséges.
+Teljes Unraid-, Mover- és File Integrity-elfogadási teszt még szükséges.
 Az ütemezett indító további 8 tesztje ellenőrzi a sed-kizárások tényleges
 illeszkedését, a meglévő parancsok megőrzését, hibánál a végrehajtás tiltását,
 és hogy az ellenőrző mód nem indít hash-elést vagy ír át konfigurációt.
+A cron-bekötés további 4 tesztje ellenőrzi az idempotens átirányítást,
+formátumelutasítást, atomi fájlcserét és a bash-sal történő cron-újratöltést.
