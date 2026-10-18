@@ -4,6 +4,16 @@ Hungarian-language Mover dashboard and file monitor for Unraid 7.x.
 
 **Release candidate. Not submitted to Community Applications. Clean install, update, reboot and uninstall still require validation on a disposable Unraid system.**
 
+## Interactive interface preview
+
+Download [the self-contained demo](docs/demo/index.html) and open it in your
+browser. It presents the planned interface in **Magyar / English / Deutsch**:
+pool capacity, protection states, threshold controls, nine scenarios, dry-check
+history and light/dark themes. It works offline and does not connect to a NAS.
+This is an interface concept, not the installed Unraid UI. Its decisions are
+illustrative JavaScript; the separate Python simulation tests the actual guard.
+See [demo instructions](docs/demo/README.md).
+
 ## Features
 
 - Dashboard tile with Mover process status and cache usage.
