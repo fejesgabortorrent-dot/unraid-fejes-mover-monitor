@@ -12,6 +12,24 @@ Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and G
 
 **Release candidate. Not submitted to Community Applications. Clean install, update, reboot and uninstall still require validation on a disposable Unraid system.**
 
+## Screenshots / Képernyőképek
+
+**Local browser demo with simulated data — not a live NAS.** These images show the actual compiled plugin pages in the isolated demo wrapper. Actual Unraid dashboard integration still requires acceptance testing.
+
+**Helyi demó, szimulált adatokkal.** A képek nem az élő NAS-ról készültek.
+
+### Mover Monitor / Figyelő
+
+![Mover Monitor — Hungarian demo](docs/images/monitor-hu-demo.png)
+
+### Dashboard card / Dashboard-kártya
+
+![Dashboard card — Hungarian demo](docs/images/dashboard-hu-demo.png)
+
+### Settings / Beállítások
+
+![Settings — Hungarian demo](docs/images/settings-hu-demo.png)
+
 ## Features
 
 - Dashboard tile with Mover process status and cache usage.
