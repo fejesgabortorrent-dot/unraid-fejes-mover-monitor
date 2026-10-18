@@ -48,6 +48,23 @@ No telemetry, credentials, server logs or user files are shipped in this reposit
 
 Report problems at [GitHub Issues](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues). Include your Unraid version, pool name and reproduction steps. Do not attach credentials or full private logs.
 
+## Optional torrent preflight for an external Mover launcher
+
+`python3 tools/torrent_preflight.py` performs a read-only qBittorrent check.
+It returns 0 only when every reported torrent is complete and in a known seed
+state; unfinished, stopped downloads, checks and moves return 10. API failures,
+unknown states and invalid snapshots return 20. Both nonzero results mean defer.
+The optional `--json` report includes host paths and must be kept private.
+
+This standalone tool is **not installed by the PLG** and does not change the
+legacy launcher, Unraid Mover or Dynamix File Integrity. It cannot enforce
+per-file Mover exclusions or prevent a torrent starting after its snapshot.
+See [torrent / Mover / File Integrity integration notes](docs/TORRENT-INTEGRITY-HU.md)
+before wiring it into an existing script. The live launcher must be reviewed
+first; it is not included in this repository.
+
+Run its isolated tests with `python3 tools/torrent_preflight_test.py`.
+
 ## Build
 
 ```
@@ -71,3 +88,4 @@ See [release status and remaining acceptance tests](docs/RELEASE-STATUS.md). Ear
 Fejes Mover Monitor is free and open source. If you find it useful, you can [support FejesNAS development via PayPal](https://paypal.me/FejesG). Support is voluntary and does not unlock features or guarantee support or development timelines.
 
 A Fejes Mover Monitor ingyenes és nyílt forráskódú. Ha hasznosnak találod, [támogathatod a FejesNAS fejlesztéseit PayPalon](https://paypal.me/FejesG). A támogatás önkéntes.
+
