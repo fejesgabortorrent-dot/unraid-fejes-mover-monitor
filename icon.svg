@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="24" fill="#172a3b"/><rect x="15" y="24" width="40" height="25" rx="6" fill="#59baff"/><rect x="73" y="79" width="40" height="25" rx="6" fill="#69d6b0"/><path d="M30 65h68m-13-13 13 13-13 13M98 60H30m13-13L30 60l13 13" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="45" cy="36" r="3" fill="#172a3b"/><circle cx="103" cy="91" r="3" fill="#172a3b"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="FM — Fejes Mover">
+<title>Fejes Mover</title><rect width="256" height="256" fill="#283747"/>
+<rect x="4" y="4" width="248" height="248" rx="40" fill="#334555" stroke="#7891a6" stroke-width="2"/>
+<path d="M46 49 L97 49 L97 63 L62 63 L62 79 L91 79 L91 93 L62 93 L62 119 L46 119 Z" fill="#f4f7fa"/>
+<path d="M111 119 L111 49 L129 49 L151 83 L173 49 L191 49 L191 119 L175 119 L175 76 L151 111 L127 76 L127 119 Z" fill="#f4f7fa"/>
+<rect x="32" y="150" width="81" height="56" rx="10" fill="#496074" stroke="#afc4d4" stroke-width="2"/>
+<path d="M44 166h45" stroke="#d2dfe9" stroke-width="3"/>
+<circle cx="47" cy="188" r="3" fill="#ff903f"/><circle cx="59" cy="188" r="3" fill="#d2dfe9"/>
+<rect x="143" y="150" width="81" height="56" rx="10" fill="#496074" stroke="#afc4d4" stroke-width="2"/>
+<path d="M155 166h45" stroke="#d2dfe9" stroke-width="3"/>
+<circle cx="158" cy="188" r="3" fill="#ff903f"/><circle cx="170" cy="188" r="3" fill="#d2dfe9"/>
+<path d="M72 134 L155 134 L155 124 L180 141 L155 158 L155 148 L72 148 Z" fill="#ff903f"/>
+<path d="M198 174 L224 184 L222 211 L214 225 L198 236 L182 225 L174 211 L172 184 Z" fill="#55d6a0"/>
+<path d="M183 202l11 11 19-22" fill="none" stroke="#283747" stroke-width="6"/>
+</svg>

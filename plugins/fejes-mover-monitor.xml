@@ -4,8 +4,8 @@
   <PluginURL>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg</PluginURL>
   <Support>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues</Support>
   <Project>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor</Project>
-  <Icon>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/icon.svg</Icon>
-  <Overview>Hungarian-language Mover activity dashboard and open-file monitor for Unraid 7.x. Requires a pool named cache. Shows process status, cache usage and recent Mover log lines without starting Mover. Includes an optional settings panel for an existing Filmek_Mover_Threshold script; no automation script or schedule is installed. Early public release: custom pool names, transfer ETA and English translation are not supported.</Overview>
+  <Icon>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/icon.png</Icon>
+  <Overview>Fejes Mover: Hungarian, US English and German Mover dashboard for Unraid 7.x. Observer mode by default, synthetic Demo and explicitly enabled Advanced settings. Observe a configured pool; legacy automation editing and torrent/integrity protection diagnostics require cache. Includes opt-in protection helpers; no Mover start or schedule installation on plugin install. Experimental beta; live data movement and reboot acceptance remain pending.</Overview>
   <Beta>true</Beta>
   <MinVer>7.0.0</MinVer>
   <Category>Tools:Utilities</Category>

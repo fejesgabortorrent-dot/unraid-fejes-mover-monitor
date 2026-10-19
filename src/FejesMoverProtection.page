@@ -5,8 +5,8 @@ Tag="cogs"
 ---
 <?php
 $fpEsc=static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
-$fpVar=@parse_ini_file('/var/local/emhttp/var.ini');
-$fpToken=is_array($fpVar)?($fpVar['csrf_token']??''):'';
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$fpToken=$fmc['token'];
 $fpTools='/boot/config/plugins/fejes.mover.monitor/tools/';
 $fpError='';$fpMessage='';$fpReport=null;
 $fpLabels=[
@@ -23,6 +23,14 @@ try {
   if(!is_string($_POST['fp_csrf']??null)||!is_string($fpToken)||$fpToken===''||!hash_equals($fpToken,$_POST['fp_csrf']))throw new RuntimeException('Lejárt munkamenet. Töltsd újra az oldalt.');
   $fpAction=$_POST['fp_action']??'';
   if(!is_string($fpAction)||!in_array($fpAction,['check','wire'],true))throw new RuntimeException('Ismeretlen művelet.');
+  if($fmc['error']||!is_resource($fmc['lock']))throw new RuntimeException('A konfiguráció nem olvasható biztonságosan.');
+  if($fmc['mode']==='demo'){
+   if($fpAction!=='check')throw new RuntimeException('Demó módban nincs élő művelet.');
+   $fpReport=['torrent'=>'no_torrent_blocker','checked_torrents'=>7,'blocking_torrents'=>0,'cache_free_bytes'=>633*1073741824,'remaining_upper_bound_bytes'=>20*1073741824,'pressure'=>'ok'];
+   $fpMessage='Szimulált állapot. Nincs élő lekérdezés.';
+  }else{
+  if($fmc['pool']!=='cache')throw new RuntimeException('A torrentvédelem jelenleg csak cache pool mellett ellenőrizhető.');
+  if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('A bekötéshez Haladó mód, csatolt cache és külön jóváhagyás szükséges.');
   $fpScript=$fpTools.($fpAction==='check'?'fejes_service.py':'wire_integrity_cron.py');
   if(!is_file($fpScript))throw new RuntimeException('A közös segédek nincsenek telepítve.');
   $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':'').' 2>/dev/null';
@@ -33,6 +41,7 @@ try {
    if(!is_array($fpReport))throw new RuntimeException('Érvénytelen állapotválasz.');
    $fpMessage='Pillanatkép ideje: '.date('Y-m-d H:i:s');
   } else $fpMessage='A meglévő File Integrity ütemezés bekötése lefutott. Kérj állapotellenőrzést az aktív cron igazolásához.';
+  }
  }
 } catch(Throwable $e) {$fpError=$e instanceof JsonException?'Nem olvasható állapotválasz.':$e->getMessage();}
 $fpLabel=static fn($v)=>$fpLabels[is_string($v)?$v:'unknown']??'Nem ellenőrizhető';
@@ -42,6 +51,8 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 #fp{max-width:1050px;margin:24px auto;padding:0 18px;font-size:15px;line-height:1.6}#fp .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}#fp section,#fp .notice{border:1px solid #8885;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fp h2{font-size:28px}#fp h3{margin-top:0}#fp .error{border-color:#d88868}#fp button{padding:10px 16px;margin:8px 8px 8px 0}#fp code{overflow-wrap:anywhere}#fp .muted{opacity:.75}
 </style>
 <div id="fp">
+<?=$fmc['banner']?>
+<p><a href="/Dashboard#fejes-mover-dashboard">← Vissza a főoldali kártyához</a></p>
 <h2>FejesMover · Összehangolt védelem</h2>
 <p><a href="/Tools/FejesMover">← Mover figyelő</a> · <a href="/Tools/FejesMoverSettings">Küszöb és várakozás</a></p>
 <p>Torrentállapot, cache-kapacitás és ütemezett File Integrity egy helyen.</p>
@@ -60,9 +71,12 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
  <section><h3>File Integrity</h3><p>Mentett ütemezés: <strong><?=$fpEsc($fpLabel($fpReport['integrity_config']??'unknown'))?></strong><br>Aktív ütemezés: <strong><?=$fpEsc($fpLabel($fpReport['integrity_active']??'unknown'))?></strong></p>
  <p>A meglévő feladat futása előtt az indító frissen lekéri és kizárja a változó torrentmappákat.</p></section>
  </div>
+ <?php if($fmc['mode']==='advanced'&&$fmc['pool']==='cache'&&!$fmc['error']&&$fmc['mounted']):?>
  <section><h3>Meglévő File Integrity ütemezés bekötése</h3><p>Az alábbi gomb a meglévő egyetlen feladatot irányítja az előellenőrzőre, mentéssel és próbaellenőrzéssel. Megőrzi az időpontot, nem hoz létre új feladatot és nem indít hash-elést.</p>
+ <label><input type="checkbox" name="wire_ack" value="yes"> Jóváhagyom a meglévő File Integrity feladat bekötését.</label><br>
  <button type="submit" name="fp_action" value="wire">Meglévő ütemezés bekötése / újraellenőrzése</button>
  <p class="muted">A File Integrity saját beállításainak mentése felülírhatja a bekötést. Utána itt ellenőrizd az aktív állapotot.</p></section>
+<?php endif?>
 </form>
 <section><h3>Mover-indító és eseményfigyelő</h3><p>Az ellenőrzött indítóscript védelme: <strong><?=$fpEsc($fpLabel($fpReport['mover_gate']??'unknown'))?></strong></p><p>A csomag tartalmazza a védett Mover-indítót és a külön bekötősegédet. A bekötő az áttekintett User Scripts fájlt módosítja mentéssel, megtartva a meglévő ütemezést. A felület nem indít Movert. Az állapot a beolvasott scriptet igazolja, más indítási útvonalat nem.</p>
 <p>Helyhiánynál sincs automatikus védelmi felülbírálás. Félkész letöltés mellett a globális indító halaszt; a figyelmeztetés kapacitásrendezést igényel. A kézzel vagy más ütemezésből indított Moverre ez a kapu nem vonatkozik.</p>
