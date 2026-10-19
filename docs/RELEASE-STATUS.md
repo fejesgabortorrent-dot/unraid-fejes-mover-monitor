@@ -1,12 +1,12 @@
 # Integration candidate — 2026-10-19
 
-Plugin version: `2026.10.19.7` (experimental beta). Combines protection PR #3,
+Plugin version: `2026.10.19.8` (experimental beta). Combines protection PR #3,
 mode/navigation PR #6 and the separate owner download-counter tool from PR #5.
 No automatic main-branch merge or new stable release.
 
 Validation on Unraid 7.3.3 in an isolated temporary filesystem:
 
-- 44 protection/dry-run unit tests, 56 PHP application fixtures, 31 mode guards.
+- 45 protection/dry-run unit tests, 57 PHP application fixtures, 31 mode guards.
 - 12 synthetic movement/deferral scenarios; no live media movement.
 - Reproducible XML/checksums, PHP/Python lint, install/reinstall, invalid-runtime
   rejection, invalid-code rejection and uninstall with retained helpers.
@@ -32,7 +32,12 @@ This document records only the completed isolated checks. Community Applications
 submission and broad hardware/configuration compatibility remain pending.
 
 The dry-run button was verified through the real NAS WebGUI. It shows seven
-read-only conditions and never executes the launcher. Six dry-run unit tests
+read-only conditions and never executes the launcher. Seven dry-run unit tests
 cover readiness, simultaneous blockers, missing share, unknown state and no writes.
 The owner separately enabled the torrent gate after the first lifecycle test;
 the subsequent dry-run update preserved that launcher and both cron files.
+
+Protected file/folder basenames are now opt-in for the authenticated dry-run UI.
+Default status and CLI dry-run output remain redacted; full paths and real NAS
+filenames are not published in this repository. Live browser verification
+confirmed the private list is displayed. Multi-file torrents may show a folder.

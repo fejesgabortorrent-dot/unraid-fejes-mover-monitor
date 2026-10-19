@@ -34,7 +34,7 @@ try {
   if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('A bekötéshez Haladó mód, csatolt cache és külön jóváhagyás szükséges.');
   $fpScript=$fpTools.($fpAction!=='wire'?'fejes_service.py':'wire_integrity_cron.py');
   if(!is_file($fpScript))throw new RuntimeException('A közös segédek nincsenek telepítve.');
-  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run':'')).' 2>/dev/null';
+  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run --include-items':'')).' 2>/dev/null';
   $fpOut=[];$fpCode=0;exec($fpCommand,$fpOut,$fpCode);
   if($fpCode!==0)throw new RuntimeException('A művelet nem fejeződött be. Ellenőrizd a Python, Docker és File Integrity elérhetőségét.');
   if($fpAction!=='wire') {
@@ -88,6 +88,10 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php if($fpKey==='torrent'&&is_int($fpDetail)):?><p><?=$fpEsc($fpT('Halasztást okozó torrentek: ','Blocking torrents: ','Blockierende Torrents: '))?><?=$fpDetail?></p><?php endif?>
 <?php if($fpKey==='cooldown'&&is_array($fpDetail)):?><p><?=$fpEsc((int)ceil(($fpDetail['remaining_seconds']??0)/60))?> <?=$fpEsc($fpT('perc várakozás','minutes remaining','Minuten verbleibend'))?></p><?php endif?>
 </div><?php endforeach?></div>
+<?php if(!empty($fpReport['protected_items'])):?><h4><?=$fpEsc($fpT('Halasztást okozó fájlok / mappák','Files / folders causing deferral','Dateien / Ordner mit Aufschub'))?></h4><ul style="list-style:none;padding:0">
+<?php foreach($fpReport['protected_items'] as $fpItem):if(!is_array($fpItem)||!is_string($fpItem['name']??null))continue;?>
+<li style="padding:10px 12px;margin:6px 0;border:1px solid #8885;border-left:4px solid #ffb55c;overflow-wrap:anywhere"><strong><?=$fpEsc($fpItem['name'])?></strong><br><small><?=$fpEsc(($fpItem['kind']??'unknown')==='folder'?$fpT('Mappa','Folder','Ordner'):(($fpItem['kind']??'unknown')==='file'?$fpT('Fájl','File','Datei'):$fpT('Fájl vagy mappa; típusa nem igazolt','File or folder; type not verified','Datei oder Ordner; Typ nicht bestätigt')))?></small></li>
+<?php endforeach?></ul><p class="muted"><?=$fpEsc($fpT('Csak nevek, teljes elérési út nélkül. Több fájlos torrentnél a mappa neve jelenhet meg. Legfeljebb 25 elem látható.','Names only, without full paths. Multi-file torrents may show a folder name. Up to 25 entries are shown.','Nur Namen ohne vollständige Pfade. Bei Torrents mit mehreren Dateien kann der Ordnername erscheinen. Höchstens 25 Einträge.'))?></p><?php endif?>
 <p class="muted"><?=$fpEsc($fpT('A gomb ismételt megnyomása új pillanatképet kér. Az éles indításnál minden feltételt újra kell ellenőrizni.','Press again for a fresh snapshot. Every condition must be checked again at an actual start.','Erneut drücken für eine neue Momentaufnahme. Beim echten Start müssen alle Bedingungen erneut geprüft werden.'))?></p>
 </section>
 <?php endif?>

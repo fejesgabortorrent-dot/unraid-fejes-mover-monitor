@@ -27,9 +27,9 @@ MOVER_PID = Path('/var/run/mover.pid')
 SHARE = Path('/mnt/user/Filmek')
 
 
-def dry_run(container='binhex-qbittorrentvpn'):
+def dry_run(container='binhex-qbittorrentvpn', include_items=False):
     """Read-only decision snapshot. Never execute a launcher or write a timestamp."""
-    report = status(container)
+    report = status(container, include_items=include_items)
     checks = []
     def add(key, state, detail=''):
         checks.append({'key': key, 'state': state, 'detail': detail})
@@ -117,7 +117,7 @@ def cron_state(source):
     return 'wired' if source == expected else 'original'
 
 
-def status(container='binhex-qbittorrentvpn', reserve_gib=20):
+def status(container='binhex-qbittorrentvpn', reserve_gib=20, include_items=False):
     result = {'torrent': 'unavailable', 'cache': 'unavailable',
               'integrity_config': 'unknown', 'integrity_active': 'unknown',
               'legacy_launcher_present': LAUNCHER.is_file(),
@@ -127,7 +127,8 @@ def status(container='binhex-qbittorrentvpn', reserve_gib=20):
         result['mover_gate'] = 'wired' if rewrite_launcher(launcher) == launcher else 'original'
     except ERRORS:
         result['mover_gate'] = 'unknown'
-    # No media filenames, trackers, subprocess output or protected paths in reports.
+    # Default reports contain no media filenames or paths. The authenticated
+    # dry-run UI can explicitly request basenames only; never trackers or paths.
     try:
         configured = (ROOT / 'integrity-check.cron').read_text()
         result['integrity_config'] = cron_state(configured)
@@ -150,6 +151,12 @@ def status(container='binhex-qbittorrentvpn', reserve_gib=20):
         result.update(torrent=decision['decision'],
                       checked_torrents=decision['checked_torrents'],
                       blocking_torrents=decision['blocking_torrents'])
+        if include_items:
+            paths=decision['protected_paths']
+            result['protected_items']=[{'name':Path(p).name,
+                'kind':'folder' if Path(p).is_dir() else 'file' if Path(p).is_file() else 'unknown'}
+                for p in paths[:25]]
+            result['protected_items_total']=len(paths)
     except ERRORS:
         pass
     try:
@@ -203,12 +210,15 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['status', 'dry-run', 'run-mover'])
     parser.add_argument('--container', default='binhex-qbittorrentvpn')
+    parser.add_argument('--include-items', action='store_true', help='Private UI: include protected file/folder basenames in dry-run output only')
     args = parser.parse_args(argv)
     if not args.container or args.container.startswith('-'):
         parser.error('Invalid container name')
+    if args.include_items and args.action!='dry-run':
+        parser.error('--include-items is only supported for a private dry-run preview')
     if args.action == 'run-mover':
         return run_mover(args.container)
-    print(json.dumps(dry_run(args.container) if args.action == 'dry-run' else status(args.container), allow_nan=False))
+    print(json.dumps(dry_run(args.container, args.include_items) if args.action == 'dry-run' else status(args.container), allow_nan=False))
     return 0
 
 

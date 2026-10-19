@@ -94,10 +94,11 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     (lab / 'helpers/fejes_service.py').write_text('import json\nprint(json.dumps('+repr({'torrent':'defer','checked_torrents':7,'blocking_torrents':2,'cache_free_bytes':1073741824,'remaining_upper_bound_bytes':2147483648,'pressure':'warning','integrity_config':'wired','integrity_active':'not_verified'})+'))\n')
     snapshot = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'check'})
     check('Authenticated protection check renders returned diagnostics', 'Halasztás: félkész' in snapshot and '1,0 GiB' in snapshot and 'Az aktív bekötés nem igazolt' in snapshot)
-    dry_fixture={'torrent':'defer','blocking_torrents':2,'dry_run':{'decision':'wait','read_only':True,'checks':[{'key':key,'state':'wait' if key in ('capacity','torrent') else 'pass','detail':2 if key=='torrent' else ''} for key in ('launcher','capacity','torrent','backup','parity','mover','cooldown')]}}
-    (lab/'helpers/fejes_service.py').write_text('import sys,json\nassert sys.argv[-1]=="dry-run"\nprint(json.dumps('+repr(dry_fixture)+'))\n')
+    dry_fixture={'protected_items':[{'name':'<b>example</b>.mkv','kind':'unknown'}],'torrent':'defer','blocking_torrents':2,'dry_run':{'decision':'wait','read_only':True,'checks':[{'key':key,'state':'wait' if key in ('capacity','torrent') else 'pass','detail':2 if key=='torrent' else ''} for key in ('launcher','capacity','torrent','backup','parity','mover','cooldown')]}}
+    (lab/'helpers/fejes_service.py').write_text('import sys,json\nassert "dry-run" in sys.argv and "--include-items" in sys.argv\nprint(json.dumps('+repr(dry_fixture)+'))\n')
     dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'})
     check('Dry-run POST shows seven visual conditions and the wait result', 'Most várakozna' in dry and all(label in dry for label in ['Indító ellenőrzése','Szabad hely és küszöb','Torrentvédelem','Appdata-mentés','Paritásművelet','Futó Mover','Újrapróbálkozási várakozás']))
+    check('Private item basenames are HTML escaped', '&lt;b&gt;example&lt;/b&gt;.mkv' in dry and '<b>example</b>.mkv' not in dry)
     check('Monitor dry-run button uses CSRF-protected POST', 'value="dry-run"' in render('FejesMover.page') and 'name="fp_csrf"' in render('FejesMover.page'))
     for language in ('en','de'):
         translated_dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'},language)

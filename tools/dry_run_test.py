@@ -67,5 +67,15 @@ class DryRunTest(unittest.TestCase):
         (self.root/'share').rmdir()
         self.assertEqual(self.run_preview()['decision'],'unknown')
 
+    def test_private_names_are_opt_in_and_never_include_paths(self):
+        torrents=[{'state':'downloading','progress':.5,'content_path':'/data/example.mkv','amount_left':20}]
+        mounts=[{'Type':'bind','Destination':'/data','Source':'/mnt/user/private-parent'}]
+        with patch.object(service,'read_snapshot',return_value=(torrents,mounts)),patch.object(service.os.path,'ismount',return_value=False):
+            public=service.status()
+            private=service.status(include_items=True)
+        self.assertNotIn('example.mkv',json.dumps(public))
+        self.assertEqual(private['protected_items'][0]['name'],'example.mkv')
+        self.assertNotIn('/mnt/user/private-parent',json.dumps(private))
+
 
 if __name__=='__main__':unittest.main()

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.19.7" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
+<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.19.8" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
 <CHANGES>
+### 2026.10.19.8 (beta)
+- Show protected content basenames only in explicitly requested private dry-run UI.
 ### 2026.10.19.7 (beta)
 - Fail dry-run readiness closed when the required legacy share is unavailable.
 ### 2026.10.19.6 (beta)
@@ -33,7 +35,7 @@
 - Optional legacy threshold settings, retained only on systems with the existing script.
 - Installer validates PHP before activation and preserves local backup files.
 </CHANGES>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
 ---
 <?php
 $fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
@@ -130,7 +132,7 @@ HTML;
 
 <?php } ?>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Monitor"
 Icon="fa-exchange"
 Tag="cogs"
@@ -384,7 +386,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
 Title="FejesMover védelem"
 Icon="fa-shield"
 Tag="cogs"
@@ -428,7 +430,7 @@ try {
   if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('A bekötéshez Advanced mód, csatolt cache és külön jóváhagyás szükséges.');
   $fpScript=$fpTools.($fpAction!=='wire'?'fejes_service.py':'wire_integrity_cron.py');
   if(!is_file($fpScript))throw new RuntimeException('A közös segédek nincsenek telepítve.');
-  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run':'')).' 2>/dev/null';
+  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run --include-items':'')).' 2>/dev/null';
   $fpOut=[];$fpCode=0;exec($fpCommand,$fpOut,$fpCode);
   if($fpCode!==0)throw new RuntimeException('A művelet nem fejeződött be. Ellenőrizd a Python, Docker és File Integrity elérhetőségét.');
   if($fpAction!=='wire') {
@@ -482,6 +484,10 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,'.',',
 <?php if($fpKey==='torrent'&&is_int($fpDetail)):?><p><?=$fpEsc($fpT('Halasztást okozó torrentek: ','Blocking torrents: ','Blockierende Torrents: '))?><?=$fpDetail?></p><?php endif?>
 <?php if($fpKey==='cooldown'&&is_array($fpDetail)):?><p><?=$fpEsc((int)ceil(($fpDetail['remaining_seconds']??0)/60))?> <?=$fpEsc($fpT('perc várakozás','minutes remaining','Minuten verbleibend'))?></p><?php endif?>
 </div><?php endforeach?></div>
+<?php if(!empty($fpReport['protected_items'])):?><h4><?=$fpEsc($fpT('Halasztást okozó fájlok / mappák','Files / folders causing deferral','Dateien / Ordner mit Aufschub'))?></h4><ul style="list-style:none;padding:0">
+<?php foreach($fpReport['protected_items'] as $fpItem):if(!is_array($fpItem)||!is_string($fpItem['name']??null))continue;?>
+<li style="padding:10px 12px;margin:6px 0;border:1px solid #8885;border-left:4px solid #ffb55c;overflow-wrap:anywhere"><strong><?=$fpEsc($fpItem['name'])?></strong><br><small><?=$fpEsc(($fpItem['kind']??'unknown')==='folder'?$fpT('Mappa','Folder','Ordner'):(($fpItem['kind']??'unknown')==='file'?$fpT('Fájl','File','Datei'):$fpT('Fájl vagy mappa; típusa nem igazolt','File or folder; type not verified','Datei oder Ordner; Typ nicht bestätigt')))?></small></li>
+<?php endforeach?></ul><p class="muted"><?=$fpEsc($fpT('Csak nevek, teljes elérési út nélkül. Több fájlos torrentnél a mappa neve jelenhet meg. Legfeljebb 25 elem látható.','Names only, without full paths. Multi-file torrents may show a folder name. Up to 25 entries are shown.','Nur Namen ohne vollständige Pfade. Bei Torrents mit mehreren Dateien kann der Ordnername erscheinen. Höchstens 25 Einträge.'))?></p><?php endif?>
 <p class="muted"><?=$fpEsc($fpT('A gomb ismételt megnyomása új pillanatképet kér. Az éles indításnál minden feltételt újra kell ellenőrizni.','Press again for a fresh snapshot. Every condition must be checked again at an actual start.','Erneut drücken für eine neue Momentaufnahme. Beim echten Start müssen alle Bedingungen erneut geprüft werden.'))?></p>
 </section>
 <?php endif?>
@@ -539,7 +545,7 @@ try {
   if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('A bekötéshez Erweitert mód, csatolt cache és külön jóváhagyás szükséges.');
   $fpScript=$fpTools.($fpAction!=='wire'?'fejes_service.py':'wire_integrity_cron.py');
   if(!is_file($fpScript))throw new RuntimeException('A közös segédek nincsenek telepítve.');
-  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run':'')).' 2>/dev/null';
+  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run --include-items':'')).' 2>/dev/null';
   $fpOut=[];$fpCode=0;exec($fpCommand,$fpOut,$fpCode);
   if($fpCode!==0)throw new RuntimeException('A művelet nem fejeződött be. Ellenőrizd a Python, Docker és File Integrity elérhetőségét.');
   if($fpAction!=='wire') {
@@ -593,6 +599,10 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php if($fpKey==='torrent'&&is_int($fpDetail)):?><p><?=$fpEsc($fpT('Halasztást okozó torrentek: ','Blocking torrents: ','Blockierende Torrents: '))?><?=$fpDetail?></p><?php endif?>
 <?php if($fpKey==='cooldown'&&is_array($fpDetail)):?><p><?=$fpEsc((int)ceil(($fpDetail['remaining_seconds']??0)/60))?> <?=$fpEsc($fpT('perc várakozás','minutes remaining','Minuten verbleibend'))?></p><?php endif?>
 </div><?php endforeach?></div>
+<?php if(!empty($fpReport['protected_items'])):?><h4><?=$fpEsc($fpT('Halasztást okozó fájlok / mappák','Files / folders causing deferral','Dateien / Ordner mit Aufschub'))?></h4><ul style="list-style:none;padding:0">
+<?php foreach($fpReport['protected_items'] as $fpItem):if(!is_array($fpItem)||!is_string($fpItem['name']??null))continue;?>
+<li style="padding:10px 12px;margin:6px 0;border:1px solid #8885;border-left:4px solid #ffb55c;overflow-wrap:anywhere"><strong><?=$fpEsc($fpItem['name'])?></strong><br><small><?=$fpEsc(($fpItem['kind']??'unknown')==='folder'?$fpT('Mappa','Folder','Ordner'):(($fpItem['kind']??'unknown')==='file'?$fpT('Fájl','File','Datei'):$fpT('Fájl vagy mappa; típusa nem igazolt','File or folder; type not verified','Datei oder Ordner; Typ nicht bestätigt')))?></small></li>
+<?php endforeach?></ul><p class="muted"><?=$fpEsc($fpT('Csak nevek, teljes elérési út nélkül. Több fájlos torrentnél a mappa neve jelenhet meg. Legfeljebb 25 elem látható.','Names only, without full paths. Multi-file torrents may show a folder name. Up to 25 entries are shown.','Nur Namen ohne vollständige Pfade. Bei Torrents mit mehreren Dateien kann der Ordnername erscheinen. Höchstens 25 Einträge.'))?></p><?php endif?>
 <p class="muted"><?=$fpEsc($fpT('A gomb ismételt megnyomása új pillanatképet kér. Az éles indításnál minden feltételt újra kell ellenőrizni.','Press again for a fresh snapshot. Every condition must be checked again at an actual start.','Erneut drücken für eine neue Momentaufnahme. Beim echten Start müssen alle Bedingungen erneut geprüft werden.'))?></p>
 </section>
 <?php endif?>
@@ -650,7 +660,7 @@ try {
   if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('A bekötéshez Haladó mód, csatolt cache és külön jóváhagyás szükséges.');
   $fpScript=$fpTools.($fpAction!=='wire'?'fejes_service.py':'wire_integrity_cron.py');
   if(!is_file($fpScript))throw new RuntimeException('A közös segédek nincsenek telepítve.');
-  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run':'')).' 2>/dev/null';
+  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run --include-items':'')).' 2>/dev/null';
   $fpOut=[];$fpCode=0;exec($fpCommand,$fpOut,$fpCode);
   if($fpCode!==0)throw new RuntimeException('A művelet nem fejeződött be. Ellenőrizd a Python, Docker és File Integrity elérhetőségét.');
   if($fpAction!=='wire') {
@@ -704,6 +714,10 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php if($fpKey==='torrent'&&is_int($fpDetail)):?><p><?=$fpEsc($fpT('Halasztást okozó torrentek: ','Blocking torrents: ','Blockierende Torrents: '))?><?=$fpDetail?></p><?php endif?>
 <?php if($fpKey==='cooldown'&&is_array($fpDetail)):?><p><?=$fpEsc((int)ceil(($fpDetail['remaining_seconds']??0)/60))?> <?=$fpEsc($fpT('perc várakozás','minutes remaining','Minuten verbleibend'))?></p><?php endif?>
 </div><?php endforeach?></div>
+<?php if(!empty($fpReport['protected_items'])):?><h4><?=$fpEsc($fpT('Halasztást okozó fájlok / mappák','Files / folders causing deferral','Dateien / Ordner mit Aufschub'))?></h4><ul style="list-style:none;padding:0">
+<?php foreach($fpReport['protected_items'] as $fpItem):if(!is_array($fpItem)||!is_string($fpItem['name']??null))continue;?>
+<li style="padding:10px 12px;margin:6px 0;border:1px solid #8885;border-left:4px solid #ffb55c;overflow-wrap:anywhere"><strong><?=$fpEsc($fpItem['name'])?></strong><br><small><?=$fpEsc(($fpItem['kind']??'unknown')==='folder'?$fpT('Mappa','Folder','Ordner'):(($fpItem['kind']??'unknown')==='file'?$fpT('Fájl','File','Datei'):$fpT('Fájl vagy mappa; típusa nem igazolt','File or folder; type not verified','Datei oder Ordner; Typ nicht bestätigt')))?></small></li>
+<?php endforeach?></ul><p class="muted"><?=$fpEsc($fpT('Csak nevek, teljes elérési út nélkül. Több fájlos torrentnél a mappa neve jelenhet meg. Legfeljebb 25 elem látható.','Names only, without full paths. Multi-file torrents may show a folder name. Up to 25 entries are shown.','Nur Namen ohne vollständige Pfade. Bei Torrents mit mehreren Dateien kann der Ordnername erscheinen. Höchstens 25 Einträge.'))?></p><?php endif?>
 <p class="muted"><?=$fpEsc($fpT('A gomb ismételt megnyomása új pillanatképet kér. Az éles indításnál minden feltételt újra kell ellenőrizni.','Press again for a fresh snapshot. Every condition must be checked again at an actual start.','Erneut drücken für eine neue Momentaufnahme. Beim echten Start müssen alle Bedingungen erneut geprüft werden.'))?></p>
 </section>
 <?php endif?>
@@ -731,7 +745,7 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
 // Shared, fail-closed runtime configuration. No settings or automation writes here.
 return (static function ($configWrite) {
     $language = $_COOKIE['fejes_mover_lang'] ?? 'hu';
@@ -795,7 +809,7 @@ return (static function ($configWrite) {
         't'=>$t,'esc'=>$esc,'banner'=>$banner];
 })(!empty($fmcConfigWrite));
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Settings"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1085,7 +1099,7 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover · Mód és pool"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1276,7 +1290,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Read-only, conservative qBittorrent gate for an external Mover launcher."""
 import argparse
 import json
@@ -1392,7 +1406,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Run an existing generated Bunker schedule with live torrent exclusions."""
 import argparse
 import pathlib
@@ -1494,7 +1508,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Route the existing File Integrity cron job through its reviewed preflight."""
 import argparse
 import datetime
@@ -1602,7 +1616,7 @@ if __name__ == "__main__":
               "errno=" + str(getattr(exc, "errno", None)))
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Shared read-only diagnostics and an opt-in guarded legacy Mover launcher."""
 import argparse
 import fcntl
@@ -1631,9 +1645,9 @@ MOVER_PID = Path('/var/run/mover.pid')
 SHARE = Path('/mnt/user/Filmek')
 
 
-def dry_run(container='binhex-qbittorrentvpn'):
+def dry_run(container='binhex-qbittorrentvpn', include_items=False):
     """Read-only decision snapshot. Never execute a launcher or write a timestamp."""
-    report = status(container)
+    report = status(container, include_items=include_items)
     checks = []
     def add(key, state, detail=''):
         checks.append({'key': key, 'state': state, 'detail': detail})
@@ -1721,7 +1735,7 @@ def cron_state(source):
     return 'wired' if source == expected else 'original'
 
 
-def status(container='binhex-qbittorrentvpn', reserve_gib=20):
+def status(container='binhex-qbittorrentvpn', reserve_gib=20, include_items=False):
     result = {'torrent': 'unavailable', 'cache': 'unavailable',
               'integrity_config': 'unknown', 'integrity_active': 'unknown',
               'legacy_launcher_present': LAUNCHER.is_file(),
@@ -1731,7 +1745,8 @@ def status(container='binhex-qbittorrentvpn', reserve_gib=20):
         result['mover_gate'] = 'wired' if rewrite_launcher(launcher) == launcher else 'original'
     except ERRORS:
         result['mover_gate'] = 'unknown'
-    # No media filenames, trackers, subprocess output or protected paths in reports.
+    # Default reports contain no media filenames or paths. The authenticated
+    # dry-run UI can explicitly request basenames only; never trackers or paths.
     try:
         configured = (ROOT / 'integrity-check.cron').read_text()
         result['integrity_config'] = cron_state(configured)
@@ -1754,6 +1769,12 @@ def status(container='binhex-qbittorrentvpn', reserve_gib=20):
         result.update(torrent=decision['decision'],
                       checked_torrents=decision['checked_torrents'],
                       blocking_torrents=decision['blocking_torrents'])
+        if include_items:
+            paths=decision['protected_paths']
+            result['protected_items']=[{'name':Path(p).name,
+                'kind':'folder' if Path(p).is_dir() else 'file' if Path(p).is_file() else 'unknown'}
+                for p in paths[:25]]
+            result['protected_items_total']=len(paths)
     except ERRORS:
         pass
     try:
@@ -1807,19 +1828,22 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['status', 'dry-run', 'run-mover'])
     parser.add_argument('--container', default='binhex-qbittorrentvpn')
+    parser.add_argument('--include-items', action='store_true', help='Private UI: include protected file/folder basenames in dry-run output only')
     args = parser.parse_args(argv)
     if not args.container or args.container.startswith('-'):
         parser.error('Invalid container name')
+    if args.include_items and args.action!='dry-run':
+        parser.error('--include-items is only supported for a private dry-run preview')
     if args.action == 'run-mover':
         return run_mover(args.container)
-    print(json.dumps(dry_run(args.container) if args.action == 'dry-run' else status(args.container), allow_nan=False))
+    print(json.dumps(dry_run(args.container, args.include_items) if args.action == 'dry-run' else status(args.container), allow_nan=False))
     return 0
 
 
 if __name__ == '__main__':
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.7/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.8/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Add an opt-in torrent gate to the reviewed legacy threshold script."""
 import argparse
 import datetime
@@ -1944,7 +1968,7 @@ if __name__ == '__main__':
 ]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.10.19.7
+src=/tmp/fejes-mover-monitor-2026.10.19.8
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+).' >&2; exit 1; }
