@@ -20,6 +20,7 @@ checked_js = set()
 with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     lab = Path(directory)
     paths = {
+        '/etc/cron.d/root': str(lab/'active-cron'),
         '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php': str(lab/'FejesMoverRuntime.php'),
         '/boot/config/plugins/fejes.mover.monitor/settings.json': str(lab/'config.json'),
         '/boot/config/pools/': str(lab/'pools')+'/',
@@ -82,6 +83,14 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     check('Idle detail page renders without PHP warnings', '● Nem fut' in page)
     check('Missing cache shows unavailable capacity', '<span>—</span>' in page)
     check('Syslog HTML is escaped', '&lt;script&gt;' in page and '<script>alert("test")</script>' not in page)
+    check('Missing schedule never claims active automation', 'Az automatikus ütemezés nem igazolt' in page)
+    schedule='*/15 * * * * /usr/local/emhttp/plugins/user.scripts/startCustom.php '+(lab/'automation/script').as_posix()+' > /dev/null 2>&1\n'
+    (lab/'active-cron').write_text(schedule,newline='\n')
+    for lang,label in [('hu','Ütemezés aktív'),('en','Schedule active'),('de','Zeitplan aktiv')]:
+        check(lang+': verified schedule is visible', label in render('FejesMover.page',language=lang))
+    (lab/'active-cron').write_text('# '+schedule)
+    check('Commented scheduler never claims active automation','Az automatikus ütemezés nem igazolt' in render('FejesMover.page'))
+    (lab/'active-cron').unlink()
     settings = render('FejesMoverSettings.page')
     check('Missing optional automation is handled', 'A script nincs telepítve' in settings)
     protection = render('FejesMoverProtection.page')

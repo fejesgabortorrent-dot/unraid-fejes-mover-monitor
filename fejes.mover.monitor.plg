@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.19.92" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
+<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.19.93" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
 <CHANGES>
+### 2026.10.19.93 (beta)
+- Show the active quarter-hour automation schedule and direct settings access.
 ### 2026.10.19.92 (beta)
 - Reject missing PHP ctype before activating any runtime file.
 ### 2026.10.19.91 (beta)
@@ -41,7 +43,7 @@
 - Optional legacy threshold settings, retained only on systems with the existing script.
 - Installer validates PHP before activation and preserves local backup files.
 </CHANGES>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
 ---
 <?php
 $fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
@@ -138,7 +140,7 @@ HTML;
 
 <?php } ?>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Monitor"
 Icon="fa-exchange"
 Tag="cogs"
@@ -159,6 +161,10 @@ if($fmLang==='en'){ ?>
 echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmEsc=$fmc['esc'];
+$fmT=$fmc['t'];
+// Observe the actual schedule, independently of the selected interface mode.
+$fmCron=$fmc['mode']!=='demo'?@file_get_contents('/etc/cron.d/root'):false;
+$fmScheduled=is_string($fmCron)&&preg_match('~^\*/15[ \t]+\*[ \t]+\*[ \t]+\*[ \t]+\*[ \t]+/usr/local/emhttp/plugins/user[.]scripts/startCustom[.]php[ \t]+/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script[ \t]+>[ \t]+/dev/null[ \t]+2>&1[ \t]*$~m',$fmCron)===1;
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
@@ -213,6 +219,13 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
 <?=$fmc['banner']?>
 <form method="post" action="/Tools/FejesMoverProtection#fp-dry-run" style="margin:12px 0 18px"><input type="hidden" name="csrf_token" value="<?=$fmEsc($fmc['token'])?>"><input type="hidden" name="fp_csrf" value="<?=$fmEsc($fmc['token'])?>"><button type="submit" name="fp_action" value="dry-run" style="background:#d96316;color:white;border:2px solid #ff9c55;font-weight:600;font-size:17px">▶ Dry run – no file movement</button><small style="margin-left:12px">Read-only check. No files are moved.</small></form>
+<section class="fm-card" id="fm-automation" role="status">
+<h3><?=$fmEsc($fmT('Automatikus Mover','Automatic Mover','Automatischer Mover'))?></h3>
+<strong style="font-size:21px;color:<?=$fmScheduled?'#64b99b':'#ffb55c'?>"><?=$fmEsc($fmc['mode']==='demo'?$fmT('Demo · nincs élő indítás','Demo · no live start','Demo · kein echter Start'):($fmScheduled?$fmT('Ütemezés aktív · 15 percenként','Schedule active · every 15 minutes','Zeitplan aktiv · alle 15 Minuten'):$fmT('Az automatikus ütemezés nem igazolt','Automatic schedule not verified','Automatischer Zeitplan nicht bestätigt')))?></strong>
+<p><?=$fmEsc($fmT('A meglévő automatika a böngésző bezárása után is működik. Az ellenőrzéskor a küszöb alatti szabad hely és minden védelmi feltétel szükséges az induláshoz.','Existing automation also runs with the browser closed. At each check, free space must be below the threshold and all protections must allow a start.','Die bestehende Automatik läuft auch bei geschlossenem Browser. Beim Prüfen muss der freie Platz unter der Schwelle liegen und jeder Schutz den Start erlauben.'))?></p>
+<p><?=$fmEsc($fmT('Tele cache esetén sincs kényszerített indítás: torrent, mentés, paritás, futó Mover vagy várakozási idő halasztást okozhat. A Próba gomb frissen megmutatja az akadályokat.','A full cache never forces a start: torrents, backup, parity, a running Mover or retry cooldown can defer it. Preview shows current blockers.','Auch ein voller Cache erzwingt keinen Start: Torrents, Sicherung, Parität, laufender Mover oder Wartezeit können ihn aufschieben. Die Vorschau zeigt aktuelle Hindernisse.'))?></p>
+<a href="/Tools/FejesMoverSettings"><?=$fmEsc($fmT('Threshold and retry interval beállítása','Configure threshold and retry interval','Schwelle und Wartezeit einstellen'))?></a>
+</section>
 <h2>Mover Monitor</h2><p class="fm-sub">FejesNAS · Live status · Monitoring only</p>
 <a href="/Dashboard#fejes-mover-dashboard" style="display:inline-block;margin:0 16px 12px 0;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← Back to dashboard card</a>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Settings</a><button type="button" id="fm-toggle">Auto-refresh: ON (5 sec)</button> <span>Data timestamp: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
@@ -239,6 +252,10 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmEsc=$fmc['esc'];
+$fmT=$fmc['t'];
+// Observe the actual schedule, independently of the selected interface mode.
+$fmCron=$fmc['mode']!=='demo'?@file_get_contents('/etc/cron.d/root'):false;
+$fmScheduled=is_string($fmCron)&&preg_match('~^\*/15[ \t]+\*[ \t]+\*[ \t]+\*[ \t]+\*[ \t]+/usr/local/emhttp/plugins/user[.]scripts/startCustom[.]php[ \t]+/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script[ \t]+>[ \t]+/dev/null[ \t]+2>&1[ \t]*$~m',$fmCron)===1;
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
@@ -293,6 +310,13 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
 <?=$fmc['banner']?>
 <form method="post" action="/Tools/FejesMoverProtection#fp-dry-run" style="margin:12px 0 18px"><input type="hidden" name="csrf_token" value="<?=$fmEsc($fmc['token'])?>"><input type="hidden" name="fp_csrf" value="<?=$fmEsc($fmc['token'])?>"><button type="submit" name="fp_action" value="dry-run" style="background:#d96316;color:white;border:2px solid #ff9c55;font-weight:600;font-size:17px">▶ Probelauf – keine Dateiverschiebung</button><small style="margin-left:12px">Nur Statusprüfung. Keine Dateien werden verschoben.</small></form>
+<section class="fm-card" id="fm-automation" role="status">
+<h3><?=$fmEsc($fmT('Automatikus Mover','Automatic Mover','Automatischer Mover'))?></h3>
+<strong style="font-size:21px;color:<?=$fmScheduled?'#64b99b':'#ffb55c'?>"><?=$fmEsc($fmc['mode']==='demo'?$fmT('Demo · nincs élő indítás','Demo · no live start','Demo · kein echter Start'):($fmScheduled?$fmT('Ütemezés aktív · 15 percenként','Schedule active · every 15 minutes','Zeitplan aktiv · alle 15 Minuten'):$fmT('Az automatikus ütemezés nem igazolt','Automatic schedule not verified','Automatischer Zeitplan nicht bestätigt')))?></strong>
+<p><?=$fmEsc($fmT('A meglévő automatika a böngésző bezárása után is működik. Az ellenőrzéskor a küszöb alatti szabad hely és minden védelmi feltétel szükséges az induláshoz.','Existing automation also runs with the browser closed. At each check, free space must be below the threshold and all protections must allow a start.','Die bestehende Automatik läuft auch bei geschlossenem Browser. Beim Prüfen muss der freie Platz unter der Schwelle liegen und jeder Schutz den Start erlauben.'))?></p>
+<p><?=$fmEsc($fmT('Tele cache esetén sincs kényszerített indítás: torrent, mentés, paritás, futó Mover vagy várakozási idő halasztást okozhat. A Próba gomb frissen megmutatja az akadályokat.','A full cache never forces a start: torrents, backup, parity, a running Mover or retry cooldown can defer it. Preview shows current blockers.','Auch ein voller Cache erzwingt keinen Start: Torrents, Sicherung, Parität, laufender Mover oder Wartezeit können ihn aufschieben. Die Vorschau zeigt aktuelle Hindernisse.'))?></p>
+<a href="/Tools/FejesMoverSettings"><?=$fmEsc($fmT('Schwelle und Wartezeit beállítása','Configure threshold and retry interval','Schwelle und Wartezeit einstellen'))?></a>
+</section>
 <h2>Mover-Monitor</h2><p class="fm-sub">FejesNAS · Live-Status · Nur Überwachung</p>
 <a href="/Dashboard#fejes-mover-dashboard" style="display:inline-block;margin:0 16px 12px 0;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← Zurück zur Dashboard-Karte</a>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Einstellungen</a><button type="button" id="fm-toggle">Automatische Aktualisierung: AN (5 Sek.)</button> <span>Datenstand: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
@@ -319,6 +343,10 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $fmEsc=$fmc['esc'];
+$fmT=$fmc['t'];
+// Observe the actual schedule, independently of the selected interface mode.
+$fmCron=$fmc['mode']!=='demo'?@file_get_contents('/etc/cron.d/root'):false;
+$fmScheduled=is_string($fmCron)&&preg_match('~^\*/15[ \t]+\*[ \t]+\*[ \t]+\*[ \t]+\*[ \t]+/usr/local/emhttp/plugins/user[.]scripts/startCustom[.]php[ \t]+/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script[ \t]+>[ \t]+/dev/null[ \t]+2>&1[ \t]*$~m',$fmCron)===1;
 if($fmc['mode']!=='demo'){
 $fmMounted=$fmc['mounted'];
 $fmRead=static fn($p)=>@file_get_contents($p)?:'';
@@ -373,6 +401,13 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
 <?=$fmc['banner']?>
 <form method="post" action="/Tools/FejesMoverProtection#fp-dry-run" style="margin:12px 0 18px"><input type="hidden" name="csrf_token" value="<?=$fmEsc($fmc['token'])?>"><input type="hidden" name="fp_csrf" value="<?=$fmEsc($fmc['token'])?>"><button type="submit" name="fp_action" value="dry-run" style="background:#d96316;color:white;border:2px solid #ff9c55;font-weight:600;font-size:17px">▶ Próba – nincs fájlmozgatás</button><small style="margin-left:12px">Csak állapotellenőrzés, nincs fájlmozgatás.</small></form>
+<section class="fm-card" id="fm-automation" role="status">
+<h3><?=$fmEsc($fmT('Automatikus Mover','Automatic Mover','Automatischer Mover'))?></h3>
+<strong style="font-size:21px;color:<?=$fmScheduled?'#64b99b':'#ffb55c'?>"><?=$fmEsc($fmc['mode']==='demo'?$fmT('Demó · nincs élő indítás','Demo · no live start','Demo · kein echter Start'):($fmScheduled?$fmT('Ütemezés aktív · 15 percenként','Schedule active · every 15 minutes','Zeitplan aktiv · alle 15 Minuten'):$fmT('Az automatikus ütemezés nem igazolt','Automatic schedule not verified','Automatischer Zeitplan nicht bestätigt')))?></strong>
+<p><?=$fmEsc($fmT('A meglévő automatika a böngésző bezárása után is működik. Az ellenőrzéskor a küszöb alatti szabad hely és minden védelmi feltétel szükséges az induláshoz.','Existing automation also runs with the browser closed. At each check, free space must be below the threshold and all protections must allow a start.','Die bestehende Automatik läuft auch bei geschlossenem Browser. Beim Prüfen muss der freie Platz unter der Schwelle liegen und jeder Schutz den Start erlauben.'))?></p>
+<p><?=$fmEsc($fmT('Tele cache esetén sincs kényszerített indítás: torrent, mentés, paritás, futó Mover vagy várakozási idő halasztást okozhat. A Próba gomb frissen megmutatja az akadályokat.','A full cache never forces a start: torrents, backup, parity, a running Mover or retry cooldown can defer it. Preview shows current blockers.','Auch ein voller Cache erzwingt keinen Start: Torrents, Sicherung, Parität, laufender Mover oder Wartezeit können ihn aufschieben. Die Vorschau zeigt aktuelle Hindernisse.'))?></p>
+<a href="/Tools/FejesMoverSettings"><?=$fmEsc($fmT('Küszöb és várakozás beállítása','Configure threshold and retry interval','Schwelle und Wartezeit einstellen'))?></a>
+</section>
 <h2>Mover figyelő</h2><p class="fm-sub">FejesNAS · Élő állapot · Csak megfigyelés</p>
 <a href="/Dashboard#fejes-mover-dashboard" style="display:inline-block;margin:0 16px 12px 0;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← Vissza a főoldali kártyához</a>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Beállítások</a><button type="button" id="fm-toggle">Automatikus frissítés: BE (5 mp)</button> <span>Adatok ideje: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
@@ -396,7 +431,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
 Title="FejesMover védelem"
 Icon="fa-shield"
 Tag="cogs"
@@ -759,7 +794,7 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
 // Shared, fail-closed runtime configuration. No settings or automation writes here.
 return (static function ($configWrite) {
     $language = $_COOKIE['fejes_mover_lang'] ?? 'hu';
@@ -823,7 +858,7 @@ return (static function ($configWrite) {
         't'=>$t,'esc'=>$esc,'banner'=>$banner];
 })(!empty($fmcConfigWrite));
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Settings"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1117,7 +1152,7 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover · Mód és pool"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1312,7 +1347,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Read-only, conservative qBittorrent gate for an external Mover launcher."""
 import argparse
 import json
@@ -1428,7 +1463,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Run an existing generated Bunker schedule with live torrent exclusions."""
 import argparse
 import pathlib
@@ -1530,7 +1565,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Route the existing File Integrity cron job through its reviewed preflight."""
 import argparse
 import datetime
@@ -1638,7 +1673,7 @@ if __name__ == "__main__":
               "errno=" + str(getattr(exc, "errno", None)))
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Shared read-only diagnostics and an opt-in guarded legacy Mover launcher."""
 import argparse
 import fcntl
@@ -1865,7 +1900,7 @@ def main(argv=None):
 if __name__ == '__main__':
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.92/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.19.93/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Add an opt-in torrent gate to the reviewed legacy threshold script."""
 import argparse
 import datetime
@@ -1990,7 +2025,7 @@ if __name__ == '__main__':
 ]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.10.19.92
+src=/tmp/fejes-mover-monitor-2026.10.19.93
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }
