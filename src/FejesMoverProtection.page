@@ -49,7 +49,7 @@ $fpLabel=static fn($v)=>$fpLabels[is_string($v)?$v:'unknown']??'Nem ellenőrizhe
 $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' ').' GiB':'Nem ellenőrizhető';
 ?>
 <style>
-#fp{max-width:1050px;margin:24px auto;padding:0 18px;font-size:15px;line-height:1.6}#fp .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}#fp section,#fp .notice{border:1px solid #8885;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fp h2{font-size:28px}#fp h3{margin-top:0}#fp .error{border-color:#d88868}#fp button{padding:10px 16px;margin:8px 8px 8px 0}#fp code{overflow-wrap:anywhere}#fp .muted{opacity:.75}
+#fp{max-width:1050px;margin:24px auto;padding:0 18px;font-size:15px;line-height:1.6}#fp .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}#fp section,#fp .fp-notice{border:1px solid #8885;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fp h2{font-size:28px}#fp h3{margin-top:0}#fp .fp-error{border-color:#d88868}#fp button{padding:10px 16px;margin:8px 8px 8px 0}#fp code{overflow-wrap:anywhere}#fp .muted{opacity:.75}
 </style>
 <div id="fp">
 <?=$fmc['banner']?>
@@ -57,8 +57,8 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <h2>FejesMover · Összehangolt védelem</h2>
 <p><a href="/Tools/FejesMover">← Mover figyelő</a> · <a href="/Tools/FejesMoverSettings">Küszöb és várakozás</a></p>
 <p>Torrentállapot, cache-kapacitás és ütemezett File Integrity egy helyen.</p>
-<?php if($fpError):?><div class="notice error" role="alert"><?=$fpEsc($fpError)?></div><?php endif?>
-<?php if($fpMessage):?><div class="notice" role="status"><?=$fpEsc($fpMessage)?></div><?php endif?>
+<?php if($fpError):?><div class="fp-notice fp-error" role="alert"><?=$fpEsc($fpError)?></div><?php endif?>
+<?php if($fpMessage):?><div class="fp-notice" role="status"><?=$fpEsc($fpMessage)?></div><?php endif?>
 <form method="post" action="/Tools/FejesMoverProtection">
  <input type="hidden" name="csrf_token" value="<?=$fpEsc($fpToken)?>"><input type="hidden" name="fp_csrf" value="<?=$fpEsc($fpToken)?>">
  <button type="submit" name="fp_action" value="dry-run" style="background:#d96316;color:white;border:2px solid #ff9c55;font-size:17px;font-weight:600">▶ Próba – nincs fájlmozgatás</button>

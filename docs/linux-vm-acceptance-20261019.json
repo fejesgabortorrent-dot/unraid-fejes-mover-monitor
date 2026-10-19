@@ -1,0 +1,19 @@
+{
+  "linux_guest": "Alpine 3.24.2",
+  "real_unraid": false,
+  "host_rebooted": false,
+  "host_protected_files_unchanged": true,
+  "guest_reboot_after_install": {
+    "guest_reboot_verified": true,
+    "runtime_restored_from_tmpfs": true,
+    "settings_preserved": true,
+    "demo_post_renders": true,
+    "exact_files": 11
+  },
+  "guest_reboot_after_uninstall": {
+    "second_guest_reboot_verified": true,
+    "uninstalled_plugin_stays_absent": true,
+    "settings_and_helpers_retained": true
+  },
+  "guest_shutdown_requested": true
+}

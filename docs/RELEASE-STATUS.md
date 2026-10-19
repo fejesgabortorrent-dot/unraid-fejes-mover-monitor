@@ -1,6 +1,6 @@
 # Integration candidate — 2026-10-19
 
-Plugin version: `2026.10.19.9` (experimental beta). Combines protection PR #3,
+Plugin version: `2026.10.19.92` (experimental beta). Combines protection PR #3,
 mode/navigation PR #6 and the separate owner download-counter tool from PR #5.
 No automatic main-branch merge or new stable release.
 
@@ -45,3 +45,11 @@ The full protection page now has English/German explanatory translations.
 Live navigation verified language retention through monitor, settings, setup,
 Dashboard and protection for both English and German; Hungarian was restored.
 Native plugin page headings follow the selected plugin language.
+
+The notice CSS collision was fixed with plugin-specific class names; the live
+package/app tests passed and 2026.10.19.92 was installed. Browser visual
+confirmation of this small fix remained blocked by the origin approval gate.
+The separate Alpine VM passed real guest reboots after install and removal,
+with restored tmpfs runtime, preserved settings/helpers and unchanged NAS
+boot ID/protected files. Missing PHP ctype was caught and is now rejected
+before activation. See LINUX-VM-ACCEPTANCE.md and its JSON report.
