@@ -5,13 +5,19 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.10.18.1'
+version='2026.10.19.1'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 def cdata(s):
     return '<![CDATA['+s.replace(']]>',']]]]><![CDATA[>')+']]>'
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.10.19.1 (beta)
+- Add inline country flags to the HU, US English and German language selectors.
+### 2026.10.18.3 (beta)
+- Add the same Dashboard return button to mode/pool setup and every settings state.
+### 2026.10.18.2 (beta)
+- Add a visible return button from the detailed monitor to its Dashboard card.
 ### 2026.10.18.1 (beta)
 - Unraid 7.x preflight; observer mode by default, demo and explicit advanced opt-in.
 - Select a configured Unraid pool for observation; legacy script editor remains cache-only.

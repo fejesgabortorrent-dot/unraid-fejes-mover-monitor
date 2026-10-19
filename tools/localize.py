@@ -17,7 +17,7 @@ def compile_page(source):
     header, body = source.split('---\n', 1)
     # Unraid menu metadata is static; neutral English names work in every locale.
     header = header.replace('Mover figyelő', 'Mover Monitor').replace('Mover beállítások', 'Mover Settings')
-    selector = '''<label style="display:inline-block;margin:10px 12px;font-size:14px">🌐 <select aria-label="Language / Nyelv / Sprache" onchange="document.cookie=\x27fejes_mover_lang=\x27+this.value+\x27; Path=/; Max-Age=31536000; SameSite=Lax\x27;location.assign(location.pathname)"><option value="hu" HU_SELECTED>Magyar</option><option value="en" EN_SELECTED>English (US)</option><option value="de" DE_SELECTED>Deutsch</option></select></label>'''
+    selector = '''<label style="display:inline-block;margin:10px 12px;font-size:14px"><span aria-hidden="true" style="display:inline-block;width:26px;margin-right:7px;vertical-align:middle">FLAG_IMAGE</span><select aria-label="Language / Nyelv / Sprache" onchange="document.cookie=\x27fejes_mover_lang=\x27+this.value+\x27; Path=/; Max-Age=31536000; SameSite=Lax\x27;location.assign(location.pathname)"><option value="hu" HU_SELECTED>🇭🇺 Magyar</option><option value="en" EN_SELECTED>🇺🇸 English (US)</option><option value="de" DE_SELECTED>🇩🇪 Deutsch</option></select></label>'''
     prefix = '''<?php
 $fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
 $fmLang=is_string($fmCookie)&&in_array($fmCookie,['hu','en','de'],true)?$fmCookie:'hu';
@@ -25,6 +25,24 @@ $fmLanguageSelector=SELECTOR;
 $fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fmLang==='hu'?'selected':'',$fmLang==='en'?'selected':'',$fmLang==='de'?'selected':''],$fmLanguageSelector);
 '''.replace('SELECTOR;', json.dumps(selector, ensure_ascii=False).replace('\\/', '/')+';')
     # JSON double-quoted text is a PHP double-quoted literal; selector has no $.
+    # Inline SVG stays visible on Windows even if emoji flags are unsupported.
+    svg = lambda body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 100" width="26" height="16">'+body+'</svg>'
+    flags = {
+        'hu': svg('<path fill="#ce2939" d="M0 0h190v34H0z"/><path fill="#fff" d="M0 34h190v33H0z"/><path fill="#477050" d="M0 67h190v33H0z"/>'),
+        'de': svg('<path fill="#000" d="M0 0h190v34H0z"/><path fill="#d00" d="M0 34h190v33H0z"/><path fill="#ffce00" d="M0 67h190v33H0z"/>'),
+    }
+    stripes = ''.join(f'<rect y="{i*100/13:.3f}" width="190" height="{100/13+0.01:.3f}" fill="{"#b22234" if i%2==0 else "#fff"}"/>' for i in range(13))
+    import math
+    stars = ''
+    for row in range(9):
+        for col in range(6 if row%2==0 else 5):
+            x = (col+0.5 if row%2==0 else col+1)*76/6
+            y = (row+1)*53.85/10
+            points = ' '.join(f'{x+(2.7 if k%2==0 else 1.05)*math.cos(-math.pi/2+k*math.pi/5):.2f},{y+(2.7 if k%2==0 else 1.05)*math.sin(-math.pi/2+k*math.pi/5):.2f}' for k in range(10))
+            stars += f'<polygon fill="#fff" points="{points}"/>'
+    flags['en'] = svg(stripes+'<rect width="76" height="53.85" fill="#3c3b6e"/>'+stars)
+    flag_map = '['+','.join("'"+lang+"'=>"+json.dumps(flag) for lang,flag in flags.items())+']'
+    prefix += "$fmLanguageSelector=str_replace('FLAG_IMAGE',"+flag_map+"[$fmLang],$fmLanguageSelector);\n"
     variants = []
     for index, lang in enumerate(['en', 'de', 'hu']):
         translated = body

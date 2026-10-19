@@ -502,5 +502,9 @@
   "A kiválasztott Unraid poolt figyeli.": {
     "en": "Monitors the selected Unraid pool.",
     "de": "Überwacht den ausgewählten Unraid-Pool."
+  },
+  "Vissza a főoldali kártyához": {
+    "en": "Back to dashboard card",
+    "de": "Zurück zur Dashboard-Karte"
   }
 }
