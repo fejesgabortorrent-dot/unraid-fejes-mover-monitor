@@ -102,6 +102,7 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     check('Monitor dry-run button uses CSRF-protected POST', 'value="dry-run"' in render('FejesMover.page') and 'name="fp_csrf"' in render('FejesMover.page'))
     for language in ('en','de'):
         translated_dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'},language)
+        check(language+': protection descriptions and native title translated', ('Coordinated protection' if language=='en' else 'Abgestimmter Schutz') in translated_dry and 'Helyhiánynál sincs' not in translated_dry and 'Az eseményfigyelő korábbi' not in translated_dry and ('FejesMover Protection' if language=='en' else 'FejesMover Schutz') in translated_dry)
         check(language+': dry-run heading translated', ('Would wait now' if language=='en' else 'Würde jetzt warten') in translated_dry)
     marker = lab / 'wired'
     (lab / 'helpers/wire_integrity_cron.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').touch()\n')
@@ -153,7 +154,7 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     free_bytes = 0
     full = render('FejesMoverSettings.page')
     check('Zero free bytes render as valid capacity', '0,0 GiB</strong>' in full and 'free=0' in full)
-    preview_script = re.findall(r'<script>(.*?)</script>', full, re.S)[0]
+    preview_script = next(js for js in re.findall(r'<script>(.*?)</script>', full, re.S) if 'ms-threshold' in js)
     preview_test = '''const vm=require('node:vm'),assert=require('node:assert/strict');
 const elements={}; for(const id of ['ms-threshold','ms-slider','ms-cooldown','ms-hours','ms-marker','ms-preview']) elements[id]={value:'2',style:{},addEventListener(){},form:{addEventListener(){}}};
 vm.runInNewContext(SCRIPT,{document:{getElementById:id=>elements[id]}});

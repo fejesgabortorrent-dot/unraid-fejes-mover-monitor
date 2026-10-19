@@ -514,5 +514,193 @@
   "Csak állapotellenőrzés, nincs fájlmozgatás.": {
     "en": "Read-only check. No files are moved.",
     "de": "Nur Statusprüfung. Keine Dateien werden verschoben."
+  },
+  "FejesMover védelem": {
+    "en": "FejesMover Protection",
+    "de": "FejesMover Schutz"
+  },
+  "Mover · Mód és pool": {
+    "en": "Mover · Mode and pool",
+    "de": "Mover · Modus und Pool"
+  },
+  "Összehangolt védelem": {
+    "en": "Coordinated protection",
+    "de": "Abgestimmter Schutz"
+  },
+  "Küszöb és várakozás": {
+    "en": "Threshold and retry interval",
+    "de": "Schwelle und Wartezeit"
+  },
+  "Torrentállapot, cache-kapacitás és ütemezett File Integrity egy helyen.": {
+    "en": "Torrent state, cache capacity and scheduled File Integrity in one place.",
+    "de": "Torrent-Status, Cache-Kapazität und geplante File Integrity an einem Ort."
+  },
+  "Állapot ellenőrzése": {
+    "en": "Check status",
+    "de": "Status prüfen"
+  },
+  "Az ellenőrzés pillanatképet olvas. Nem indít Movert vagy hash-elést.": {
+    "en": "The check reads a snapshot. It starts neither Mover nor hashing.",
+    "de": "Die Prüfung liest eine Momentaufnahme. Sie startet weder Mover noch Hashing."
+  },
+  "Elérhető": {
+    "en": "Available",
+    "de": "Verfügbar"
+  },
+  "Nincs torrentoldali akadály": {
+    "en": "No torrent blocker",
+    "de": "Kein Torrent-Hindernis"
+  },
+  "Halasztás: félkész vagy elfoglalt torrent": {
+    "en": "Deferred: unfinished or busy torrent",
+    "de": "Aufgeschoben: unvollständiger oder beschäftigter Torrent"
+  },
+  "Bekötve": {
+    "en": "Integrated",
+    "de": "Eingebunden"
+  },
+  "Az eredeti indítót használja": {
+    "en": "Uses the original launcher",
+    "de": "Verwendet das ursprüngliche Startskript"
+  },
+  "Az aktív bekötés nem igazolt": {
+    "en": "Active integration not verified",
+    "de": "Aktive Einbindung nicht bestätigt"
+  },
+  "A becsült hátralévő adatmennyiség és a tartalék elfér": {
+    "en": "Estimated remaining data and reserve fit",
+    "de": "Geschätzte Restdaten und Reserve passen"
+  },
+  "Kevés hely lehet a hátralévő letöltéshez és a tartalékhoz": {
+    "en": "Space may be insufficient for remaining downloads and reserve",
+    "de": "Platz für restliche Downloads und Reserve reicht möglicherweise nicht"
+  },
+  "Ismeretlen művelet.": {
+    "en": "Unknown action.",
+    "de": "Unbekannte Aktion."
+  },
+  "A konfiguráció nem olvasható biztonságosan.": {
+    "en": "Configuration cannot be read safely.",
+    "de": "Konfiguration kann nicht sicher gelesen werden."
+  },
+  "Demó módban nincs élő művelet.": {
+    "en": "No live operation in Demo mode.",
+    "de": "Keine Live-Aktion im Demo-Modus."
+  },
+  "Szimulált állapot. Nincs élő lekérdezés.": {
+    "en": "Simulated state. No live query.",
+    "de": "Simulierter Status. Keine Live-Abfrage."
+  },
+  "A torrentvédelem jelenleg csak cache pool mellett ellenőrizhető.": {
+    "en": "Torrent protection currently requires the cache pool.",
+    "de": "Torrent-Schutz erfordert derzeit den Cache-Pool."
+  },
+  "A bekötéshez Haladó mód, csatolt cache és külön jóváhagyás szükséges.": {
+    "en": "Integration requires Advanced mode, a mounted cache and separate consent.",
+    "de": "Einbindung erfordert den erweiterten Modus, eingehängten Cache und gesonderte Zustimmung."
+  },
+  "A közös segédek nincsenek telepítve.": {
+    "en": "Shared helpers are not installed.",
+    "de": "Gemeinsame Hilfsskripte sind nicht installiert."
+  },
+  "A művelet nem fejeződött be. Ellenőrizd a Python, Docker és File Integrity elérhetőségét.": {
+    "en": "The action did not complete. Check Python, Docker and File Integrity availability.",
+    "de": "Die Aktion wurde nicht abgeschlossen. Verfügbarkeit von Python, Docker und File Integrity prüfen."
+  },
+  "Érvénytelen állapotválasz.": {
+    "en": "Invalid status response.",
+    "de": "Ungültige Statusantwort."
+  },
+  "Pillanatkép ideje: ": {
+    "en": "Snapshot time: ",
+    "de": "Zeitpunkt der Momentaufnahme: "
+  },
+  "A meglévő File Integrity ütemezés bekötése lefutott. Kérj állapotellenőrzést az aktív cron igazolásához.": {
+    "en": "Existing File Integrity schedule integration completed. Check status to verify the active cron.",
+    "de": "Einbindung des vorhandenen File-Integrity-Zeitplans abgeschlossen. Aktiven Cron durch Statusprüfung bestätigen."
+  },
+  "Nem olvasható állapotválasz.": {
+    "en": "Cannot read status response.",
+    "de": "Statusantwort nicht lesbar."
+  },
+  "Torrentvédelem": {
+    "en": "Torrent protection",
+    "de": "Torrent-Schutz"
+  },
+  "Vizsgált torrentek: ": {
+    "en": "Checked torrents: ",
+    "de": "Geprüfte Torrents: "
+  },
+  "Halasztást okoz: ": {
+    "en": "Blocking: ",
+    "de": "Blockierend: "
+  },
+  "A megállított félkész torrent és az ellenőrzés vagy áthelyezés alatt álló kész torrent is védett.": {
+    "en": "Stopped unfinished torrents and completed torrents being checked or moved are also protected.",
+    "de": "Gestoppte unvollständige Torrents und fertige Torrents bei Prüfung oder Verschiebung sind ebenfalls geschützt."
+  },
+  "Cache és letöltés": {
+    "en": "Cache and downloads",
+    "de": "Cache und Downloads"
+  },
+  "Hátralévő adatok felső becslése: ": {
+    "en": "Upper estimate of remaining data: ",
+    "de": "Obere Schätzung der Restdaten: "
+  },
+  "A becslés minden torrent hátralévő bájtjait összegzi, ezért a lemeztömbre töltött és közös adatok túlbecslést okozhatnak. Számítási tartalék: 20 GiB; helyet nem foglal le.": {
+    "en": "The estimate sums remaining bytes of all torrents. Array downloads and shared data may cause overestimation. Calculation reserve: 20 GiB; no space is allocated.",
+    "de": "Die Schätzung summiert die Restbytes aller Torrents. Array-Downloads und gemeinsame Daten können zu Überschätzung führen. Rechenreserve: 20 GiB; kein Platz wird reserviert."
+  },
+  "Mentett ütemezés: ": {
+    "en": "Saved schedule: ",
+    "de": "Gespeicherter Zeitplan: "
+  },
+  "Aktív ütemezés: ": {
+    "en": "Active schedule: ",
+    "de": "Aktiver Zeitplan: "
+  },
+  "A meglévő feladat futása előtt az indító frissen lekéri és kizárja a változó torrentmappákat.": {
+    "en": "Before the existing job runs, the launcher refreshes and excludes changing torrent folders.",
+    "de": "Vor Ausführung der vorhandenen Aufgabe fragt das Startskript veränderliche Torrent-Ordner neu ab und schließt sie aus."
+  },
+  "Meglévő File Integrity ütemezés bekötése": {
+    "en": "Integrate existing File Integrity schedule",
+    "de": "Vorhandenen File-Integrity-Zeitplan einbinden"
+  },
+  "Az alábbi gomb a meglévő egyetlen feladatot irányítja az előellenőrzőre, mentéssel és próbaellenőrzéssel. Megőrzi az időpontot, nem hoz létre új feladatot és nem indít hash-elést.": {
+    "en": "This button routes the existing single job through preflight, with backup and verification. It preserves the time, creates no new job and starts no hashing.",
+    "de": "Diese Schaltfläche leitet die vorhandene einzelne Aufgabe über die Vorprüfung, mit Sicherung und Prüfung. Zeitpunkt bleibt erhalten; keine neue Aufgabe und kein Hashing werden gestartet."
+  },
+  "Jóváhagyom a meglévő File Integrity feladat bekötését.": {
+    "en": "I approve integrating the existing File Integrity job.",
+    "de": "Ich stimme der Einbindung der vorhandenen File-Integrity-Aufgabe zu."
+  },
+  "Meglévő ütemezés bekötése / újraellenőrzése": {
+    "en": "Integrate / recheck existing schedule",
+    "de": "Vorhandenen Zeitplan einbinden / erneut prüfen"
+  },
+  "A File Integrity saját beállításainak mentése felülírhatja a bekötést. Utána itt ellenőrizd az aktív állapotot.": {
+    "en": "Saving File Integrity settings may overwrite the integration. Check its active state here afterwards.",
+    "de": "Speichern der File-Integrity-Einstellungen kann die Einbindung überschreiben. Danach hier den aktiven Status prüfen."
+  },
+  "Mover-indító és eseményfigyelő": {
+    "en": "Mover launcher and event watcher",
+    "de": "Mover-Startskript und Ereignisüberwachung"
+  },
+  "Az ellenőrzött indítóscript védelme: ": {
+    "en": "Reviewed launcher protection: ",
+    "de": "Schutz des geprüften Startskripts: "
+  },
+  "A csomag tartalmazza a védett Mover-indítót és a külön bekötősegédet. A bekötő az áttekintett User Scripts fájlt módosítja mentéssel, megtartva a meglévő ütemezést. A felület nem indít Movert. Az állapot a beolvasott scriptet igazolja, más indítási útvonalat nem.": {
+    "en": "The package includes guarded Mover tools and a separate integration helper. Integration updates the reviewed User Scripts file with backup, preserving the schedule. This interface does not start Mover. Status verifies the read script only, not other launch paths.",
+    "de": "Das Paket enthält geschützte Mover-Werkzeuge und ein separates Einbindungsskript. Die Einbindung ändert die geprüfte User-Scripts-Datei mit Sicherung und erhält den Zeitplan. Diese Oberfläche startet Mover nicht. Der Status bestätigt nur das gelesene Skript, keine anderen Startwege."
+  },
+  "Helyhiánynál sincs automatikus védelmi felülbírálás. Félkész letöltés mellett a globális indító halaszt; a figyelmeztetés kapacitásrendezést igényel. A kézzel vagy más ütemezésből indított Moverre ez a kapu nem vonatkozik.": {
+    "en": "Protection is never automatically overridden for low space. The global launcher defers for unfinished downloads; capacity warnings require action. This gate does not cover Mover started manually or through another schedule.",
+    "de": "Bei Platzmangel wird der Schutz nicht automatisch umgangen. Bei unvollständigen Downloads wartet das globale Startskript; Kapazitätswarnungen erfordern Maßnahmen. Manuell oder über andere Zeitpläne gestarteter Mover wird von dieser Sperre nicht erfasst."
+  },
+  "Az eseményfigyelő korábbi statikus kizárásai külön beállítások. A csomag ezeket nem oldja fel automatikusan, és a letöltés közben már futó hash-elést sem állítja le.": {
+    "en": "Existing static watcher exclusions are separate settings. This package does not automatically remove them or stop hashing already running during a download.",
+    "de": "Vorhandene statische Überwachungsausschlüsse sind separate Einstellungen. Dieses Paket entfernt sie nicht automatisch und stoppt kein während eines Downloads bereits laufendes Hashing."
   }
 }

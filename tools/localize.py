@@ -17,6 +17,8 @@ def compile_page(source):
         if set(values) != {'en', 'de'} or any(not isinstance(v, str) or any(c in v for c in "\"'\\$<>\r\n") for v in values.values()):
             raise ValueError(f'Unsafe or incomplete source-literal translation: {key}')
     header, body = source.split('---\n', 1)
+    title_match=re.search(r'^Title="([^"]+)"',header,re.M)
+    source_title=title_match[1] if title_match else ''
     # Unraid menu metadata is static; neutral English names work in every locale.
     header = header.replace('Mover figyelő', 'Mover Monitor').replace('Mover beállítások', 'Mover Settings')
     selector = '''<label style="display:inline-block;margin:10px 12px;font-size:14px"><span aria-hidden="true" style="display:inline-block;width:26px;margin-right:7px;vertical-align:middle">FLAG_IMAGE</span><select aria-label="Language / Nyelv / Sprache" onchange="document.cookie=\x27fejes_mover_lang=\x27+this.value+\x27; Path=/; Max-Age=31536000; SameSite=Lax\x27;location.assign(location.pathname)"><option value="hu" HU_SELECTED>🇭🇺 Magyar</option><option value="en" EN_SELECTED>🇺🇸 English (US)</option><option value="de" DE_SELECTED>🇩🇪 Deutsch</option></select></label>'''
@@ -45,6 +47,13 @@ $fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fm
     flags['en'] = svg(stripes+'<rect width="76" height="53.85" fill="#3c3b6e"/>'+stars)
     flag_map = '['+','.join("'"+lang+"'=>"+json.dumps(flag) for lang,flag in flags.items())+']'
     prefix += "$fmLanguageSelector=str_replace('FLAG_IMAGE',"+flag_map+"[$fmLang],$fmLanguageSelector);\n"
+    if source_title:
+        titles={'hu':source_title, **catalog.get(source_title, {'en':source_title,'de':source_title})}
+        prefix += '$fmPageTitle=['+','.join("'"+lang+"'=>"+json.dumps(title,ensure_ascii=False) for lang,title in titles.items())+'][$fmLang];\n'
+        prefix += '''?>
+<script>(()=>{const label=<?=json_encode($fmPageTitle)?>;const host=document.querySelector('div.title > span.left');if(host){const node=Array.from(host.childNodes).find(n=>n.nodeType===3&&n.textContent.trim());if(node)node.nodeValue=label;}document.title=document.title.split('/')[0]+'/'+label;})();</script>
+<?php
+'''
     variants = []
     for index, lang in enumerate(['en', 'de', 'hu']):
         translated = body

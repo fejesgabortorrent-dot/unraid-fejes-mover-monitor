@@ -105,10 +105,9 @@ A Fejes Mover Monitor ingyenes és nyílt forráskódú. Ha hasznosnak találod,
 
 ## Integrated protection candidate / Összevont védelmi próbaverzió
 
-Candidate `2026.10.19.8` combines the current mode/pool UI and flag navigation
+Candidate `2026.10.19.9` combines the current mode/pool UI and flag navigation
 with torrent and scheduled File Integrity diagnostics. Open Tools / FejesMover
-védelem from the monitor. Diagnostics currently retain Hungarian explanatory
-text; the monitor, settings and mode setup support HU / US English / German.
+védelem from the monitor. Protection diagnostics, monitor, settings and mode setup support HU / US English / German.
 Demo diagnostics use synthetic data. Observer diagnostics read state only.
 Integrity schedule wiring requires Advanced mode, a mounted cache and separate
 consent. Installation never wires schedules or starts Mover/hashing.
@@ -131,3 +130,5 @@ The Community Applications listing has not been submitted.
 Use the orange **Dry run – no file movement / Próba – nincs fájlmozgatás** button on the monitor or protection page. It reads a fresh snapshot of the reviewed launcher/share, cache threshold, torrents, Appdata backup marker, parity, Mover PID and retry timestamp. Green means clear, amber means wait, and unknown state prevents a ready result. Demo uses synthetic data; Observer also permits this read-only check. No launcher, schedule, settings or attempt timestamp is written, and no start lock is reserved. A preview is not a guarantee of a later real start.
 
 The authenticated dry-run UI additionally shows up to 25 protected content basenames, identifying files/folders when their type is readable. No full paths are returned. Default status/CLI output remains redacted; private names require the explicit dry-run `--include-items` option and are never sent to GitHub.
+
+Language selection persists across all five plugin views (including the Dashboard card). Native plugin page headings follow the same selection; Unraid navigation remains in the language configured in Unraid. Logs and private filenames are displayed as stored, never translated.

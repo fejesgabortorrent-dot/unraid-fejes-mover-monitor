@@ -1,12 +1,12 @@
 # Integration candidate — 2026-10-19
 
-Plugin version: `2026.10.19.8` (experimental beta). Combines protection PR #3,
+Plugin version: `2026.10.19.9` (experimental beta). Combines protection PR #3,
 mode/navigation PR #6 and the separate owner download-counter tool from PR #5.
 No automatic main-branch merge or new stable release.
 
 Validation on Unraid 7.3.3 in an isolated temporary filesystem:
 
-- 45 protection/dry-run unit tests, 57 PHP application fixtures, 31 mode guards.
+- 45 protection/dry-run unit tests, 59 PHP application fixtures, 31 mode guards.
 - 12 synthetic movement/deferral scenarios; no live media movement.
 - Reproducible XML/checksums, PHP/Python lint, install/reinstall, invalid-runtime
   rejection, invalid-code rejection and uninstall with retained helpers.
@@ -18,8 +18,7 @@ GET pages never invoke protection commands. Installation creates no schedule.
 Uninstall retains helpers, configuration and external protection integrations.
 See the protection guide for explicit manual restoration procedures.
 
-Protection diagnostic explanations are currently Hungarian; the existing
-monitor/settings/setup remain available in HU, US English and German.
+Protection diagnostics and the monitor/settings/setup are available in HU, US English and German.
 
 Live plugin-manager install/remove/reinstall passed on the owner NAS in
 Observer/cache mode. All 11 installed files matched the manifest; settings,
@@ -41,3 +40,8 @@ Protected file/folder basenames are now opt-in for the authenticated dry-run UI.
 Default status and CLI dry-run output remain redacted; full paths and real NAS
 filenames are not published in this repository. Live browser verification
 confirmed the private list is displayed. Multi-file torrents may show a folder.
+
+The full protection page now has English/German explanatory translations.
+Live navigation verified language retention through monitor, settings, setup,
+Dashboard and protection for both English and German; Hungarian was restored.
+Native plugin page headings follow the selected plugin language.
