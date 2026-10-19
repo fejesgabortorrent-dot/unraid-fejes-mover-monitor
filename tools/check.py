@@ -36,12 +36,13 @@ for page in sorted((root / 'src').glob('*.page')):
 with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
     sandbox = Path(directory)
     destination = sandbox / 'runtime'
+    helper_destination = sandbox / 'config/tools'
     nodes = plugin.findall('FILE')
     for node in nodes:
         if 'Name' in node.attrib:
             target = sandbox / Path(node.attrib['Name']).name
             target.write_text(node.findtext('INLINE'), encoding='utf-8', newline='\n')
-            source=(root / 'src' / target.name).read_text(encoding='utf-8')
+            source=(root / ('tools' if target.suffix=='.py' else 'src') / target.name).read_text(encoding='utf-8')
             assert target.read_text(encoding='utf-8') == (compile_page(source) if target.suffix=='.page' else source)
     (sandbox/'unraid-version').write_text('version="7.3.3"\n')
     (sandbox/'emhttp').mkdir()
@@ -51,6 +52,7 @@ with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
         text = node.findtext('INLINE')
         text = text.replace('/tmp/fejes-mover-monitor-' + plugin.attrib['version'], sandbox.as_posix())
         text = text.replace('/usr/local/emhttp/plugins/fejes.mover.monitor', destination.as_posix())
+        text = text.replace('/boot/config/plugins/fejes.mover.monitor/tools', helper_destination.as_posix())
         text = text.replace('/etc/unraid-version', (sandbox/'unraid-version').as_posix())
         text = text.replace('/usr/local/emhttp', (sandbox/'emhttp').as_posix())
         text = text.replace('/boot/config', (sandbox/'boot-config').as_posix())
@@ -61,11 +63,21 @@ with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
     (sandbox/'unraid-version').write_text('version="7.3.3"\n')
     assert script('').returncode == 0, 'Clean install failed'
     installed = {p.name: p.read_bytes() for p in destination.iterdir()}
+    helper_bytes={p.name:p.read_bytes() for p in helper_destination.iterdir()}
+    assert len(helper_bytes)==5
+    if sys.platform!='win32':
+        assert all((p.stat().st_mode & 0o777)==0o700 for p in helper_destination.iterdir())
     assert script('').returncode == 0, 'Repeated install failed'
     assert installed == {p.name: p.read_bytes() for p in destination.iterdir()}
     (sandbox/'unraid-version').write_text('version="8.0.0"\n')
     assert script('').returncode != 0 and installed == {p.name:p.read_bytes() for p in destination.iterdir()}, 'Unsupported update changed runtime'
     (sandbox/'unraid-version').write_text('version="7.3.3"\n')
+    helper=sandbox/'fejes_service.py'
+    good_helper=helper.read_bytes()
+    helper.write_text('def broken(:')
+    assert script('').returncode!=0, 'Invalid helper must fail before activation'
+    assert helper_bytes=={p.name:p.read_bytes() for p in helper_destination.iterdir()}
+    helper.write_bytes(good_helper)
     page = sandbox / 'FejesMover.page'
     page.write_text('<?php function broken( {')
     assert script('').returncode != 0, 'Invalid PHP must be rejected'
@@ -74,5 +86,6 @@ with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
     unrelated.write_text('preserve')
     assert script('remove').returncode == 0, 'Uninstall failed'
     assert list(destination.iterdir()) == [unrelated], 'Uninstall removed unrelated data'
+    assert helper_bytes=={p.name:p.read_bytes() for p in helper_destination.iterdir()}, 'Uninstall changed external protection helpers'
 print('PASS: reproducible manifest, checksums, XML, PHP lint, isolated install/update/rejection/remove')
 print('Unraid WebGUI, reboot persistence and live Mover behavior remain untested.')

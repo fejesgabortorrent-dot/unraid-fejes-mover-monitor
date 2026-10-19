@@ -20,6 +20,7 @@ checked_js = set()
 with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     lab = Path(directory)
     paths = {
+        '/etc/cron.d/root': str(lab/'active-cron'),
         '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php': str(lab/'FejesMoverRuntime.php'),
         '/boot/config/plugins/fejes.mover.monitor/settings.json': str(lab/'config.json'),
         '/boot/config/pools/': str(lab/'pools')+'/',
@@ -29,6 +30,7 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
         '/var/run/fejes-mover-settings.lock': str(lab / 'settings.lock'),
         '/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script': str(lab / 'automation/script'),
         '/boot/config/plugins/fejes.mover.monitor/backups': str(lab / 'backups'),
+        '/boot/config/plugins/fejes.mover.monitor/tools/': str(lab / 'helpers') + '/',
         '/var/log/syslog': str(lab / 'syslog'),
         '/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.txt': str(lab / 'script.log'),
         '/mnt/cache': str(lab / 'cache'),
@@ -81,9 +83,58 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     check('Idle detail page renders without PHP warnings', '● Nem fut' in page)
     check('Missing cache shows unavailable capacity', '<span>—</span>' in page)
     check('Syslog HTML is escaped', '&lt;script&gt;' in page and '<script>alert("test")</script>' not in page)
+    check('Missing schedule never claims active automation', 'Az automatikus ütemezés nem igazolt' in page)
+    schedule='*/15 * * * * /usr/local/emhttp/plugins/user.scripts/startCustom.php '+(lab/'automation/script').as_posix()+' > /dev/null 2>&1\n'
+    (lab/'active-cron').write_text(schedule,newline='\n')
+    for lang,label in [('hu','Ütemezés aktív'),('en','Schedule active'),('de','Zeitplan aktiv')]:
+        check(lang+': verified schedule is visible', label in render('FejesMover.page',language=lang))
+    (lab/'active-cron').write_text('# '+schedule)
+    check('Commented scheduler never claims active automation','Az automatikus ütemezés nem igazolt' in render('FejesMover.page'))
+    (lab/'active-cron').unlink()
     settings = render('FejesMoverSettings.page')
     check('Missing optional automation is handled', 'A script nincs telepítve' in settings)
+    protection = render('FejesMoverProtection.page')
+    check('Common protection page renders without API calls', 'Összehangolt védelem' in protection and 'Állapot ellenőrzése' in protection)
+    rejected = render('FejesMoverProtection.page', {'fp_csrf':'wrong', 'fp_action':'wire'})
+    check('Protection actions reject invalid CSRF', 'Lejárt munkamenet' in rejected)
+    rejected = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'run-mover'})
+    check('Protection UI cannot start Mover', 'Ismeretlen művelet' in rejected)
+    (lab / 'helpers').mkdir()
+    (lab / 'helpers/fejes_service.py').write_text('import json\nprint(json.dumps('+repr({'torrent':'defer','checked_torrents':7,'blocking_torrents':2,'cache_free_bytes':1073741824,'remaining_upper_bound_bytes':2147483648,'pressure':'warning','integrity_config':'wired','integrity_active':'not_verified'})+'))\n')
+    snapshot = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'check'})
+    check('Authenticated protection check renders returned diagnostics', 'Halasztás: félkész' in snapshot and '1,0 GiB' in snapshot and 'Az aktív bekötés nem igazolt' in snapshot)
+    dry_fixture={'protected_items':[{'name':'<b>example</b>.mkv','kind':'unknown'}],'torrent':'defer','blocking_torrents':2,'dry_run':{'decision':'wait','read_only':True,'checks':[{'key':key,'state':'wait' if key in ('capacity','torrent') else 'pass','detail':2 if key=='torrent' else ''} for key in ('launcher','capacity','torrent','backup','parity','mover','cooldown')]}}
+    (lab/'helpers/fejes_service.py').write_text('import sys,json\nassert "dry-run" in sys.argv and "--include-items" in sys.argv\nprint(json.dumps('+repr(dry_fixture)+'))\n')
+    dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'})
+    check('Dry-run POST shows seven visual conditions and the wait result', 'Most várakozna' in dry and all(label in dry for label in ['Indító ellenőrzése','Szabad hely és küszöb','Torrentvédelem','Appdata-mentés','Paritásművelet','Futó Mover','Újrapróbálkozási várakozás']))
+    check('Private item basenames are HTML escaped', '&lt;b&gt;example&lt;/b&gt;.mkv' in dry and '<b>example</b>.mkv' not in dry)
+    check('Monitor dry-run button uses CSRF-protected POST', 'value="dry-run"' in render('FejesMover.page') and 'name="fp_csrf"' in render('FejesMover.page'))
+    for language in ('en','de'):
+        translated_dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'},language)
+        check(language+': protection descriptions and native title translated', ('Coordinated protection' if language=='en' else 'Abgestimmter Schutz') in translated_dry and 'Helyhiánynál sincs' not in translated_dry and 'Az eseményfigyelő korábbi' not in translated_dry and ('FejesMover Protection' if language=='en' else 'FejesMover Schutz') in translated_dry)
+        check(language+': dry-run heading translated', ('Would wait now' if language=='en' else 'Würde jetzt warten') in translated_dry)
+    marker = lab / 'wired'
+    (lab / 'helpers/wire_integrity_cron.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').touch()\n')
+    mounted=True
+    rejected=render('FejesMoverProtection.page', {'fp_csrf':'test-token','fp_action':'wire'})
+    check('Wiring requires separate consent', not marker.exists() and 'külön jóváhagyás' in rejected)
+    (lab/'config.json').write_text('{"version":1,"mode":"observer","pool":"cache"}')
+    rejected=render('FejesMoverProtection.page', {'fp_csrf':'test-token','fp_action':'wire','wire_ack':'yes'})
+    check('Observer rejects schedule writes', not marker.exists() and 'külön jóváhagyás' in rejected)
+    dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'})
+    check('Observer permits dry run without schedule mutation', 'Most várakozna' in dry and not marker.exists())
+    (lab/'config.json').write_text('{"version":1,"mode":"demo","pool":"cache"}')
+    (lab/'helpers/fejes_service.py').write_text('raise RuntimeError("must not execute in demo")')
+    demo=render('FejesMoverProtection.page', {'fp_csrf':'test-token','fp_action':'check'})
+    check('Demo diagnostics never invoke live helper', 'Szimulált állapot' in demo)
+    demo_dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'})
+    check('Demo dry-run is synthetic and never invokes live helper', 'Szimulált állapot' in demo_dry and 'Most várakozna' in demo_dry)
+    (lab/'config.json').write_text('{"version":1,"mode":"advanced","pool":"cache"}')
+    wired = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'wire','wire_ack':'yes'})
+    check('Authenticated wiring invokes only the fixed helper', marker.exists() and 'bekötése lefutott' in wired)
+    mounted=False
     dashboard = render('FejesMover.Dashboard.page')
+    check('Dashboard embeds offline FM icon', 'data:image/svg+xml;base64,' in json.loads(dashboard.split('TILE=',1)[1])['fejes.mover.monitor']['column2'])
     check('Dashboard tile renders without PHP warnings', 'TILE=' in dashboard and 'MOVER FIGYEL' in dashboard)
     (lab / 'cache').mkdir()
     unmounted = render('FejesMover.page')
@@ -112,7 +163,7 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     free_bytes = 0
     full = render('FejesMoverSettings.page')
     check('Zero free bytes render as valid capacity', '0,0 GiB</strong>' in full and 'free=0' in full)
-    preview_script = re.findall(r'<script>(.*?)</script>', full, re.S)[0]
+    preview_script = next(js for js in re.findall(r'<script>(.*?)</script>', full, re.S) if 'ms-threshold' in js)
     preview_test = '''const vm=require('node:vm'),assert=require('node:assert/strict');
 const elements={}; for(const id of ['ms-threshold','ms-slider','ms-cooldown','ms-hours','ms-marker','ms-preview']) elements[id]={value:'2',style:{},addEventListener(){},form:{addEventListener(){}}};
 vm.runInNewContext(SCRIPT,{document:{getElementById:id=>elements[id]}});
@@ -180,5 +231,5 @@ for label in checks:
     print('PASS:', label)
 print(f'{len(checks)} application fixture checks passed. Actual Unraid WebGUI/Mover/reboot remain untested.')
 
-assert len(checked_js) == 3, checked_js
-print('PASS: JavaScript syntax in rendered output of all three page types (Node --check).')
+assert len(checked_js) == 4, checked_js
+print('PASS: JavaScript syntax in rendered output of all four exercised page types (Node --check).')

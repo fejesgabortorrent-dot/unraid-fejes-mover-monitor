@@ -101,3 +101,36 @@ See [release status and remaining acceptance tests](docs/RELEASE-STATUS.md). Ear
 Fejes Mover Monitor is free and open source. If you find it useful, you can [support FejesNAS development via PayPal](https://paypal.me/FejesG). Support is voluntary and does not unlock features or guarantee support or development timelines.
 
 A Fejes Mover Monitor ingyenes és nyílt forráskódú. Ha hasznosnak találod, [támogathatod a FejesNAS fejlesztéseit PayPalon](https://paypal.me/FejesG). A támogatás önkéntes.
+
+
+## Integrated protection candidate / Összevont védelmi próbaverzió
+
+Candidate `2026.10.19.92` combines the current mode/pool UI and flag navigation
+with torrent and scheduled File Integrity diagnostics. Open Tools / FejesMover
+védelem from the monitor. Protection diagnostics, monitor, settings and mode setup support HU / US English / German.
+Demo diagnostics use synthetic data. Observer diagnostics read state only.
+Integrity schedule wiring requires Advanced mode, a mounted cache and separate
+consent. Installation never wires schedules or starts Mover/hashing.
+
+Removal deletes the owned WebGUI files but retains configuration, helpers,
+backups and separately configured external schedule integrations. This avoids
+breaking existing File Integrity jobs. Explicit restoration commands and the
+global torrent gate limitations are described in
+[the protection guide](docs/TORRENT-INTEGRITY-HU.md).
+
+[Owner-only GitHub download counter](docs/GITHUB-DOWNLOADS-HU.md) is included as
+a separate tool, never installed or scheduled by the plugin. No public NAS
+receiver or telemetry endpoint is enabled.
+
+The FM icon means **Fejes Mover**: two drives, an orange transfer arrow and a
+green protection shield. PNG is used for the catalog; SVG remains editable.
+The Community Applications listing has not been submitted.
+
+### Read-only start preview / Indítási próba
+Use the orange **Dry run – no file movement / Próba – nincs fájlmozgatás** button on the monitor or protection page. It reads a fresh snapshot of the reviewed launcher/share, cache threshold, torrents, Appdata backup marker, parity, Mover PID and retry timestamp. Green means clear, amber means wait, and unknown state prevents a ready result. Demo uses synthetic data; Observer also permits this read-only check. No launcher, schedule, settings or attempt timestamp is written, and no start lock is reserved. A preview is not a guarantee of a later real start.
+
+The authenticated dry-run UI additionally shows up to 25 protected content basenames, identifying files/folders when their type is readable. No full paths are returned. Default status/CLI output remains redacted; private names require the explicit dry-run `--include-items` option and are never sent to GitHub.
+
+Language selection persists across all five plugin views (including the Dashboard card). Native plugin page headings follow the same selection; Unraid navigation remains in the language configured in Unraid. Logs and private filenames are displayed as stored, never translated.
+
+The installer requires PHP 8+ with ctype. Minimal environments without ctype are rejected before runtime activation. [Linux VM reboot acceptance](docs/LINUX-VM-ACCEPTANCE.md) documents successful guest-only install/reboot and removal/reboot checks; it does not replace genuine Unraid boot acceptance.

@@ -25,6 +25,10 @@ jobs:
           bash --version
       - name: Check package, checksums and isolated installation
         run: python3 tools/check.py
+      - name: Protection unit tests
+        run: python3 -m unittest discover -s tools -p '*_test.py'
+      - name: Synthetic movement and deferral checks
+        run: python3 tools/simulate.py --output /tmp/fejes-simulation
       - name: Check all three interfaces and settings guards
         run: python3 tools/app_test.py
       - name: Check mode, pool and configuration recovery guards

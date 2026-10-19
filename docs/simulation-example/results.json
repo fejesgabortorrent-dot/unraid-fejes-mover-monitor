@@ -1,0 +1,138 @@
+{
+  "simulation": true,
+  "live_unraid_verified": false,
+  "scenarios": [
+    {
+      "id": "ready",
+      "scenario": "Kevés hely, kész torrentek",
+      "passed": true,
+      "moved": true,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": true,
+      "exit_code": 0,
+      "log": "Real torrent assessor: no_torrent_blocker\n[Filmek Mover] Cache: 100.0 GiB szabad | küszöb: 300 GiB | MOVER INDÍTÁS\nSIMULATION: synthetic file moved\n"
+    },
+    {
+      "id": "space",
+      "scenario": "Elegendő szabad hely",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": false,
+      "exit_code": 0,
+      "log": "[Filmek Mover] Cache: 633.0 GiB szabad | küszöb: 300 GiB | OK\n"
+    },
+    {
+      "id": "boundary",
+      "scenario": "Pontosan 300 GiB szabad",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": false,
+      "exit_code": 0,
+      "log": "[Filmek Mover] Cache: 300.0 GiB szabad | küszöb: 300 GiB | OK\n"
+    },
+    {
+      "id": "download",
+      "scenario": "Aktív letöltés",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": true,
+      "exit_code": 0,
+      "log": "Real torrent assessor: defer\n[Filmek Mover] Torrentellenorzes halasztast kert | Mover nem indul | Varakozasi idobelyeg valtozatlan\n"
+    },
+    {
+      "id": "stalled",
+      "scenario": "99,95%-os megakadt letöltés",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": true,
+      "exit_code": 0,
+      "log": "Real torrent assessor: defer\n[Filmek Mover] Torrentellenorzes halasztast kert | Mover nem indul | Varakozasi idobelyeg valtozatlan\n"
+    },
+    {
+      "id": "checking",
+      "scenario": "100%-os torrent ellenőrzése",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": true,
+      "exit_code": 0,
+      "log": "Real torrent assessor: defer\n[Filmek Mover] Torrentellenorzes halasztast kert | Mover nem indul | Varakozasi idobelyeg valtozatlan\n"
+    },
+    {
+      "id": "api",
+      "scenario": "Nem elérhető torrent API",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": true,
+      "exit_code": 0,
+      "log": "SIMULATED API unavailable\n[Filmek Mover] Torrentellenorzes halasztast kert | Mover nem indul | Varakozasi idobelyeg valtozatlan\n"
+    },
+    {
+      "id": "backup",
+      "scenario": "Appdata-mentés fut",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": false,
+      "exit_code": 0,
+      "log": "[Filmek Mover] Cache: 100.0 GiB szabad | Appdata mentes fut | Mover halasztva\n"
+    },
+    {
+      "id": "parity",
+      "scenario": "Paritásművelet fut",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": false,
+      "exit_code": 0,
+      "log": "[Filmek Mover] Cache: 100.0 GiB szabad | Paritasmuvelet fut | Mover halasztva\n"
+    },
+    {
+      "id": "mover",
+      "scenario": "Mover már fut",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": false,
+      "exit_code": 0,
+      "log": "[Filmek Mover] Cache: 100.0 GiB szabad | küszöb: 300 GiB | Mover már fut\n"
+    },
+    {
+      "id": "cooldown",
+      "scenario": "Újrapróbálkozási várakozás",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": false,
+      "exit_code": 0,
+      "log": "[Filmek Mover] Cache: 100.0 GiB szabad | küszöb: 300 GiB | várakozás aktív, még kb. 360 perc\n"
+    },
+    {
+      "id": "mount",
+      "scenario": "Cache nincs felcsatolva",
+      "passed": true,
+      "moved": false,
+      "checksum_ok": true,
+      "timestamp_ok": true,
+      "gate_called": false,
+      "exit_code": 1,
+      "log": "[Filmek Mover] HIBA: A cache pool nincs felcsatolva\n"
+    }
+  ]
+}
