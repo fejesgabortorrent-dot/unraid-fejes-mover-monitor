@@ -506,5 +506,13 @@
   "Vissza a főoldali kártyához": {
     "en": "Back to dashboard card",
     "de": "Zurück zur Dashboard-Karte"
+  },
+  "Próba – nincs fájlmozgatás": {
+    "en": "Dry run – no file movement",
+    "de": "Probelauf – keine Dateiverschiebung"
+  },
+  "Csak állapotellenőrzés, nincs fájlmozgatás.": {
+    "en": "Read-only check. No files are moved.",
+    "de": "Nur Statusprüfung. Keine Dateien werden verschoben."
   }
 }

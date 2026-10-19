@@ -22,21 +22,22 @@ try {
  if(($_SERVER['REQUEST_METHOD']??'GET')==='POST') {
   if(!is_string($_POST['fp_csrf']??null)||!is_string($fpToken)||$fpToken===''||!hash_equals($fpToken,$_POST['fp_csrf']))throw new RuntimeException('Lejárt munkamenet. Töltsd újra az oldalt.');
   $fpAction=$_POST['fp_action']??'';
-  if(!is_string($fpAction)||!in_array($fpAction,['check','wire'],true))throw new RuntimeException('Ismeretlen művelet.');
+  if(!is_string($fpAction)||!in_array($fpAction,['check','dry-run','wire'],true))throw new RuntimeException('Ismeretlen művelet.');
   if($fmc['error']||!is_resource($fmc['lock']))throw new RuntimeException('A konfiguráció nem olvasható biztonságosan.');
   if($fmc['mode']==='demo'){
-   if($fpAction!=='check')throw new RuntimeException('Demó módban nincs élő művelet.');
+   if(!in_array($fpAction,['check','dry-run'],true))throw new RuntimeException('Demó módban nincs élő művelet.');
    $fpReport=['torrent'=>'no_torrent_blocker','checked_torrents'=>7,'blocking_torrents'=>0,'cache_free_bytes'=>633*1073741824,'remaining_upper_bound_bytes'=>20*1073741824,'pressure'=>'ok'];
+   if($fpAction==='dry-run')$fpReport['dry_run']=['decision'=>'wait','read_only'=>true,'checks'=>[['key'=>'capacity','state'=>'wait','detail'=>['free_gib'=>633,'threshold_gib'=>300]],['key'=>'torrent','state'=>'pass','detail'=>0],['key'=>'backup','state'=>'pass'],['key'=>'parity','state'=>'pass'],['key'=>'mover','state'=>'pass'],['key'=>'cooldown','state'=>'pass'],['key'=>'launcher','state'=>'pass']]];
    $fpMessage='Szimulált állapot. Nincs élő lekérdezés.';
   }else{
   if($fmc['pool']!=='cache')throw new RuntimeException('A torrentvédelem jelenleg csak cache pool mellett ellenőrizhető.');
   if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('A bekötéshez Haladó mód, csatolt cache és külön jóváhagyás szükséges.');
-  $fpScript=$fpTools.($fpAction==='check'?'fejes_service.py':'wire_integrity_cron.py');
+  $fpScript=$fpTools.($fpAction!=='wire'?'fejes_service.py':'wire_integrity_cron.py');
   if(!is_file($fpScript))throw new RuntimeException('A közös segédek nincsenek telepítve.');
-  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':'').' 2>/dev/null';
+  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run':'')).' 2>/dev/null';
   $fpOut=[];$fpCode=0;exec($fpCommand,$fpOut,$fpCode);
   if($fpCode!==0)throw new RuntimeException('A művelet nem fejeződött be. Ellenőrizd a Python, Docker és File Integrity elérhetőségét.');
-  if($fpAction==='check') {
+  if($fpAction!=='wire') {
    $fpReport=json_decode(implode("\n",$fpOut),true,32,JSON_THROW_ON_ERROR);
    if(!is_array($fpReport))throw new RuntimeException('Érvénytelen állapotválasz.');
    $fpMessage='Pillanatkép ideje: '.date('Y-m-d H:i:s');
@@ -60,8 +61,36 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php if($fpMessage):?><div class="notice" role="status"><?=$fpEsc($fpMessage)?></div><?php endif?>
 <form method="post" action="/Tools/FejesMoverProtection">
  <input type="hidden" name="csrf_token" value="<?=$fpEsc($fpToken)?>"><input type="hidden" name="fp_csrf" value="<?=$fpEsc($fpToken)?>">
+ <button type="submit" name="fp_action" value="dry-run" style="background:#d96316;color:white;border:2px solid #ff9c55;font-size:17px;font-weight:600">▶ Próba – nincs fájlmozgatás</button>
  <button type="submit" name="fp_action" value="check">Állapot ellenőrzése</button>
  <p class="muted">Az ellenőrzés pillanatképet olvas. Nem indít Movert vagy hash-elést.</p>
+<?php if(isset($fpReport['dry_run'])&&is_array($fpReport['dry_run'])):
+ $fpDry=$fpReport['dry_run'];$fpT=$fmc['t'];
+ $fpDecision=in_array($fpDry['decision']??null,['ready','wait','unknown'],true)?$fpDry['decision']:'unknown';
+ $fpColors=['ready'=>'#62d4a3','wait'=>'#ffb55c','unknown'=>'#ed9587'];
+ $fpHead=['ready'=>$fpT('A feltételek alapján indulna','Conditions allow a start','Bedingungen erlauben den Start'),'wait'=>$fpT('Most várakozna','Would wait now','Würde jetzt warten'),'unknown'=>$fpT('Nem dönthető el biztonságosan','Cannot safely determine readiness','Startbereitschaft nicht sicher prüfbar')];
+ $fpNames=['launcher'=>$fpT('Indító ellenőrzése','Reviewed launcher','Geprüftes Startskript'),'capacity'=>$fpT('Szabad hely és küszöb','Free space and threshold','Freier Platz und Schwelle'),'torrent'=>$fpT('Torrentvédelem','Torrent protection','Torrent-Schutz'),'backup'=>$fpT('Appdata-mentés','Appdata backup','Appdata-Sicherung'),'parity'=>$fpT('Paritásművelet','Parity operation','Paritätsvorgang'),'mover'=>$fpT('Futó Mover','Running Mover','Laufender Mover'),'cooldown'=>$fpT('Újrapróbálkozási várakozás','Retry cooldown','Wartezeit bis zum nächsten Versuch')];
+ $fpStates=['pass'=>$fpT('Rendben','Clear','In Ordnung'),'wait'=>$fpT('Várakozás','Wait','Warten'),'unknown'=>$fpT('Nem ellenőrizhető','Unavailable','Nicht prüfbar')];
+?>
+<section id="fp-dry-run" aria-live="polite" style="border:2px solid <?=$fpColors[$fpDecision]?>;background:#8881">
+<h3><?=$fpEsc($fpT('Indítási próba · csak olvasás','Start preview · read only','Startvorschau · nur lesen'))?></h3>
+<p style="font-size:26px;font-weight:700;color:<?=$fpColors[$fpDecision]?>"><?=$fpEsc($fpHead[$fpDecision])?></p>
+<p><?=$fpEsc($fpT('Pillanatkép, nem indítás. Nem mozgat fájlokat, nem írja az időbélyeget és nem foglal indítási jogot.','Snapshot only. No files moved, no timestamp written and no launch reservation.','Nur Momentaufnahme. Keine Dateien verschoben, kein Zeitstempel geschrieben und kein Start reserviert.'))?></p>
+<div class="grid">
+<?php foreach(($fpDry['checks']??[]) as $fpCheck):
+ if(!is_array($fpCheck)||!isset($fpNames[$fpCheck['key']??'']))continue;
+ $fpKey=$fpCheck['key'];$fpState=$fpCheck['state']??'unknown';if(!isset($fpStates[$fpState]))$fpState='unknown';
+ $fpColor=$fpState==='pass'?'#62d4a3':($fpState==='wait'?'#ffb55c':'#ed9587');
+ $fpDetail=$fpCheck['detail']??null;
+?>
+<div style="padding:14px;border:1px solid #8885;border-left:5px solid <?=$fpColor?>;border-radius:4px"><strong><?=$fpEsc($fpNames[$fpKey])?></strong><br><span style="color:<?=$fpColor?>;font-weight:600"><?=$fpState==='pass'?'✓':($fpState==='wait'?'⏸':'?')?> <?=$fpEsc($fpStates[$fpState])?></span>
+<?php if($fpKey==='capacity'&&is_array($fpDetail)):?><p><?=$fpEsc($fpDetail['free_gib']??'—')?> GiB / <?=$fpEsc($fpT('küszöb','threshold','Schwelle'))?>: <?=$fpEsc($fpDetail['threshold_gib']??'—')?> GiB</p><?php endif?>
+<?php if($fpKey==='torrent'&&is_int($fpDetail)):?><p><?=$fpEsc($fpT('Halasztást okozó torrentek: ','Blocking torrents: ','Blockierende Torrents: '))?><?=$fpDetail?></p><?php endif?>
+<?php if($fpKey==='cooldown'&&is_array($fpDetail)):?><p><?=$fpEsc((int)ceil(($fpDetail['remaining_seconds']??0)/60))?> <?=$fpEsc($fpT('perc várakozás','minutes remaining','Minuten verbleibend'))?></p><?php endif?>
+</div><?php endforeach?></div>
+<p class="muted"><?=$fpEsc($fpT('A gomb ismételt megnyomása új pillanatképet kér. Az éles indításnál minden feltételt újra kell ellenőrizni.','Press again for a fresh snapshot. Every condition must be checked again at an actual start.','Erneut drücken für eine neue Momentaufnahme. Beim echten Start müssen alle Bedingungen erneut geprüft werden.'))?></p>
+</section>
+<?php endif?>
  <div class="grid">
  <section><h3>Torrentvédelem</h3><strong><?=$fpEsc($fpLabel($fpReport['torrent']??'unknown'))?></strong>
  <?php if($fpReport!==null):?><p>Vizsgált torrentek: <?=$fpEsc($fpReport['checked_torrents']??'—')?><br>Halasztást okoz: <?=$fpEsc($fpReport['blocking_torrents']??'—')?></p><?php endif?>

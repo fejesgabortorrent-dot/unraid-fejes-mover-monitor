@@ -94,6 +94,14 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     (lab / 'helpers/fejes_service.py').write_text('import json\nprint(json.dumps('+repr({'torrent':'defer','checked_torrents':7,'blocking_torrents':2,'cache_free_bytes':1073741824,'remaining_upper_bound_bytes':2147483648,'pressure':'warning','integrity_config':'wired','integrity_active':'not_verified'})+'))\n')
     snapshot = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'check'})
     check('Authenticated protection check renders returned diagnostics', 'Halasztás: félkész' in snapshot and '1,0 GiB' in snapshot and 'Az aktív bekötés nem igazolt' in snapshot)
+    dry_fixture={'torrent':'defer','blocking_torrents':2,'dry_run':{'decision':'wait','read_only':True,'checks':[{'key':key,'state':'wait' if key in ('capacity','torrent') else 'pass','detail':2 if key=='torrent' else ''} for key in ('launcher','capacity','torrent','backup','parity','mover','cooldown')]}}
+    (lab/'helpers/fejes_service.py').write_text('import sys,json\nassert sys.argv[-1]=="dry-run"\nprint(json.dumps('+repr(dry_fixture)+'))\n')
+    dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'})
+    check('Dry-run POST shows seven visual conditions and the wait result', 'Most várakozna' in dry and all(label in dry for label in ['Indító ellenőrzése','Szabad hely és küszöb','Torrentvédelem','Appdata-mentés','Paritásművelet','Futó Mover','Újrapróbálkozási várakozás']))
+    check('Monitor dry-run button uses CSRF-protected POST', 'value="dry-run"' in render('FejesMover.page') and 'name="fp_csrf"' in render('FejesMover.page'))
+    for language in ('en','de'):
+        translated_dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'},language)
+        check(language+': dry-run heading translated', ('Would wait now' if language=='en' else 'Würde jetzt warten') in translated_dry)
     marker = lab / 'wired'
     (lab / 'helpers/wire_integrity_cron.py').write_text('from pathlib import Path\nPath('+repr(str(marker))+').touch()\n')
     mounted=True
@@ -102,10 +110,14 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     (lab/'config.json').write_text('{"version":1,"mode":"observer","pool":"cache"}')
     rejected=render('FejesMoverProtection.page', {'fp_csrf':'test-token','fp_action':'wire','wire_ack':'yes'})
     check('Observer rejects schedule writes', not marker.exists() and 'külön jóváhagyás' in rejected)
+    dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'})
+    check('Observer permits dry run without schedule mutation', 'Most várakozna' in dry and not marker.exists())
     (lab/'config.json').write_text('{"version":1,"mode":"demo","pool":"cache"}')
     (lab/'helpers/fejes_service.py').write_text('raise RuntimeError("must not execute in demo")')
     demo=render('FejesMoverProtection.page', {'fp_csrf':'test-token','fp_action':'check'})
     check('Demo diagnostics never invoke live helper', 'Szimulált állapot' in demo)
+    demo_dry=render('FejesMoverProtection.page',{'fp_csrf':'test-token','fp_action':'dry-run'})
+    check('Demo dry-run is synthetic and never invokes live helper', 'Szimulált állapot' in demo_dry and 'Most várakozna' in demo_dry)
     (lab/'config.json').write_text('{"version":1,"mode":"advanced","pool":"cache"}')
     wired = render('FejesMoverProtection.page', {'fp_csrf':'test-token', 'fp_action':'wire','wire_ack':'yes'})
     check('Authenticated wiring invokes only the fixed helper', marker.exists() and 'bekötése lefutott' in wired)

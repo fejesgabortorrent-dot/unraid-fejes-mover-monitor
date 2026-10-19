@@ -105,7 +105,7 @@ A Fejes Mover Monitor ingyenes és nyílt forráskódú. Ha hasznosnak találod,
 
 ## Integrated protection candidate / Összevont védelmi próbaverzió
 
-Candidate `2026.10.19.5` combines the current mode/pool UI and flag navigation
+Candidate `2026.10.19.7` combines the current mode/pool UI and flag navigation
 with torrent and scheduled File Integrity diagnostics. Open Tools / FejesMover
 védelem from the monitor. Diagnostics currently retain Hungarian explanatory
 text; the monitor, settings and mode setup support HU / US English / German.
@@ -126,3 +126,6 @@ receiver or telemetry endpoint is enabled.
 The FM icon means **Fejes Mover**: two drives, an orange transfer arrow and a
 green protection shield. PNG is used for the catalog; SVG remains editable.
 The Community Applications listing has not been submitted.
+
+### Read-only start preview / Indítási próba
+Use the orange **Dry run – no file movement / Próba – nincs fájlmozgatás** button on the monitor or protection page. It reads a fresh snapshot of the reviewed launcher/share, cache threshold, torrents, Appdata backup marker, parity, Mover PID and retry timestamp. Green means clear, amber means wait, and unknown state prevents a ready result. Demo uses synthetic data; Observer also permits this read-only check. No launcher, schedule, settings or attempt timestamp is written, and no start lock is reserved. A preview is not a guarantee of a later real start.

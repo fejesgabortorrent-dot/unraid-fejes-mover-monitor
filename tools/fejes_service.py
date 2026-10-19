@@ -4,6 +4,8 @@ import argparse
 import fcntl
 import json
 import os
+import re
+import time
 from pathlib import Path
 import shutil
 import subprocess
@@ -18,6 +20,81 @@ LAUNCHER = Path('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshol
 CACHE = '/mnt/cache'
 LOCK = '/var/run/fejes-mover-launch.lock'
 ERRORS = (ValueError, TypeError, KeyError, AttributeError, OSError, subprocess.SubprocessError)
+BACKUP_MARKER = Path('/tmp/appdata.backup/running')
+MDSTAT = Path('/proc/mdstat')
+ATTEMPT = Path('/var/run/filmek_mover_last_attempt')
+MOVER_PID = Path('/var/run/mover.pid')
+SHARE = Path('/mnt/user/Filmek')
+
+
+def dry_run(container='binhex-qbittorrentvpn'):
+    """Read-only decision snapshot. Never execute a launcher or write a timestamp."""
+    report = status(container)
+    checks = []
+    def add(key, state, detail=''):
+        checks.append({'key': key, 'state': state, 'detail': detail})
+    threshold = wait = None
+    try:
+        if LAUNCHER.is_symlink():
+            raise ValueError('Symlink')
+        source = LAUNCHER.read_text()
+        rewrite_launcher(source)  # Reject drift; known guards only.
+        if not SHARE.is_dir():
+            raise ValueError('Required share unavailable')
+        threshold = int(re.search(r'^KUSZOB_GIB=([0-9]+)$', source, re.M)[1])
+        wait = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
+        add('launcher', 'pass')
+    except (IndexError, *ERRORS):
+        add('launcher', 'unknown')
+    free = report.get('cache_free_bytes')
+    if report.get('cache') != 'available' or type(free) is not int or threshold is None:
+        add('capacity', 'unknown')
+    else:
+        add('capacity', 'pass' if free < threshold*1024**3 else 'wait',
+            {'free_gib': round(free/1024**3, 1), 'threshold_gib': threshold})
+    decision = report.get('torrent')
+    add('torrent', 'pass' if decision == 'no_torrent_blocker' else
+        'wait' if decision == 'defer' else 'unknown', report.get('blocking_torrents'))
+    try:
+        if BACKUP_MARKER.exists():
+            raw = BACKUP_MARKER.read_text().strip()
+            if not raw.isdigit() or int(raw) <= 1:
+                raise ValueError('Invalid backup PID')
+            try:
+                os.kill(int(raw), 0)
+                add('backup', 'wait')
+            except ProcessLookupError:
+                add('backup', 'pass')
+        else:
+            add('backup', 'pass')
+    except ERRORS:
+        add('backup', 'unknown')
+    try:
+        values = re.findall(r'^mdResync=([0-9]+)$', MDSTAT.read_text(), re.M)
+        if len(values) != 1:
+            raise ValueError('Parity status missing')
+        add('parity', 'pass' if int(values[0]) == 0 else 'wait')
+    except ERRORS:
+        add('parity', 'unknown')
+    add('mover', 'wait' if MOVER_PID.exists() else 'pass')
+    try:
+        if wait is None:
+            raise ValueError('Retry interval unknown')
+        if ATTEMPT.exists():
+            raw = ATTEMPT.read_text().strip()
+            if not raw.isdigit():
+                raise ValueError('Invalid timestamp')
+            remaining = max(0, int(raw)+wait*60-int(time.time()))
+            add('cooldown', 'wait' if remaining else 'pass', {'remaining_seconds': remaining})
+        else:
+            add('cooldown', 'pass', {'remaining_seconds': 0})
+    except ERRORS:
+        add('cooldown', 'unknown')
+    states = {c['state'] for c in checks}
+    report['dry_run'] = {'decision': 'unknown' if 'unknown' in states else
+                         'wait' if 'wait' in states else 'ready',
+                         'checks': checks, 'read_only': True}
+    return report
 
 
 def capacity(torrents, free, reserve):
@@ -124,14 +201,14 @@ def run_mover(container):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['status', 'run-mover'])
+    parser.add_argument('action', choices=['status', 'dry-run', 'run-mover'])
     parser.add_argument('--container', default='binhex-qbittorrentvpn')
     args = parser.parse_args(argv)
     if not args.container or args.container.startswith('-'):
         parser.error('Invalid container name')
     if args.action == 'run-mover':
         return run_mover(args.container)
-    print(json.dumps(status(args.container), allow_nan=False))
+    print(json.dumps(dry_run(args.container) if args.action == 'dry-run' else status(args.container), allow_nan=False))
     return 0
 
 
