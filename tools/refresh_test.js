@@ -4,7 +4,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 function script(name) {
-  return fs.readFileSync(path.join(__dirname, '../src', name), 'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+  const marker = name === 'FejesMover.page' ? 'window.fejesMoverTimer' : 'window.fejesMoverDashTimer';
+  const matches = [...fs.readFileSync(path.join(__dirname, '../src', name), 'utf8').matchAll(/<script>([\s\S]*?)<\/script>/g)];
+  // Source contains precompiled language branches plus a PHP-backed title
+  // script. Execute the actual Hungarian polling branch, not that title.
+  const found = matches.filter(match => match[1].includes(marker)).at(-1);
+  assert.ok(found, 'Polling script missing: '+name);
+  return found[1];
 }
 function environment() {
   const elements = {};

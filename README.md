@@ -10,15 +10,17 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**Experimental beta 0.1.0-beta.1 · Unraid 7.x · Not production-validated.**
+**2026.10.23.992 · Experimental beta · Unraid 7.x**
 
-[Download the beta](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v0.1.0-beta.1) · [Installation, checksums and removal/recovery](docs/BETA-INSTALL.md)
+[Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
-Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Advanced editing requires explicit acknowledgment and an existing cache-only automation script. No mode change starts Mover. Live Unraid installation and reboot acceptance testing remain outstanding. Not submitted to Community Applications.
+Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Installation and mode changes never start movement or install a schedule. Advanced/cache mode includes authenticated, opt-in age-filtered movement for the existing `Filmek` share and reviewed threshold automation. The app is listed in the owner's Community Applications search; listing is not broad hardware certification.
+
+**Magyar:** Az új szelektív mozgató kihagyja a túl fiatal, félkész, aktív, megnyitott vagy megváltozott fájlokat. A korhatár 7 / 14 / 30 nap; a cache-ben igazolt első megfigyelés is számít. A natív Unraid-mozgatót használja, a célon SHA-256-ot és metaadatokat ellenőriz. Az automatikus bekötés külön, mentéssel történik; telepítéskor nem változik a meglévő ütemezés.
 
 ## Screenshots / Képernyőképek
 
-**Local browser demo with simulated data — not a live NAS.** These images show the actual compiled plugin pages in the isolated demo wrapper. Actual Unraid dashboard integration still requires acceptance testing.
+**Local browser demo with simulated data — not a live NAS.** These older images illustrate the monitor; current selective-movement evidence and its limits are recorded in the release status.
 
 **Helyi demó, szimulált adatokkal.** A képek nem az élő NAS-ról készültek.
 
@@ -41,6 +43,9 @@ Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/F
 - Recent Mover-related syslog lines, escaped before display.
 - Polling only while the page is visible, with timeouts and stale-data notices.
 - Optional settings page for an existing `Filmek_Mover_Threshold` User Scripts automation.
+- Optional age-filtered native movement, with exact single-file input and no global Mover invocation.
+- Per-content torrent exclusions, fresh maintenance/open-file checks, SHA-256 and metadata verification.
+- Authenticated manual start and explicit, backed-up integration with an existing schedule.
 
 ## Requirements and limits
 
@@ -52,16 +57,17 @@ Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/F
 - The cache-to-array diagram is illustrative. Actual movement direction is controlled by each share's Unraid settings.
 - The optional threshold panel requires the pre-existing script at `/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script`. It is not distributed here. Without it, monitoring still works and settings explain that the optional automation is unavailable.
 - The settings panel changes only `KUSZOB_GIB` and `UJRA_PROBALKOZAS_MP`, after CSRF, version, range, lock and shell-syntax checks. It saves a backup first. The legacy UI interprets `UJRA_PROBALKOZAS_MP` as minutes; check your script's semantics before using this panel with a different script.
-- The plugin does not install a scheduler, start Mover, move files or provide backup/parity guards itself. Those remain the responsibility of Unraid and any existing automation.
+- Installation never creates a schedule or starts movement. The optional selective executor has backup/parity/scrub/mount/integrity/cooldown guards. It supports **cache/Filmek → Array** with user-share torrent bindings. Observer monitoring remains available for other configured pools.
+- Selection uses the newest of mtime, verified first observation and torrent completion. Old-looking files may need the full new observation window. A batch is limited to 8 files / 16 GiB; larger files are skipped.
 
 ## Experimental beta installation
 
-Use a test Unraid 7.x system. Read [the installation and recovery guide](docs/BETA-INSTALL.md) and verify the release checksums first. This beta has not been accepted on live Unraid.
+Read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. Owner acceptance on Unraid 7.3.3 used self-created files outside Emby. Production-media movement and live NAS reboot persistence remain unverified.
 
 In Unraid, open **Plugins → Install Plugin**, then enter:
 
 ```
-https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v0.1.0-beta.1/fejes.mover.monitor.plg
+https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg
 ```
 
 The manifest contains the runtime pages. It does not rely on files from the author's NAS. The installer checks PHP syntax before activating them.
@@ -70,7 +76,7 @@ Open **Tools → Mover figyelő** or the dashboard tile. Plugin updates use the 
 
 ## Uninstall
 
-Remove `fejes.mover.monitor` through Unraid's Plugins page. Its three runtime pages are removed. Existing local automation scripts and `/boot/config/plugins/fejes.mover.monitor/backups` are preserved.
+Remove `fejes.mover.monitor` through Unraid's Plugins page. Owned runtime pages are removed; settings, inventories, helpers, external wiring and backups are retained. UI uninstall does **not** disable separately wired automation. Follow the selective guide's restoration procedure first if you also want that disabled.
 
 ## Privacy and support
 
@@ -87,6 +93,8 @@ sha256sum -c SHA256SUMS
 ```
 
 This rebuilds the self-contained `.plg` manifest and checksums from `src/`. Before publishing changes, run PHP lint on all page files, validate the XML, and test install/update/remove on an appropriate Unraid system.
+
+The verified owner baseline is stored as self-contained trilingual PHP source. The compiler preserves those pages verbatim instead of wrapping their language branches a second time. Tests execute the resulting pages in all three languages.
 
 ## License
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CommunityApplications>
-  <Profile>FejesNAS utilities for Unraid. Fejes Mover Monitor provides a Hungarian, US English and German dashboard and file activity view for the built-in Mover. Support and issue reporting are available through the project's GitHub Issues.</Profile>
+  <Profile>FejesNAS utilities for Unraid. Fejes Mover Monitor provides Hungarian, US English and German monitoring plus opt-in age-filtered native movement with torrent exclusions and checksum verification. Observer is the default; installation does not create schedules or start movement. Support and limits are documented on GitHub.</Profile>
   <Icon>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/icon.svg</Icon>
   <WebPage>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor</WebPage>
   <DonateLink>https://paypal.me/FejesG</DonateLink>

@@ -25,6 +25,8 @@ jobs:
           bash --version
       - name: Check package, checksums and isolated installation
         run: python3 tools/check.py
+      - name: Protection, age selection, native invocation and authenticated UI tests
+        run: python3 -m unittest discover -s tools -p '*_test.py'
       - name: Check all three interfaces and settings guards
         run: python3 tools/app_test.py
       - name: Check mode, pool and configuration recovery guards
