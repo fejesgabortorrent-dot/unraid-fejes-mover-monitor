@@ -1,4 +1,6 @@
-# Experimental beta — 2026.10.23.993
+# Experimental beta — 2026.10.23.994
+
+The .994 follow-up adds a private, timestamped waiting table with per-file size, earliest age eligibility, countdown and blockers. Explicit preview returns a fresh read-only forecast; scheduled inventory observations cache a snapshot. Displayed dates never authorize movement or promise start/finish times. Changing the age setting hides an older forecast until refreshed. Movement safety checks and limits are unchanged.
 
 Unraid 7.x / PHP 8+. Observer remains the default. Installation and mode changes do not start movement or create a schedule.
 

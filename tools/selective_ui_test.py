@@ -10,12 +10,13 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 
 class SelectiveInterface(unittest.TestCase):
-    def render(self,post=None,mode='advanced',lang='hu',last=None):
+    def render(self,post=None,mode='advanced',lang='hu',last=None,forecast=None):
         with tempfile.TemporaryDirectory(prefix='fejes-selective-ui-') as folder:
             lab=Path(folder)
             config='{"version":1,"age_days":7}'
             (lab/'selective.json').write_text(config)
             (lab/'selective-last.json').write_text(json.dumps(last if last is not None else {'state':'nothing_eligible','skipped':{'too_young':4}}))
+            if forecast is not None:(lab/'selective-forecast.json').write_text(json.dumps(forecast))
             runtime='''<?php return ['mode'=>MODE,'pool'=>'cache','mounted'=>true,'error'=>false,'token'=>'test-token',
                 't'=>static fn($hu,$en,$de)=>[$hu,$en,$de][LANG],
                 'esc'=>static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8'),'banner'=>'fixture'];'''
@@ -65,6 +66,20 @@ class SelectiveInterface(unittest.TestCase):
     def test_wrong_csrf_cannot_launch(self):
         request=self.request();request['fejes_csrf']='wrong'
         self.assertFalse(self.render(request)['calls'])
+
+    def test_private_waiting_table_escapes_names_and_shows_countdown_in_every_language(self):
+        forecast={'version':1,'age_days':7,'observed_at':2_000_000_000,'total_bytes':1024,
+                  'rows':[{'file':'<script>alert(1)</script>.mkv','bytes':1024,'age_ready_at':2_000_086_400,'reason':'too_young'}]}
+        for lang,label in [('hu','Korhatárig hátra'),('en','Time until age eligible'),('de','Zeit bis Altersfreigabe')]:
+            result=self.render(lang=lang,forecast=forecast)
+            self.assertFalse(result['calls']);self.assertIn(label,result['html'])
+            self.assertIn('data-fms-countdown="2000086400"',result['html'])
+            self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;.mkv',result['html'])
+            self.assertNotIn('<script>alert(1)</script>.mkv',result['html'])
+
+    def test_changed_age_ignores_old_forecast(self):
+        result=self.render(lang='en',forecast={'version':1,'age_days':14,'rows':[]})
+        self.assertIn('No current observation for this age setting',result['html'])
 
     def test_stale_config_cannot_launch(self):
         request=self.request();request['source_hash']='old'
