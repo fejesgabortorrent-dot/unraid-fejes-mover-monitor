@@ -10,12 +10,12 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 
 class SelectiveInterface(unittest.TestCase):
-    def render(self,post=None,mode='advanced',lang='hu'):
+    def render(self,post=None,mode='advanced',lang='hu',last=None):
         with tempfile.TemporaryDirectory(prefix='fejes-selective-ui-') as folder:
             lab=Path(folder)
             config='{"version":1,"age_days":7}'
             (lab/'selective.json').write_text(config)
-            (lab/'selective-last.json').write_text('{"state":"nothing_eligible","skipped":{"too_young":4}}')
+            (lab/'selective-last.json').write_text(json.dumps(last if last is not None else {'state':'nothing_eligible','skipped':{'too_young':4}}))
             runtime='''<?php return ['mode'=>MODE,'pool'=>'cache','mounted'=>true,'error'=>false,'token'=>'test-token',
                 't'=>static fn($hu,$en,$de)=>[$hu,$en,$de][LANG],
                 'esc'=>static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8'),'banner'=>'fixture'];'''
@@ -50,6 +50,17 @@ class SelectiveInterface(unittest.TestCase):
 
     def test_observer_cannot_launch(self):
         self.assertFalse(self.render(self.request(),mode='observer')['calls'])
+
+    def test_zero_movement_and_both_limits_are_visible_in_every_language(self):
+        last={'state':'no_files_moved','moved_files':0,'moved_bytes':0,
+              'skipped':{'file_exceeds_batch_limit':3,'batch_file_limit':2,'batch_size_limit':1}}
+        for lang,label in [('hu','nem történt mozgatás'),('en','no files moved'),('de','keine Dateien verschoben')]:
+            with self.subTest(lang=lang):
+                result=self.render(lang=lang,last=last)
+                self.assertFalse(result['calls'])
+                self.assertIn(label,result['html'])
+                self.assertIn('16 GiB',result['html'])
+                self.assertNotIn('Unverifiable or unsupported: 3',result['html'])
 
     def test_wrong_csrf_cannot_launch(self):
         request=self.request();request['fejes_csrf']='wrong'

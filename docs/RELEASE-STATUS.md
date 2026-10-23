@@ -1,22 +1,19 @@
-# Experimental beta — 2026.10.23.992
+# Experimental beta — 2026.10.23.993
 
-Unraid 7.x / PHP 8+. Observer remains the default. Installation and mode changes do not start movement or create a schedule. Community Applications listing was observed on the owner's NAS; listing does not certify broad compatibility.
+Unraid 7.x / PHP 8+. Observer remains the default. Installation and mode changes do not start movement or create a schedule.
 
-## Direct owner-NAS evidence (Unraid 7.3.3)
+## Reporting correction
 
-- A 256 MiB own file moved through the native Unraid engine, cache to physical disk2, outside Emby. Before/after SHA-256 matched. User-share access, permissions, ownership, mtime and test/checksum xattrs were preserved. The native engine retained the file while it was actually open.
-- Separate selective executor tests moved a 64 MiB eligible fixture while retaining a young fixture, synthetic active-torrent fixture and actually open fixture. Synthetic age/torrent inputs existed only in the isolated test adapter. Production inventory and torrent API state were not falsified.
-- Real before/after snapshots retained the same 366 torrent identities/paths and all 364 completed torrent seed states. Upload counters increased during the initial native test. This does not claim that production torrent files moved.
-- The actual browser monitor showed the running selective process, open file, position, cache and logs. The fixture checksum read was deliberately slowed for observation; no sustained copy-speed or ETA measurement is claimed.
-- Every installed inline runtime/helper matched the manifest. Owner mode/pool, age setting and cron bytes remained unchanged. Existing 15-minute dispatch was explicitly delegated to the selective executor with a verified backup. Threshold remained 300 GiB and cooldown 360 minutes.
-- Invoking the installed dispatcher and authenticated UI returned nothing_eligible: 437 files, 98 protected and 339 too young, zero moved. These counts are a time-specific owner snapshot.
+The .993 follow-up preserves every batch-limit skip in the final selective-run report. A file larger than the fixed 16 GiB limit now has a distinct explanation; it cannot move under the current limit. Files deferred by the current batch are reported separately. A run that moves zero files no longer displays the verified-movement completion state. Movement limits and safety checks are unchanged.
 
-## Release validation
+## Validation scope
 
-Python policy/native invocation/dispatch guards, authenticated selective UI requests in all three languages, existing PHP page fixtures, 31 mode guards, stale-artifact rejection, JavaScript refresh behavior, reproducible XML/checksums and isolated install/reinstall/rejection/remove are checked. CI runs these from committed public source and never performs production movement.
+Regression cases cover oversized files, the exact byte boundary, trailing byte-limit skips, file-count deferrals, independent smaller files and native-retained sources. Authenticated UI fixtures check the new explanations in Hungarian, English and German. These isolated tests use synthetic inputs and mocked execution; they are not additional live-NAS movement evidence.
+
+The project validation also checks policy/native invocation/dispatch guards, existing PHP pages, mode guards, stale-artifact rejection, JavaScript refresh behavior, reproducible package/checksums and isolated install/reinstall/rejection/remove. Public CI never performs production movement.
 
 ## Remaining limits
 
-Production-media/torrent-file movement, live NAS reboot persistence and broad hardware/configuration compatibility remain unverified. The accepted movement tests used self-created files outside Emby. Selective execution is fixed to cache/Filmek to Array with user-share torrent bindings and an 8-file/16-GiB batch limit. Age includes first observation; old mtime alone does not make a new cache file eligible. Unknown state stops execution.
+Production-media/torrent-file movement, live NAS reboot persistence and broad hardware/configuration compatibility remain unverified. Earlier owner acceptance tests used self-created files outside media libraries; no production-media movement is claimed. Selective execution is fixed to cache/Filmek to Array with user-share torrent bindings and an 8-file/16-GiB batch limit. Age includes first observation; old mtime alone does not make a new cache file eligible. Unknown state stops execution.
 
-See [selective movement and recovery](SELECTIVE-MOVEMENT.md) for retained-helper uninstall semantics and explicit restoration of external wiring. Older archive-prototype and acceptance notes are historical; this status describes the current build.
+See [selective movement and recovery](SELECTIVE-MOVEMENT.md) for retained-helper uninstall semantics and explicit restoration of external wiring. Older archive-prototype and acceptance notes are historical.
