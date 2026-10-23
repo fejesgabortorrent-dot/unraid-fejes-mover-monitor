@@ -62,7 +62,7 @@ html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dash
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard){padding:18px!important}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(h1,h2,h3,p,span,strong,small,label,legend,summary,td,th,pre){color:var(--fejes-fg)!important}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(section,fieldset,.fm-card,.ms-card,.fms-panel,.fms-cards>div){background:var(--fejes-panel)!important;border-color:var(--fejes-line)!important}
-html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(input,select,button,thead th){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(input,select,button,thead th,tbody td){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) a{color:var(--fejes-link)!important}
 html[data-fejes-theme] #fms .fms-primary{background:#a95206!important;color:#fff!important;border-color:#a95206!important}
 html[data-fejes-theme] #fms .fms-danger{border-color:#d65b51!important}
