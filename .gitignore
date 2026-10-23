@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+
+# Private staging derived from the installed owner baseline
+/live/
+/live-baseline/

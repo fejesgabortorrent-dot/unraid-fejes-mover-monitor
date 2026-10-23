@@ -1,0 +1,362 @@
+Menu="Utilities"
+Title="FejesMover védelem"
+Icon="fa-shield"
+Tag="cogs"
+---
+<?php
+$fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
+$fmLang=is_string($fmCookie)&&in_array($fmCookie,['hu','en','de'],true)?$fmCookie:'hu';
+$fmLanguageSelector="<label style=\"display:inline-flex;align-items:center;gap:6px;margin:10px 12px;font-size:14px\"><span aria-hidden=\"true\" style=\"display:inline-block;width:26px;margin-right:7px;vertical-align:middle\">FLAG_IMAGE</span><select style=\"display:inline-block;width:auto;margin:0\" aria-label=\"Language / Nyelv / Sprache\" onchange=\"document.cookie='fejes_mover_lang='+this.value+'; Path=/; Max-Age=31536000; SameSite=Lax';location.assign(location.pathname)\"><option value=\"hu\" HU_SELECTED aria-label=\"Magyar\">Hu</option><option value=\"de\" DE_SELECTED aria-label=\"Deutsch\">De</option><option value=\"en\" EN_SELECTED aria-label=\"English (US)\">Eng</option></select></label>";
+$fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fmLang==='hu'?'selected':'',$fmLang==='en'?'selected':'',$fmLang==='de'?'selected':''],$fmLanguageSelector);
+$fmLanguageSelector=str_replace('FLAG_IMAGE',['hu'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><path fill=\"#ce2939\" d=\"M0 0h190v34H0z\"/><path fill=\"#fff\" d=\"M0 34h190v33H0z\"/><path fill=\"#477050\" d=\"M0 67h190v33H0z\"/></svg>",'de'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><path fill=\"#000\" d=\"M0 0h190v34H0z\"/><path fill=\"#d00\" d=\"M0 34h190v33H0z\"/><path fill=\"#ffce00\" d=\"M0 67h190v33H0z\"/></svg>",'en'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><rect y=\"0.000\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"7.692\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"15.385\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"23.077\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"30.769\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"38.462\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"46.154\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"53.846\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"61.538\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"69.231\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"76.923\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"84.615\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"92.308\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect width=\"76\" height=\"53.85\" fill=\"#3c3b6e\"/><polygon fill=\"#fff\" points=\"6.33,2.68 6.95,4.54 8.90,4.55 7.33,5.71 7.92,7.57 6.33,6.43 4.75,7.57 5.33,5.71 3.77,4.55 5.72,4.54\"/><polygon fill=\"#fff\" points=\"19.00,2.68 19.62,4.54 21.57,4.55 20.00,5.71 20.59,7.57 19.00,6.43 17.41,7.57 18.00,5.71 16.43,4.55 18.38,4.54\"/><polygon fill=\"#fff\" points=\"31.67,2.68 32.28,4.54 34.23,4.55 32.67,5.71 33.25,7.57 31.67,6.43 30.08,7.57 30.67,5.71 29.10,4.55 31.05,4.54\"/><polygon fill=\"#fff\" points=\"44.33,2.68 44.95,4.54 46.90,4.55 45.33,5.71 45.92,7.57 44.33,6.43 42.75,7.57 43.33,5.71 41.77,4.55 43.72,4.54\"/><polygon fill=\"#fff\" points=\"57.00,2.68 57.62,4.54 59.57,4.55 58.00,5.71 58.59,7.57 57.00,6.43 55.41,7.57 56.00,5.71 54.43,4.55 56.38,4.54\"/><polygon fill=\"#fff\" points=\"69.67,2.68 70.28,4.54 72.23,4.55 70.67,5.71 71.25,7.57 69.67,6.43 68.08,7.57 68.67,5.71 67.10,4.55 69.05,4.54\"/><polygon fill=\"#fff\" points=\"12.67,8.07 13.28,9.92 15.23,9.94 13.67,11.09 14.25,12.95 12.67,11.82 11.08,12.95 11.67,11.09 10.10,9.94 12.05,9.92\"/><polygon fill=\"#fff\" points=\"25.33,8.07 25.95,9.92 27.90,9.94 26.33,11.09 26.92,12.95 25.33,11.82 23.75,12.95 24.33,11.09 22.77,9.94 24.72,9.92\"/><polygon fill=\"#fff\" points=\"38.00,8.07 38.62,9.92 40.57,9.94 39.00,11.09 39.59,12.95 38.00,11.82 36.41,12.95 37.00,11.09 35.43,9.94 37.38,9.92\"/><polygon fill=\"#fff\" points=\"50.67,8.07 51.28,9.92 53.23,9.94 51.67,11.09 52.25,12.95 50.67,11.82 49.08,12.95 49.67,11.09 48.10,9.94 50.05,9.92\"/><polygon fill=\"#fff\" points=\"63.33,8.07 63.95,9.92 65.90,9.94 64.33,11.09 64.92,12.95 63.33,11.82 61.75,12.95 62.33,11.09 60.77,9.94 62.72,9.92\"/><polygon fill=\"#fff\" points=\"6.33,13.46 6.95,15.31 8.90,15.32 7.33,16.48 7.92,18.34 6.33,17.21 4.75,18.34 5.33,16.48 3.77,15.32 5.72,15.31\"/><polygon fill=\"#fff\" points=\"19.00,13.46 19.62,15.31 21.57,15.32 20.00,16.48 20.59,18.34 19.00,17.21 17.41,18.34 18.00,16.48 16.43,15.32 18.38,15.31\"/><polygon fill=\"#fff\" points=\"31.67,13.46 32.28,15.31 34.23,15.32 32.67,16.48 33.25,18.34 31.67,17.21 30.08,18.34 30.67,16.48 29.10,15.32 31.05,15.31\"/><polygon fill=\"#fff\" points=\"44.33,13.46 44.95,15.31 46.90,15.32 45.33,16.48 45.92,18.34 44.33,17.21 42.75,18.34 43.33,16.48 41.77,15.32 43.72,15.31\"/><polygon fill=\"#fff\" points=\"57.00,13.46 57.62,15.31 59.57,15.32 58.00,16.48 58.59,18.34 57.00,17.21 55.41,18.34 56.00,16.48 54.43,15.32 56.38,15.31\"/><polygon fill=\"#fff\" points=\"69.67,13.46 70.28,15.31 72.23,15.32 70.67,16.48 71.25,18.34 69.67,17.21 68.08,18.34 68.67,16.48 67.10,15.32 69.05,15.31\"/><polygon fill=\"#fff\" points=\"12.67,18.84 13.28,20.69 15.23,20.71 13.67,21.86 14.25,23.72 12.67,22.59 11.08,23.72 11.67,21.86 10.10,20.71 12.05,20.69\"/><polygon fill=\"#fff\" points=\"25.33,18.84 25.95,20.69 27.90,20.71 26.33,21.86 26.92,23.72 25.33,22.59 23.75,23.72 24.33,21.86 22.77,20.71 24.72,20.69\"/><polygon fill=\"#fff\" points=\"38.00,18.84 38.62,20.69 40.57,20.71 39.00,21.86 39.59,23.72 38.00,22.59 36.41,23.72 37.00,21.86 35.43,20.71 37.38,20.69\"/><polygon fill=\"#fff\" points=\"50.67,18.84 51.28,20.69 53.23,20.71 51.67,21.86 52.25,23.72 50.67,22.59 49.08,23.72 49.67,21.86 48.10,20.71 50.05,20.69\"/><polygon fill=\"#fff\" points=\"63.33,18.84 63.95,20.69 65.90,20.71 64.33,21.86 64.92,23.72 63.33,22.59 61.75,23.72 62.33,21.86 60.77,20.71 62.72,20.69\"/><polygon fill=\"#fff\" points=\"6.33,24.23 6.95,26.08 8.90,26.09 7.33,27.25 7.92,29.11 6.33,27.98 4.75,29.11 5.33,27.25 3.77,26.09 5.72,26.08\"/><polygon fill=\"#fff\" points=\"19.00,24.23 19.62,26.08 21.57,26.09 20.00,27.25 20.59,29.11 19.00,27.98 17.41,29.11 18.00,27.25 16.43,26.09 18.38,26.08\"/><polygon fill=\"#fff\" points=\"31.67,24.23 32.28,26.08 34.23,26.09 32.67,27.25 33.25,29.11 31.67,27.98 30.08,29.11 30.67,27.25 29.10,26.09 31.05,26.08\"/><polygon fill=\"#fff\" points=\"44.33,24.23 44.95,26.08 46.90,26.09 45.33,27.25 45.92,29.11 44.33,27.98 42.75,29.11 43.33,27.25 41.77,26.09 43.72,26.08\"/><polygon fill=\"#fff\" points=\"57.00,24.23 57.62,26.08 59.57,26.09 58.00,27.25 58.59,29.11 57.00,27.98 55.41,29.11 56.00,27.25 54.43,26.09 56.38,26.08\"/><polygon fill=\"#fff\" points=\"69.67,24.23 70.28,26.08 72.23,26.09 70.67,27.25 71.25,29.11 69.67,27.98 68.08,29.11 68.67,27.25 67.10,26.09 69.05,26.08\"/><polygon fill=\"#fff\" points=\"12.67,29.61 13.28,31.46 15.23,31.48 13.67,32.63 14.25,34.49 12.67,33.36 11.08,34.49 11.67,32.63 10.10,31.48 12.05,31.46\"/><polygon fill=\"#fff\" points=\"25.33,29.61 25.95,31.46 27.90,31.48 26.33,32.63 26.92,34.49 25.33,33.36 23.75,34.49 24.33,32.63 22.77,31.48 24.72,31.46\"/><polygon fill=\"#fff\" points=\"38.00,29.61 38.62,31.46 40.57,31.48 39.00,32.63 39.59,34.49 38.00,33.36 36.41,34.49 37.00,32.63 35.43,31.48 37.38,31.46\"/><polygon fill=\"#fff\" points=\"50.67,29.61 51.28,31.46 53.23,31.48 51.67,32.63 52.25,34.49 50.67,33.36 49.08,34.49 49.67,32.63 48.10,31.48 50.05,31.46\"/><polygon fill=\"#fff\" points=\"63.33,29.61 63.95,31.46 65.90,31.48 64.33,32.63 64.92,34.49 63.33,33.36 61.75,34.49 62.33,32.63 60.77,31.48 62.72,31.46\"/><polygon fill=\"#fff\" points=\"6.33,34.99 6.95,36.85 8.90,36.86 7.33,38.02 7.92,39.88 6.33,38.74 4.75,39.88 5.33,38.02 3.77,36.86 5.72,36.85\"/><polygon fill=\"#fff\" points=\"19.00,34.99 19.62,36.85 21.57,36.86 20.00,38.02 20.59,39.88 19.00,38.74 17.41,39.88 18.00,38.02 16.43,36.86 18.38,36.85\"/><polygon fill=\"#fff\" points=\"31.67,34.99 32.28,36.85 34.23,36.86 32.67,38.02 33.25,39.88 31.67,38.74 30.08,39.88 30.67,38.02 29.10,36.86 31.05,36.85\"/><polygon fill=\"#fff\" points=\"44.33,34.99 44.95,36.85 46.90,36.86 45.33,38.02 45.92,39.88 44.33,38.74 42.75,39.88 43.33,38.02 41.77,36.86 43.72,36.85\"/><polygon fill=\"#fff\" points=\"57.00,34.99 57.62,36.85 59.57,36.86 58.00,38.02 58.59,39.88 57.00,38.74 55.41,39.88 56.00,38.02 54.43,36.86 56.38,36.85\"/><polygon fill=\"#fff\" points=\"69.67,34.99 70.28,36.85 72.23,36.86 70.67,38.02 71.25,39.88 69.67,38.74 68.08,39.88 68.67,38.02 67.10,36.86 69.05,36.85\"/><polygon fill=\"#fff\" points=\"12.67,40.38 13.28,42.23 15.23,42.25 13.67,43.40 14.25,45.26 12.67,44.13 11.08,45.26 11.67,43.40 10.10,42.25 12.05,42.23\"/><polygon fill=\"#fff\" points=\"25.33,40.38 25.95,42.23 27.90,42.25 26.33,43.40 26.92,45.26 25.33,44.13 23.75,45.26 24.33,43.40 22.77,42.25 24.72,42.23\"/><polygon fill=\"#fff\" points=\"38.00,40.38 38.62,42.23 40.57,42.25 39.00,43.40 39.59,45.26 38.00,44.13 36.41,45.26 37.00,43.40 35.43,42.25 37.38,42.23\"/><polygon fill=\"#fff\" points=\"50.67,40.38 51.28,42.23 53.23,42.25 51.67,43.40 52.25,45.26 50.67,44.13 49.08,45.26 49.67,43.40 48.10,42.25 50.05,42.23\"/><polygon fill=\"#fff\" points=\"63.33,40.38 63.95,42.23 65.90,42.25 64.33,43.40 64.92,45.26 63.33,44.13 61.75,45.26 62.33,43.40 60.77,42.25 62.72,42.23\"/><polygon fill=\"#fff\" points=\"6.33,45.77 6.95,47.62 8.90,47.63 7.33,48.79 7.92,50.65 6.33,49.52 4.75,50.65 5.33,48.79 3.77,47.63 5.72,47.62\"/><polygon fill=\"#fff\" points=\"19.00,45.77 19.62,47.62 21.57,47.63 20.00,48.79 20.59,50.65 19.00,49.52 17.41,50.65 18.00,48.79 16.43,47.63 18.38,47.62\"/><polygon fill=\"#fff\" points=\"31.67,45.77 32.28,47.62 34.23,47.63 32.67,48.79 33.25,50.65 31.67,49.52 30.08,50.65 30.67,48.79 29.10,47.63 31.05,47.62\"/><polygon fill=\"#fff\" points=\"44.33,45.77 44.95,47.62 46.90,47.63 45.33,48.79 45.92,50.65 44.33,49.52 42.75,50.65 43.33,48.79 41.77,47.63 43.72,47.62\"/><polygon fill=\"#fff\" points=\"57.00,45.77 57.62,47.62 59.57,47.63 58.00,48.79 58.59,50.65 57.00,49.52 55.41,50.65 56.00,48.79 54.43,47.63 56.38,47.62\"/><polygon fill=\"#fff\" points=\"69.67,45.77 70.28,47.62 72.23,47.63 70.67,48.79 71.25,50.65 69.67,49.52 68.08,50.65 68.67,48.79 67.10,47.63 69.05,47.62\"/></svg>"][$fmLang],$fmLanguageSelector);
+$fmPageTitle=['hu'=>"FejesMover védelem",'en'=>"FejesMover Protection",'de'=>"FejesMover Schutz"][$fmLang];
+?>
+<script>(()=>{const label=<?=json_encode($fmPageTitle)?>;const host=document.querySelector('div.title > span.left');if(host){const node=Array.from(host.childNodes).find(n=>n.nodeType===3&&n.textContent.trim());if(node)node.nodeValue=label;}document.title=document.title.split('/')[0]+'/'+label;})();</script>
+<?php
+if($fmLang==='en'){ ?>
+<?php
+echo $fmLanguageSelector;
+$fpEsc=static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$fpToken=$fmc['token'];
+$fpTools='/boot/config/plugins/fejes.mover.monitor/tools/';
+$fpError='';$fpMessage='';$fpReport=null;
+$fpLabels=[
+ 'unavailable'=>'Nem ellenőrizhető', 'available'=>'Available',
+ 'unknown'=>'Nem ellenőrizhető', 'no_torrent_blocker'=>'No torrent blocker',
+ 'defer'=>'Deferred: unfinished or busy torrent',
+ 'wired'=>'Integrated', 'original'=>'Uses the original launcher',
+ 'not_verified'=>'Active integration not verified',
+ 'ok'=>'Estimated remaining data and reserve fit',
+ 'warning'=>'Space may be insufficient for remaining downloads and reserve'
+];
+try {
+ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST') {
+  if(!is_string($_POST['fp_csrf']??null)||!is_string($fpToken)||$fpToken===''||!hash_equals($fpToken,$_POST['fp_csrf']))throw new RuntimeException('Session expired. Reload the page.');
+  $fpAction=$_POST['fp_action']??'';
+  if(!is_string($fpAction)||!in_array($fpAction,['check','dry-run','wire'],true))throw new RuntimeException('Unknown action.');
+  if($fmc['error']||!is_resource($fmc['lock']))throw new RuntimeException('Configuration cannot be read safely.');
+  if($fmc['mode']==='demo'){
+   if(!in_array($fpAction,['check','dry-run'],true))throw new RuntimeException('No live operation in Demo mode.');
+   $fpReport=['torrent'=>'no_torrent_blocker','checked_torrents'=>7,'blocking_torrents'=>0,'cache_free_bytes'=>633*1073741824,'remaining_upper_bound_bytes'=>20*1073741824,'pressure'=>'ok'];
+   if($fpAction==='dry-run')$fpReport['dry_run']=['decision'=>'wait','read_only'=>true,'checks'=>[['key'=>'capacity','state'=>'wait','detail'=>['free_gib'=>633,'threshold_gib'=>300]],['key'=>'torrent','state'=>'pass','detail'=>0],['key'=>'backup','state'=>'pass'],['key'=>'parity','state'=>'pass'],['key'=>'mover','state'=>'pass'],['key'=>'cooldown','state'=>'pass'],['key'=>'launcher','state'=>'pass']]];
+   $fpMessage='Simulated state. No live query.';
+  }else{
+  if($fmc['pool']!=='cache')throw new RuntimeException('Torrent protection currently requires the cache pool.');
+  if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('Integration requires Advanced mode, a mounted cache and separate consent.');
+  $fpScript=$fpTools.($fpAction!=='wire'?'fejes_service.py':'wire_integrity_cron.py');
+  if(!is_file($fpScript))throw new RuntimeException('Shared helpers are not installed.');
+  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run --include-items':'')).' 2>/dev/null';
+  $fpOut=[];$fpCode=0;exec($fpCommand,$fpOut,$fpCode);
+  if($fpCode!==0)throw new RuntimeException('The action did not complete. Check Python, Docker and File Integrity availability.');
+  if($fpAction!=='wire') {
+   $fpReport=json_decode(implode("\n",$fpOut),true,32,JSON_THROW_ON_ERROR);
+   if(!is_array($fpReport))throw new RuntimeException('Invalid status response.');
+   $fpMessage='Snapshot time: '.date('Y-m-d H:i:s');
+  } else $fpMessage='Existing File Integrity schedule integration completed. Check status to verify the active cron.';
+  }
+ }
+} catch(Throwable $e) {$fpError=$e instanceof JsonException?'Cannot read status response.':$e->getMessage();}
+$fpLabel=static fn($v)=>$fpLabels[is_string($v)?$v:'unknown']??'Nem ellenőrizhető';
+$fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,'.',',').' GiB':'Nem ellenőrizhető';
+?>
+<style>
+#fp{max-width:1050px;margin:24px auto;padding:0 18px;font-size:15px;line-height:1.6}#fp .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}#fp section,#fp .fp-notice{border:1px solid #8885;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fp h2{font-size:28px}#fp h3{margin-top:0}#fp .fp-error{border-color:#d88868}#fp button{padding:10px 16px;margin:8px 8px 8px 0}#fp code{overflow-wrap:anywhere}#fp .muted{opacity:.75}
+</style>
+<div id="fp">
+<?=$fmc['banner']?>
+<p><a href="/Dashboard#fejes-mover-dashboard">← Back to dashboard card</a></p>
+<h2>FejesMover · Coordinated protection</h2>
+<p><a href="/Tools/FejesMover">← Mover Monitor</a> · <a href="/Tools/FejesMoverSettings">Threshold and retry interval</a></p>
+<p>Torrent state, cache capacity and scheduled File Integrity in one place.</p>
+<?php if($fpError):?><div class="fp-notice fp-error" role="alert"><?=$fpEsc($fpError)?></div><?php endif?>
+<?php if($fpMessage):?><div class="fp-notice" role="status"><?=$fpEsc($fpMessage)?></div><?php endif?>
+<form method="post" action="/Tools/FejesMoverProtection">
+ <input type="hidden" name="csrf_token" value="<?=$fpEsc($fpToken)?>"><input type="hidden" name="fp_csrf" value="<?=$fpEsc($fpToken)?>">
+ <button type="submit" name="fp_action" value="dry-run" style="background:#d96316;color:white;border:2px solid #ff9c55;font-size:17px;font-weight:600">▶ Dry run – no file movement</button>
+ <button type="submit" name="fp_action" value="check">Check status</button>
+ <p class="muted">The check reads a snapshot. It starts neither Mover nor hashing.</p>
+<?php if(isset($fpReport['dry_run'])&&is_array($fpReport['dry_run'])):
+ $fpDry=$fpReport['dry_run'];$fpT=$fmc['t'];
+ $fpDecision=in_array($fpDry['decision']??null,['ready','wait','unknown'],true)?$fpDry['decision']:'unknown';
+ $fpColors=['ready'=>'#62d4a3','wait'=>'#ffb55c','unknown'=>'#ed9587'];
+ $fpHead=['ready'=>$fpT('A feltételek alapján indulna','Conditions allow a start','Bedingungen erlauben den Start'),'wait'=>$fpT('Most várakozna','Would wait now','Würde jetzt warten'),'unknown'=>$fpT('Nem dönthető el biztonságosan','Cannot safely determine readiness','Startbereitschaft nicht sicher prüfbar')];
+ $fpNames=['launcher'=>$fpT('Indító ellenőrzése','Reviewed launcher','Geprüftes Startskript'),'capacity'=>$fpT('Szabad hely és küszöb','Free space and threshold','Freier Platz und Schwelle'),'torrent'=>$fpT('Torrent protection','Torrent protection','Torrent-Schutz'),'backup'=>$fpT('Appdata-mentés','Appdata backup','Appdata-Sicherung'),'parity'=>$fpT('Paritásművelet','Parity operation','Paritätsvorgang'),'mover'=>$fpT('Futó Mover','Running Mover','Laufender Mover'),'cooldown'=>$fpT('Újrapróbálkozási várakozás','Retry cooldown','Wartezeit bis zum nächsten Versuch')];
+ $fpStates=['pass'=>$fpT('Rendben','Clear','In Ordnung'),'wait'=>$fpT('Várakozás','Wait','Warten'),'unknown'=>$fpT('Nem ellenőrizhető','Unavailable','Nicht prüfbar')];
+?>
+<section id="fp-dry-run" aria-live="polite" style="border:2px solid <?=$fpColors[$fpDecision]?>;background:#8881">
+<h3><?=$fpEsc($fpT('Indítási próba · csak olvasás','Start preview · read only','Startvorschau · nur lesen'))?></h3>
+<p style="font-size:26px;font-weight:700;color:<?=$fpColors[$fpDecision]?>"><?=$fpEsc($fpHead[$fpDecision])?></p>
+<p><?=$fpEsc($fpT('Pillanatkép, nem indítás. Nem mozgat fájlokat, nem írja az időbélyeget és nem foglal indítási jogot.','Snapshot only. No files moved, no timestamp written and no launch reservation.','Nur Momentaufnahme. Keine Dateien verschoben, kein Zeitstempel geschrieben und kein Start reserviert.'))?></p>
+<div class="grid">
+<?php foreach(($fpDry['checks']??[]) as $fpCheck):
+ if(!is_array($fpCheck)||!isset($fpNames[$fpCheck['key']??'']))continue;
+ $fpKey=$fpCheck['key'];$fpState=$fpCheck['state']??'unknown';if(!isset($fpStates[$fpState]))$fpState='unknown';
+ $fpColor=$fpState==='pass'?'#62d4a3':($fpState==='wait'?'#ffb55c':'#ed9587');
+ $fpDetail=$fpCheck['detail']??null;
+?>
+<div style="padding:14px;border:1px solid #8885;border-left:5px solid <?=$fpColor?>;border-radius:4px"><strong><?=$fpEsc($fpNames[$fpKey])?></strong><br><span style="color:<?=$fpColor?>;font-weight:600"><?=$fpState==='pass'?'✓':($fpState==='wait'?'⏸':'?')?> <?=$fpEsc($fpStates[$fpState])?></span>
+<?php if($fpKey==='capacity'&&is_array($fpDetail)):?><p><?=$fpEsc($fpDetail['free_gib']??'—')?> GiB / <?=$fpEsc($fpT('küszöb','threshold','Schwelle'))?>: <?=$fpEsc($fpDetail['threshold_gib']??'—')?> GiB</p><?php endif?>
+<?php if($fpKey==='torrent'&&is_int($fpDetail)):?><p><?=$fpEsc($fpT('Halasztást okozó torrentek: ','Blocking torrents: ','Blockierende Torrents: '))?><?=$fpDetail?></p><?php endif?>
+<?php if($fpKey==='cooldown'&&is_array($fpDetail)):?><p><?=$fpEsc((int)ceil(($fpDetail['remaining_seconds']??0)/60))?> <?=$fpEsc($fpT('perc várakozás','minutes remaining','Minuten verbleibend'))?></p><?php endif?>
+</div><?php endforeach?></div>
+<?php if(!empty($fpReport['protected_items'])):?><h4><?=$fpEsc($fpT('Halasztást okozó fájlok / mappák','Files / folders causing deferral','Dateien / Ordner mit Aufschub'))?></h4><ul style="list-style:none;padding:0">
+<?php foreach($fpReport['protected_items'] as $fpItem):if(!is_array($fpItem)||!is_string($fpItem['name']??null))continue;?>
+<li style="padding:10px 12px;margin:6px 0;border:1px solid #8885;border-left:4px solid #ffb55c;overflow-wrap:anywhere"><strong><?=$fpEsc($fpItem['name'])?></strong><br><small><?=$fpEsc(($fpItem['kind']??'unknown')==='folder'?$fpT('Mappa','Folder','Ordner'):(($fpItem['kind']??'unknown')==='file'?$fpT('Fájl','File','Datei'):$fpT('Fájl vagy mappa; típusa nem igazolt','File or folder; type not verified','Datei oder Ordner; Typ nicht bestätigt')))?></small></li>
+<?php endforeach?></ul><p class="muted"><?=$fpEsc($fpT('Csak nevek, teljes elérési út nélkül. Több fájlos torrentnél a mappa neve jelenhet meg. Legfeljebb 25 elem látható.','Names only, without full paths. Multi-file torrents may show a folder name. Up to 25 entries are shown.','Nur Namen ohne vollständige Pfade. Bei Torrents mit mehreren Dateien kann der Ordnername erscheinen. Höchstens 25 Einträge.'))?></p><?php endif?>
+<p class="muted"><?=$fpEsc($fpT('A gomb ismételt megnyomása új pillanatképet kér. Az éles indításnál minden feltételt újra kell ellenőrizni.','Press again for a fresh snapshot. Every condition must be checked again at an actual start.','Erneut drücken für eine neue Momentaufnahme. Beim echten Start müssen alle Bedingungen erneut geprüft werden.'))?></p>
+</section>
+<?php endif?>
+ <div class="grid">
+ <section><h3>Torrent protection</h3><strong><?=$fpEsc($fpLabel($fpReport['torrent']??'unknown'))?></strong>
+ <?php if($fpReport!==null):?><p>Checked torrents: <?=$fpEsc($fpReport['checked_torrents']??'—')?><br>Blocking: <?=$fpEsc($fpReport['blocking_torrents']??'—')?></p><?php endif?>
+ <p>Stopped unfinished torrents and completed torrents being checked or moved are also protected.</p></section>
+ <section><h3>Cache and downloads</h3><p>Free: <strong><?=$fpEsc($fpGiB($fpReport['cache_free_bytes']??null))?></strong><br>Upper estimate of remaining data: <?=$fpEsc($fpGiB($fpReport['remaining_upper_bound_bytes']??null))?></p>
+ <strong><?=$fpEsc($fpLabel($fpReport['pressure']??'unknown'))?></strong><p class="muted">The estimate sums remaining bytes of all torrents. Array downloads and shared data may cause overestimation. Calculation reserve: 20 GiB; no space is allocated.</p></section>
+ <section><h3>File Integrity</h3><p>Saved schedule: <strong><?=$fpEsc($fpLabel($fpReport['integrity_config']??'unknown'))?></strong><br>Active schedule: <strong><?=$fpEsc($fpLabel($fpReport['integrity_active']??'unknown'))?></strong></p>
+ <p>Before the existing job runs, the launcher refreshes and excludes changing torrent folders.</p></section>
+ </div>
+ <?php if($fmc['mode']==='advanced'&&$fmc['pool']==='cache'&&!$fmc['error']&&$fmc['mounted']):?>
+ <section><h3>Integrate existing File Integrity schedule</h3><p>This button routes the existing single job through preflight, with backup and verification. It preserves the time, creates no new job and starts no hashing.</p>
+ <label><input type="checkbox" name="wire_ack" value="yes"> I approve integrating the existing File Integrity job.</label><br>
+ <button type="submit" name="fp_action" value="wire">Integrate / recheck existing schedule</button>
+ <p class="muted">Saving File Integrity settings may overwrite the integration. Check its active state here afterwards.</p></section>
+<?php endif?>
+</form>
+<section><h3>Mover launcher and event watcher</h3><p>Reviewed launcher protection: <strong><?=$fpEsc($fpLabel($fpReport['mover_gate']??'unknown'))?></strong></p><p>The package includes guarded Mover tools and a separate integration helper. Integration updates the reviewed User Scripts file with backup, preserving the schedule. This interface does not start Mover. Status verifies the read script only, not other launch paths.</p>
+<p>Protection is never automatically overridden for low space. The global launcher defers for unfinished downloads; capacity warnings require action. This gate does not cover Mover started manually or through another schedule.</p>
+<p>Existing static watcher exclusions are separate settings. This package does not automatically remove them or stop hashing already running during a download.</p></section>
+</div>
+
+<?php } elseif($fmLang==='de'){ ?>
+<?php
+echo $fmLanguageSelector;
+$fpEsc=static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$fpToken=$fmc['token'];
+$fpTools='/boot/config/plugins/fejes.mover.monitor/tools/';
+$fpError='';$fpMessage='';$fpReport=null;
+$fpLabels=[
+ 'unavailable'=>'Nem ellenőrizhető', 'available'=>'Verfügbar',
+ 'unknown'=>'Nem ellenőrizhető', 'no_torrent_blocker'=>'Kein Torrent-Hindernis',
+ 'defer'=>'Aufgeschoben: unvollständiger oder beschäftigter Torrent',
+ 'wired'=>'Eingebunden', 'original'=>'Verwendet das ursprüngliche Startskript',
+ 'not_verified'=>'Aktive Einbindung nicht bestätigt',
+ 'ok'=>'Geschätzte Restdaten und Reserve passen',
+ 'warning'=>'Platz für restliche Downloads und Reserve reicht möglicherweise nicht'
+];
+try {
+ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST') {
+  if(!is_string($_POST['fp_csrf']??null)||!is_string($fpToken)||$fpToken===''||!hash_equals($fpToken,$_POST['fp_csrf']))throw new RuntimeException('Sitzung abgelaufen. Seite neu laden.');
+  $fpAction=$_POST['fp_action']??'';
+  if(!is_string($fpAction)||!in_array($fpAction,['check','dry-run','wire'],true))throw new RuntimeException('Unbekannte Aktion.');
+  if($fmc['error']||!is_resource($fmc['lock']))throw new RuntimeException('Konfiguration kann nicht sicher gelesen werden.');
+  if($fmc['mode']==='demo'){
+   if(!in_array($fpAction,['check','dry-run'],true))throw new RuntimeException('Keine Live-Aktion im Demo-Modus.');
+   $fpReport=['torrent'=>'no_torrent_blocker','checked_torrents'=>7,'blocking_torrents'=>0,'cache_free_bytes'=>633*1073741824,'remaining_upper_bound_bytes'=>20*1073741824,'pressure'=>'ok'];
+   if($fpAction==='dry-run')$fpReport['dry_run']=['decision'=>'wait','read_only'=>true,'checks'=>[['key'=>'capacity','state'=>'wait','detail'=>['free_gib'=>633,'threshold_gib'=>300]],['key'=>'torrent','state'=>'pass','detail'=>0],['key'=>'backup','state'=>'pass'],['key'=>'parity','state'=>'pass'],['key'=>'mover','state'=>'pass'],['key'=>'cooldown','state'=>'pass'],['key'=>'launcher','state'=>'pass']]];
+   $fpMessage='Simulierter Status. Keine Live-Abfrage.';
+  }else{
+  if($fmc['pool']!=='cache')throw new RuntimeException('Torrent-Schutz erfordert derzeit den Cache-Pool.');
+  if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('Einbindung erfordert den erweiterten Modus, eingehängten Cache und gesonderte Zustimmung.');
+  $fpScript=$fpTools.($fpAction!=='wire'?'fejes_service.py':'wire_integrity_cron.py');
+  if(!is_file($fpScript))throw new RuntimeException('Gemeinsame Hilfsskripte sind nicht installiert.');
+  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run --include-items':'')).' 2>/dev/null';
+  $fpOut=[];$fpCode=0;exec($fpCommand,$fpOut,$fpCode);
+  if($fpCode!==0)throw new RuntimeException('Die Aktion wurde nicht abgeschlossen. Verfügbarkeit von Python, Docker und File Integrity prüfen.');
+  if($fpAction!=='wire') {
+   $fpReport=json_decode(implode("\n",$fpOut),true,32,JSON_THROW_ON_ERROR);
+   if(!is_array($fpReport))throw new RuntimeException('Ungültige Statusantwort.');
+   $fpMessage='Zeitpunkt der Momentaufnahme: '.date('Y-m-d H:i:s');
+  } else $fpMessage='Einbindung des vorhandenen File-Integrity-Zeitplans abgeschlossen. Aktiven Cron durch Statusprüfung bestätigen.';
+  }
+ }
+} catch(Throwable $e) {$fpError=$e instanceof JsonException?'Statusantwort nicht lesbar.':$e->getMessage();}
+$fpLabel=static fn($v)=>$fpLabels[is_string($v)?$v:'unknown']??'Nem ellenőrizhető';
+$fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' ').' GiB':'Nem ellenőrizhető';
+?>
+<style>
+#fp{max-width:1050px;margin:24px auto;padding:0 18px;font-size:15px;line-height:1.6}#fp .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}#fp section,#fp .fp-notice{border:1px solid #8885;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fp h2{font-size:28px}#fp h3{margin-top:0}#fp .fp-error{border-color:#d88868}#fp button{padding:10px 16px;margin:8px 8px 8px 0}#fp code{overflow-wrap:anywhere}#fp .muted{opacity:.75}
+</style>
+<div id="fp">
+<?=$fmc['banner']?>
+<p><a href="/Dashboard#fejes-mover-dashboard">← Zurück zur Dashboard-Karte</a></p>
+<h2>FejesMover · Abgestimmter Schutz</h2>
+<p><a href="/Tools/FejesMover">← Mover-Monitor</a> · <a href="/Tools/FejesMoverSettings">Schwelle und Wartezeit</a></p>
+<p>Torrent-Status, Cache-Kapazität und geplante File Integrity an einem Ort.</p>
+<?php if($fpError):?><div class="fp-notice fp-error" role="alert"><?=$fpEsc($fpError)?></div><?php endif?>
+<?php if($fpMessage):?><div class="fp-notice" role="status"><?=$fpEsc($fpMessage)?></div><?php endif?>
+<form method="post" action="/Tools/FejesMoverProtection">
+ <input type="hidden" name="csrf_token" value="<?=$fpEsc($fpToken)?>"><input type="hidden" name="fp_csrf" value="<?=$fpEsc($fpToken)?>">
+ <button type="submit" name="fp_action" value="dry-run" style="background:#d96316;color:white;border:2px solid #ff9c55;font-size:17px;font-weight:600">▶ Probelauf – keine Dateiverschiebung</button>
+ <button type="submit" name="fp_action" value="check">Status prüfen</button>
+ <p class="muted">Die Prüfung liest eine Momentaufnahme. Sie startet weder Mover noch Hashing.</p>
+<?php if(isset($fpReport['dry_run'])&&is_array($fpReport['dry_run'])):
+ $fpDry=$fpReport['dry_run'];$fpT=$fmc['t'];
+ $fpDecision=in_array($fpDry['decision']??null,['ready','wait','unknown'],true)?$fpDry['decision']:'unknown';
+ $fpColors=['ready'=>'#62d4a3','wait'=>'#ffb55c','unknown'=>'#ed9587'];
+ $fpHead=['ready'=>$fpT('A feltételek alapján indulna','Conditions allow a start','Bedingungen erlauben den Start'),'wait'=>$fpT('Most várakozna','Would wait now','Würde jetzt warten'),'unknown'=>$fpT('Nem dönthető el biztonságosan','Cannot safely determine readiness','Startbereitschaft nicht sicher prüfbar')];
+ $fpNames=['launcher'=>$fpT('Indító ellenőrzése','Reviewed launcher','Geprüftes Startskript'),'capacity'=>$fpT('Szabad hely és küszöb','Free space and threshold','Freier Platz und Schwelle'),'torrent'=>$fpT('Torrent-Schutz','Torrent protection','Torrent-Schutz'),'backup'=>$fpT('Appdata-mentés','Appdata backup','Appdata-Sicherung'),'parity'=>$fpT('Paritásművelet','Parity operation','Paritätsvorgang'),'mover'=>$fpT('Futó Mover','Running Mover','Laufender Mover'),'cooldown'=>$fpT('Újrapróbálkozási várakozás','Retry cooldown','Wartezeit bis zum nächsten Versuch')];
+ $fpStates=['pass'=>$fpT('Rendben','Clear','In Ordnung'),'wait'=>$fpT('Várakozás','Wait','Warten'),'unknown'=>$fpT('Nem ellenőrizhető','Unavailable','Nicht prüfbar')];
+?>
+<section id="fp-dry-run" aria-live="polite" style="border:2px solid <?=$fpColors[$fpDecision]?>;background:#8881">
+<h3><?=$fpEsc($fpT('Indítási próba · csak olvasás','Start preview · read only','Startvorschau · nur lesen'))?></h3>
+<p style="font-size:26px;font-weight:700;color:<?=$fpColors[$fpDecision]?>"><?=$fpEsc($fpHead[$fpDecision])?></p>
+<p><?=$fpEsc($fpT('Pillanatkép, nem indítás. Nem mozgat fájlokat, nem írja az időbélyeget és nem foglal indítási jogot.','Snapshot only. No files moved, no timestamp written and no launch reservation.','Nur Momentaufnahme. Keine Dateien verschoben, kein Zeitstempel geschrieben und kein Start reserviert.'))?></p>
+<div class="grid">
+<?php foreach(($fpDry['checks']??[]) as $fpCheck):
+ if(!is_array($fpCheck)||!isset($fpNames[$fpCheck['key']??'']))continue;
+ $fpKey=$fpCheck['key'];$fpState=$fpCheck['state']??'unknown';if(!isset($fpStates[$fpState]))$fpState='unknown';
+ $fpColor=$fpState==='pass'?'#62d4a3':($fpState==='wait'?'#ffb55c':'#ed9587');
+ $fpDetail=$fpCheck['detail']??null;
+?>
+<div style="padding:14px;border:1px solid #8885;border-left:5px solid <?=$fpColor?>;border-radius:4px"><strong><?=$fpEsc($fpNames[$fpKey])?></strong><br><span style="color:<?=$fpColor?>;font-weight:600"><?=$fpState==='pass'?'✓':($fpState==='wait'?'⏸':'?')?> <?=$fpEsc($fpStates[$fpState])?></span>
+<?php if($fpKey==='capacity'&&is_array($fpDetail)):?><p><?=$fpEsc($fpDetail['free_gib']??'—')?> GiB / <?=$fpEsc($fpT('küszöb','threshold','Schwelle'))?>: <?=$fpEsc($fpDetail['threshold_gib']??'—')?> GiB</p><?php endif?>
+<?php if($fpKey==='torrent'&&is_int($fpDetail)):?><p><?=$fpEsc($fpT('Halasztást okozó torrentek: ','Blocking torrents: ','Blockierende Torrents: '))?><?=$fpDetail?></p><?php endif?>
+<?php if($fpKey==='cooldown'&&is_array($fpDetail)):?><p><?=$fpEsc((int)ceil(($fpDetail['remaining_seconds']??0)/60))?> <?=$fpEsc($fpT('perc várakozás','minutes remaining','Minuten verbleibend'))?></p><?php endif?>
+</div><?php endforeach?></div>
+<?php if(!empty($fpReport['protected_items'])):?><h4><?=$fpEsc($fpT('Halasztást okozó fájlok / mappák','Files / folders causing deferral','Dateien / Ordner mit Aufschub'))?></h4><ul style="list-style:none;padding:0">
+<?php foreach($fpReport['protected_items'] as $fpItem):if(!is_array($fpItem)||!is_string($fpItem['name']??null))continue;?>
+<li style="padding:10px 12px;margin:6px 0;border:1px solid #8885;border-left:4px solid #ffb55c;overflow-wrap:anywhere"><strong><?=$fpEsc($fpItem['name'])?></strong><br><small><?=$fpEsc(($fpItem['kind']??'unknown')==='folder'?$fpT('Mappa','Folder','Ordner'):(($fpItem['kind']??'unknown')==='file'?$fpT('Fájl','File','Datei'):$fpT('Fájl vagy mappa; típusa nem igazolt','File or folder; type not verified','Datei oder Ordner; Typ nicht bestätigt')))?></small></li>
+<?php endforeach?></ul><p class="muted"><?=$fpEsc($fpT('Csak nevek, teljes elérési út nélkül. Több fájlos torrentnél a mappa neve jelenhet meg. Legfeljebb 25 elem látható.','Names only, without full paths. Multi-file torrents may show a folder name. Up to 25 entries are shown.','Nur Namen ohne vollständige Pfade. Bei Torrents mit mehreren Dateien kann der Ordnername erscheinen. Höchstens 25 Einträge.'))?></p><?php endif?>
+<p class="muted"><?=$fpEsc($fpT('A gomb ismételt megnyomása új pillanatképet kér. Az éles indításnál minden feltételt újra kell ellenőrizni.','Press again for a fresh snapshot. Every condition must be checked again at an actual start.','Erneut drücken für eine neue Momentaufnahme. Beim echten Start müssen alle Bedingungen erneut geprüft werden.'))?></p>
+</section>
+<?php endif?>
+ <div class="grid">
+ <section><h3>Torrent-Schutz</h3><strong><?=$fpEsc($fpLabel($fpReport['torrent']??'unknown'))?></strong>
+ <?php if($fpReport!==null):?><p>Geprüfte Torrents: <?=$fpEsc($fpReport['checked_torrents']??'—')?><br>Blockierend: <?=$fpEsc($fpReport['blocking_torrents']??'—')?></p><?php endif?>
+ <p>Gestoppte unvollständige Torrents und fertige Torrents bei Prüfung oder Verschiebung sind ebenfalls geschützt.</p></section>
+ <section><h3>Cache und Downloads</h3><p>Frei: <strong><?=$fpEsc($fpGiB($fpReport['cache_free_bytes']??null))?></strong><br>Obere Schätzung der Restdaten: <?=$fpEsc($fpGiB($fpReport['remaining_upper_bound_bytes']??null))?></p>
+ <strong><?=$fpEsc($fpLabel($fpReport['pressure']??'unknown'))?></strong><p class="muted">Die Schätzung summiert die Restbytes aller Torrents. Array-Downloads und gemeinsame Daten können zu Überschätzung führen. Rechenreserve: 20 GiB; kein Platz wird reserviert.</p></section>
+ <section><h3>File Integrity</h3><p>Gespeicherter Zeitplan: <strong><?=$fpEsc($fpLabel($fpReport['integrity_config']??'unknown'))?></strong><br>Aktiver Zeitplan: <strong><?=$fpEsc($fpLabel($fpReport['integrity_active']??'unknown'))?></strong></p>
+ <p>Vor Ausführung der vorhandenen Aufgabe fragt das Startskript veränderliche Torrent-Ordner neu ab und schließt sie aus.</p></section>
+ </div>
+ <?php if($fmc['mode']==='advanced'&&$fmc['pool']==='cache'&&!$fmc['error']&&$fmc['mounted']):?>
+ <section><h3>Vorhandenen File-Integrity-Zeitplan einbinden</h3><p>Diese Schaltfläche leitet die vorhandene einzelne Aufgabe über die Vorprüfung, mit Sicherung und Prüfung. Zeitpunkt bleibt erhalten; keine neue Aufgabe und kein Hashing werden gestartet.</p>
+ <label><input type="checkbox" name="wire_ack" value="yes"> Ich stimme der Einbindung der vorhandenen File-Integrity-Aufgabe zu.</label><br>
+ <button type="submit" name="fp_action" value="wire">Vorhandenen Zeitplan einbinden / erneut prüfen</button>
+ <p class="muted">Speichern der File-Integrity-Einstellungen kann die Einbindung überschreiben. Danach hier den aktiven Status prüfen.</p></section>
+<?php endif?>
+</form>
+<section><h3>Mover-Startskript und Ereignisüberwachung</h3><p>Schutz des geprüften Startskripts: <strong><?=$fpEsc($fpLabel($fpReport['mover_gate']??'unknown'))?></strong></p><p>Das Paket enthält geschützte Mover-Werkzeuge und ein separates Einbindungsskript. Die Einbindung ändert die geprüfte User-Scripts-Datei mit Sicherung und erhält den Zeitplan. Diese Oberfläche startet Mover nicht. Der Status bestätigt nur das gelesene Skript, keine anderen Startwege.</p>
+<p>Bei Platzmangel wird der Schutz nicht automatisch umgangen. Bei unvollständigen Downloads wartet das globale Startskript; Kapazitätswarnungen erfordern Maßnahmen. Manuell oder über andere Zeitpläne gestarteter Mover wird von dieser Sperre nicht erfasst.</p>
+<p>Vorhandene statische Überwachungsausschlüsse sind separate Einstellungen. Dieses Paket entfernt sie nicht automatisch und stoppt kein während eines Downloads bereits laufendes Hashing.</p></section>
+</div>
+
+<?php } else{ ?>
+<?php
+echo $fmLanguageSelector;
+$fpEsc=static fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$fpToken=$fmc['token'];
+$fpTools='/boot/config/plugins/fejes.mover.monitor/tools/';
+$fpError='';$fpMessage='';$fpReport=null;
+$fpLabels=[
+ 'unavailable'=>'Nem ellenőrizhető', 'available'=>'Elérhető',
+ 'unknown'=>'Nem ellenőrizhető', 'no_torrent_blocker'=>'Nincs torrentoldali akadály',
+ 'defer'=>'Halasztás: félkész vagy elfoglalt torrent',
+ 'wired'=>'Bekötve', 'original'=>'Az eredeti indítót használja',
+ 'not_verified'=>'Az aktív bekötés nem igazolt',
+ 'ok'=>'A becsült hátralévő adatmennyiség és a tartalék elfér',
+ 'warning'=>'Kevés hely lehet a hátralévő letöltéshez és a tartalékhoz'
+];
+try {
+ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST') {
+  if(!is_string($_POST['fp_csrf']??null)||!is_string($fpToken)||$fpToken===''||!hash_equals($fpToken,$_POST['fp_csrf']))throw new RuntimeException('Lejárt munkamenet. Töltsd újra az oldalt.');
+  $fpAction=$_POST['fp_action']??'';
+  if(!is_string($fpAction)||!in_array($fpAction,['check','dry-run','wire'],true))throw new RuntimeException('Ismeretlen művelet.');
+  if($fmc['error']||!is_resource($fmc['lock']))throw new RuntimeException('A konfiguráció nem olvasható biztonságosan.');
+  if($fmc['mode']==='demo'){
+   if(!in_array($fpAction,['check','dry-run'],true))throw new RuntimeException('Demó módban nincs élő művelet.');
+   $fpReport=['torrent'=>'no_torrent_blocker','checked_torrents'=>7,'blocking_torrents'=>0,'cache_free_bytes'=>633*1073741824,'remaining_upper_bound_bytes'=>20*1073741824,'pressure'=>'ok'];
+   if($fpAction==='dry-run')$fpReport['dry_run']=['decision'=>'wait','read_only'=>true,'checks'=>[['key'=>'capacity','state'=>'wait','detail'=>['free_gib'=>633,'threshold_gib'=>300]],['key'=>'torrent','state'=>'pass','detail'=>0],['key'=>'backup','state'=>'pass'],['key'=>'parity','state'=>'pass'],['key'=>'mover','state'=>'pass'],['key'=>'cooldown','state'=>'pass'],['key'=>'launcher','state'=>'pass']]];
+   $fpMessage='Szimulált állapot. Nincs élő lekérdezés.';
+  }else{
+  if($fmc['pool']!=='cache')throw new RuntimeException('A torrentvédelem jelenleg csak cache pool mellett ellenőrizhető.');
+  if($fpAction==='wire'&&($fmc['mode']!=='advanced'||!$fmc['mounted']||($_POST['wire_ack']??'')!=='yes'))throw new RuntimeException('A bekötéshez Haladó mód, csatolt cache és külön jóváhagyás szükséges.');
+  $fpScript=$fpTools.($fpAction!=='wire'?'fejes_service.py':'wire_integrity_cron.py');
+  if(!is_file($fpScript))throw new RuntimeException('A közös segédek nincsenek telepítve.');
+  $fpCommand='timeout 35s python3 '.escapeshellarg($fpScript).($fpAction==='check'?' status':($fpAction==='dry-run'?' dry-run --include-items':'')).' 2>/dev/null';
+  $fpOut=[];$fpCode=0;exec($fpCommand,$fpOut,$fpCode);
+  if($fpCode!==0)throw new RuntimeException('A művelet nem fejeződött be. Ellenőrizd a Python, Docker és File Integrity elérhetőségét.');
+  if($fpAction!=='wire') {
+   $fpReport=json_decode(implode("\n",$fpOut),true,32,JSON_THROW_ON_ERROR);
+   if(!is_array($fpReport))throw new RuntimeException('Érvénytelen állapotválasz.');
+   $fpMessage='Pillanatkép ideje: '.date('Y-m-d H:i:s');
+  } else $fpMessage='A meglévő File Integrity ütemezés bekötése lefutott. Kérj állapotellenőrzést az aktív cron igazolásához.';
+  }
+ }
+} catch(Throwable $e) {$fpError=$e instanceof JsonException?'Nem olvasható állapotválasz.':$e->getMessage();}
+$fpLabel=static fn($v)=>$fpLabels[is_string($v)?$v:'unknown']??'Nem ellenőrizhető';
+$fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' ').' GiB':'Nem ellenőrizhető';
+?>
+<style>
+#fp{max-width:1050px;margin:24px auto;padding:0 18px;font-size:15px;line-height:1.6}#fp .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}#fp section,#fp .fp-notice{border:1px solid #8885;border-radius:12px;padding:20px;margin-bottom:18px;background:#88808}#fp h2{font-size:28px}#fp h3{margin-top:0}#fp .fp-error{border-color:#d88868}#fp button{padding:10px 16px;margin:8px 8px 8px 0}#fp code{overflow-wrap:anywhere}#fp .muted{opacity:.75}
+</style>
+<div id="fp">
+<?=$fmc['banner']?>
+<p><a href="/Dashboard#fejes-mover-dashboard">← Vissza a főoldali kártyához</a></p>
+<h2>FejesMover · Összehangolt védelem</h2>
+<p><a href="/Tools/FejesMover">← Mover figyelő</a> · <a href="/Tools/FejesMoverSettings">Küszöb és várakozás</a></p>
+<p>Torrentállapot, cache-kapacitás és ütemezett File Integrity egy helyen.</p>
+<?php if($fpError):?><div class="fp-notice fp-error" role="alert"><?=$fpEsc($fpError)?></div><?php endif?>
+<?php if($fpMessage):?><div class="fp-notice" role="status"><?=$fpEsc($fpMessage)?></div><?php endif?>
+<form method="post" action="/Tools/FejesMoverProtection">
+ <input type="hidden" name="csrf_token" value="<?=$fpEsc($fpToken)?>"><input type="hidden" name="fp_csrf" value="<?=$fpEsc($fpToken)?>">
+ <button type="submit" name="fp_action" value="dry-run" style="background:#d96316;color:white;border:2px solid #ff9c55;font-size:17px;font-weight:600">▶ Próba – nincs fájlmozgatás</button>
+ <button type="submit" name="fp_action" value="check">Állapot ellenőrzése</button>
+ <p class="muted">Az ellenőrzés pillanatképet olvas. Nem indít Movert vagy hash-elést.</p>
+<?php if(isset($fpReport['dry_run'])&&is_array($fpReport['dry_run'])):
+ $fpDry=$fpReport['dry_run'];$fpT=$fmc['t'];
+ $fpDecision=in_array($fpDry['decision']??null,['ready','wait','unknown'],true)?$fpDry['decision']:'unknown';
+ $fpColors=['ready'=>'#62d4a3','wait'=>'#ffb55c','unknown'=>'#ed9587'];
+ $fpHead=['ready'=>$fpT('A feltételek alapján indulna','Conditions allow a start','Bedingungen erlauben den Start'),'wait'=>$fpT('Most várakozna','Would wait now','Würde jetzt warten'),'unknown'=>$fpT('Nem dönthető el biztonságosan','Cannot safely determine readiness','Startbereitschaft nicht sicher prüfbar')];
+ $fpNames=['launcher'=>$fpT('Indító ellenőrzése','Reviewed launcher','Geprüftes Startskript'),'capacity'=>$fpT('Szabad hely és küszöb','Free space and threshold','Freier Platz und Schwelle'),'torrent'=>$fpT('Torrentvédelem','Torrent protection','Torrent-Schutz'),'backup'=>$fpT('Appdata-mentés','Appdata backup','Appdata-Sicherung'),'parity'=>$fpT('Paritásművelet','Parity operation','Paritätsvorgang'),'mover'=>$fpT('Futó Mover','Running Mover','Laufender Mover'),'cooldown'=>$fpT('Újrapróbálkozási várakozás','Retry cooldown','Wartezeit bis zum nächsten Versuch')];
+ $fpStates=['pass'=>$fpT('Rendben','Clear','In Ordnung'),'wait'=>$fpT('Várakozás','Wait','Warten'),'unknown'=>$fpT('Nem ellenőrizhető','Unavailable','Nicht prüfbar')];
+?>
+<section id="fp-dry-run" aria-live="polite" style="border:2px solid <?=$fpColors[$fpDecision]?>;background:#8881">
+<h3><?=$fpEsc($fpT('Indítási próba · csak olvasás','Start preview · read only','Startvorschau · nur lesen'))?></h3>
+<p style="font-size:26px;font-weight:700;color:<?=$fpColors[$fpDecision]?>"><?=$fpEsc($fpHead[$fpDecision])?></p>
+<p><?=$fpEsc($fpT('Pillanatkép, nem indítás. Nem mozgat fájlokat, nem írja az időbélyeget és nem foglal indítási jogot.','Snapshot only. No files moved, no timestamp written and no launch reservation.','Nur Momentaufnahme. Keine Dateien verschoben, kein Zeitstempel geschrieben und kein Start reserviert.'))?></p>
+<div class="grid">
+<?php foreach(($fpDry['checks']??[]) as $fpCheck):
+ if(!is_array($fpCheck)||!isset($fpNames[$fpCheck['key']??'']))continue;
+ $fpKey=$fpCheck['key'];$fpState=$fpCheck['state']??'unknown';if(!isset($fpStates[$fpState]))$fpState='unknown';
+ $fpColor=$fpState==='pass'?'#62d4a3':($fpState==='wait'?'#ffb55c':'#ed9587');
+ $fpDetail=$fpCheck['detail']??null;
+?>
+<div style="padding:14px;border:1px solid #8885;border-left:5px solid <?=$fpColor?>;border-radius:4px"><strong><?=$fpEsc($fpNames[$fpKey])?></strong><br><span style="color:<?=$fpColor?>;font-weight:600"><?=$fpState==='pass'?'✓':($fpState==='wait'?'⏸':'?')?> <?=$fpEsc($fpStates[$fpState])?></span>
+<?php if($fpKey==='capacity'&&is_array($fpDetail)):?><p><?=$fpEsc($fpDetail['free_gib']??'—')?> GiB / <?=$fpEsc($fpT('küszöb','threshold','Schwelle'))?>: <?=$fpEsc($fpDetail['threshold_gib']??'—')?> GiB</p><?php endif?>
+<?php if($fpKey==='torrent'&&is_int($fpDetail)):?><p><?=$fpEsc($fpT('Halasztást okozó torrentek: ','Blocking torrents: ','Blockierende Torrents: '))?><?=$fpDetail?></p><?php endif?>
+<?php if($fpKey==='cooldown'&&is_array($fpDetail)):?><p><?=$fpEsc((int)ceil(($fpDetail['remaining_seconds']??0)/60))?> <?=$fpEsc($fpT('perc várakozás','minutes remaining','Minuten verbleibend'))?></p><?php endif?>
+</div><?php endforeach?></div>
+<?php if(!empty($fpReport['protected_items'])):?><h4><?=$fpEsc($fpT('Halasztást okozó fájlok / mappák','Files / folders causing deferral','Dateien / Ordner mit Aufschub'))?></h4><ul style="list-style:none;padding:0">
+<?php foreach($fpReport['protected_items'] as $fpItem):if(!is_array($fpItem)||!is_string($fpItem['name']??null))continue;?>
+<li style="padding:10px 12px;margin:6px 0;border:1px solid #8885;border-left:4px solid #ffb55c;overflow-wrap:anywhere"><strong><?=$fpEsc($fpItem['name'])?></strong><br><small><?=$fpEsc(($fpItem['kind']??'unknown')==='folder'?$fpT('Mappa','Folder','Ordner'):(($fpItem['kind']??'unknown')==='file'?$fpT('Fájl','File','Datei'):$fpT('Fájl vagy mappa; típusa nem igazolt','File or folder; type not verified','Datei oder Ordner; Typ nicht bestätigt')))?></small></li>
+<?php endforeach?></ul><p class="muted"><?=$fpEsc($fpT('Csak nevek, teljes elérési út nélkül. Több fájlos torrentnél a mappa neve jelenhet meg. Legfeljebb 25 elem látható.','Names only, without full paths. Multi-file torrents may show a folder name. Up to 25 entries are shown.','Nur Namen ohne vollständige Pfade. Bei Torrents mit mehreren Dateien kann der Ordnername erscheinen. Höchstens 25 Einträge.'))?></p><?php endif?>
+<p class="muted"><?=$fpEsc($fpT('A gomb ismételt megnyomása új pillanatképet kér. Az éles indításnál minden feltételt újra kell ellenőrizni.','Press again for a fresh snapshot. Every condition must be checked again at an actual start.','Erneut drücken für eine neue Momentaufnahme. Beim echten Start müssen alle Bedingungen erneut geprüft werden.'))?></p>
+</section>
+<?php endif?>
+ <div class="grid">
+ <section><h3>Torrentvédelem</h3><strong><?=$fpEsc($fpLabel($fpReport['torrent']??'unknown'))?></strong>
+ <?php if($fpReport!==null):?><p>Vizsgált torrentek: <?=$fpEsc($fpReport['checked_torrents']??'—')?><br>Halasztást okoz: <?=$fpEsc($fpReport['blocking_torrents']??'—')?></p><?php endif?>
+ <p>A megállított félkész torrent és az ellenőrzés vagy áthelyezés alatt álló kész torrent is védett.</p></section>
+ <section><h3>Cache és letöltés</h3><p>Szabad: <strong><?=$fpEsc($fpGiB($fpReport['cache_free_bytes']??null))?></strong><br>Hátralévő adatok felső becslése: <?=$fpEsc($fpGiB($fpReport['remaining_upper_bound_bytes']??null))?></p>
+ <strong><?=$fpEsc($fpLabel($fpReport['pressure']??'unknown'))?></strong><p class="muted">A becslés minden torrent hátralévő bájtjait összegzi, ezért a lemeztömbre töltött és közös adatok túlbecslést okozhatnak. Számítási tartalék: 20 GiB; helyet nem foglal le.</p></section>
+ <section><h3>File Integrity</h3><p>Mentett ütemezés: <strong><?=$fpEsc($fpLabel($fpReport['integrity_config']??'unknown'))?></strong><br>Aktív ütemezés: <strong><?=$fpEsc($fpLabel($fpReport['integrity_active']??'unknown'))?></strong></p>
+ <p>A meglévő feladat futása előtt az indító frissen lekéri és kizárja a változó torrentmappákat.</p></section>
+ </div>
+ <?php if($fmc['mode']==='advanced'&&$fmc['pool']==='cache'&&!$fmc['error']&&$fmc['mounted']):?>
+ <section><h3>Meglévő File Integrity ütemezés bekötése</h3><p>Az alábbi gomb a meglévő egyetlen feladatot irányítja az előellenőrzőre, mentéssel és próbaellenőrzéssel. Megőrzi az időpontot, nem hoz létre új feladatot és nem indít hash-elést.</p>
+ <label><input type="checkbox" name="wire_ack" value="yes"> Jóváhagyom a meglévő File Integrity feladat bekötését.</label><br>
+ <button type="submit" name="fp_action" value="wire">Meglévő ütemezés bekötése / újraellenőrzése</button>
+ <p class="muted">A File Integrity saját beállításainak mentése felülírhatja a bekötést. Utána itt ellenőrizd az aktív állapotot.</p></section>
+<?php endif?>
+</form>
+<section><h3>Mover-indító és eseményfigyelő</h3><p>Az ellenőrzött indítóscript védelme: <strong><?=$fpEsc($fpLabel($fpReport['mover_gate']??'unknown'))?></strong></p><p>A csomag tartalmazza a védett Mover-indítót és a külön bekötősegédet. A bekötő az áttekintett User Scripts fájlt módosítja mentéssel, megtartva a meglévő ütemezést. A felület nem indít Movert. Az állapot a beolvasott scriptet igazolja, más indítási útvonalat nem.</p>
+<p>Helyhiánynál sincs automatikus védelmi felülbírálás. Félkész letöltés mellett a globális indító halaszt; a figyelmeztetés kapacitásrendezést igényel. A kézzel vagy más ütemezésből indított Moverre ez a kapu nem vonatkozik.</p>
+<p>Az eseményfigyelő korábbi statikus kizárásai külön beállítások. A csomag ezeket nem oldja fel automatikusan, és a letöltés közben már futó hash-elést sem állítja le.</p></section>
+</div>
+
+<?php } ?>
+<script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>

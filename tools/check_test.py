@@ -10,7 +10,7 @@ with tempfile.TemporaryDirectory(prefix='fejes-stale-check-') as directory:
     lab = Path(directory)
     for name in ['src', 'tools']:
         shutil.copytree(root / name, lab / name)
-    for name in ['fejes.mover.monitor.plg', 'SHA256SUMS']:
+    for name in ['fejes.mover.monitor.plg', 'SHA256SUMS', 'icon.svg', 'icon.png']:
         shutil.copy2(root / name, lab / name)
     originals = {name: (lab / name).read_bytes() for name in ['fejes.mover.monitor.plg', 'SHA256SUMS']}
     for name in originals:

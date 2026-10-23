@@ -1,9 +1,209 @@
 Menu="Utilities"
-Title="Mover beállítások"
+Title="Mover Settings"
 Icon="fa-sliders"
 Tag="cogs"
 ---
 <?php
+$fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
+$fmLang=is_string($fmCookie)&&in_array($fmCookie,['hu','en','de'],true)?$fmCookie:'hu';
+$fmLanguageSelector="<label style=\"display:inline-flex;align-items:center;gap:6px;margin:10px 12px;font-size:14px\"><span aria-hidden=\"true\" style=\"display:inline-block;width:26px;margin-right:7px;vertical-align:middle\">FLAG_IMAGE</span><select style=\"display:inline-block;width:auto;margin:0\" aria-label=\"Language / Nyelv / Sprache\" onchange=\"document.cookie='fejes_mover_lang='+this.value+'; Path=/; Max-Age=31536000; SameSite=Lax';location.assign(location.pathname)\"><option value=\"hu\" HU_SELECTED aria-label=\"Magyar\">Hu</option><option value=\"de\" DE_SELECTED aria-label=\"Deutsch\">De</option><option value=\"en\" EN_SELECTED aria-label=\"English (US)\">Eng</option></select></label>";
+$fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fmLang==='hu'?'selected':'',$fmLang==='en'?'selected':'',$fmLang==='de'?'selected':''],$fmLanguageSelector);
+$fmLanguageSelector=str_replace('FLAG_IMAGE',['hu'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><path fill=\"#ce2939\" d=\"M0 0h190v34H0z\"/><path fill=\"#fff\" d=\"M0 34h190v33H0z\"/><path fill=\"#477050\" d=\"M0 67h190v33H0z\"/></svg>",'de'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><path fill=\"#000\" d=\"M0 0h190v34H0z\"/><path fill=\"#d00\" d=\"M0 34h190v33H0z\"/><path fill=\"#ffce00\" d=\"M0 67h190v33H0z\"/></svg>",'en'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><rect y=\"0.000\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"7.692\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"15.385\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"23.077\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"30.769\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"38.462\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"46.154\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"53.846\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"61.538\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"69.231\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"76.923\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"84.615\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"92.308\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect width=\"76\" height=\"53.85\" fill=\"#3c3b6e\"/><polygon fill=\"#fff\" points=\"6.33,2.68 6.95,4.54 8.90,4.55 7.33,5.71 7.92,7.57 6.33,6.43 4.75,7.57 5.33,5.71 3.77,4.55 5.72,4.54\"/><polygon fill=\"#fff\" points=\"19.00,2.68 19.62,4.54 21.57,4.55 20.00,5.71 20.59,7.57 19.00,6.43 17.41,7.57 18.00,5.71 16.43,4.55 18.38,4.54\"/><polygon fill=\"#fff\" points=\"31.67,2.68 32.28,4.54 34.23,4.55 32.67,5.71 33.25,7.57 31.67,6.43 30.08,7.57 30.67,5.71 29.10,4.55 31.05,4.54\"/><polygon fill=\"#fff\" points=\"44.33,2.68 44.95,4.54 46.90,4.55 45.33,5.71 45.92,7.57 44.33,6.43 42.75,7.57 43.33,5.71 41.77,4.55 43.72,4.54\"/><polygon fill=\"#fff\" points=\"57.00,2.68 57.62,4.54 59.57,4.55 58.00,5.71 58.59,7.57 57.00,6.43 55.41,7.57 56.00,5.71 54.43,4.55 56.38,4.54\"/><polygon fill=\"#fff\" points=\"69.67,2.68 70.28,4.54 72.23,4.55 70.67,5.71 71.25,7.57 69.67,6.43 68.08,7.57 68.67,5.71 67.10,4.55 69.05,4.54\"/><polygon fill=\"#fff\" points=\"12.67,8.07 13.28,9.92 15.23,9.94 13.67,11.09 14.25,12.95 12.67,11.82 11.08,12.95 11.67,11.09 10.10,9.94 12.05,9.92\"/><polygon fill=\"#fff\" points=\"25.33,8.07 25.95,9.92 27.90,9.94 26.33,11.09 26.92,12.95 25.33,11.82 23.75,12.95 24.33,11.09 22.77,9.94 24.72,9.92\"/><polygon fill=\"#fff\" points=\"38.00,8.07 38.62,9.92 40.57,9.94 39.00,11.09 39.59,12.95 38.00,11.82 36.41,12.95 37.00,11.09 35.43,9.94 37.38,9.92\"/><polygon fill=\"#fff\" points=\"50.67,8.07 51.28,9.92 53.23,9.94 51.67,11.09 52.25,12.95 50.67,11.82 49.08,12.95 49.67,11.09 48.10,9.94 50.05,9.92\"/><polygon fill=\"#fff\" points=\"63.33,8.07 63.95,9.92 65.90,9.94 64.33,11.09 64.92,12.95 63.33,11.82 61.75,12.95 62.33,11.09 60.77,9.94 62.72,9.92\"/><polygon fill=\"#fff\" points=\"6.33,13.46 6.95,15.31 8.90,15.32 7.33,16.48 7.92,18.34 6.33,17.21 4.75,18.34 5.33,16.48 3.77,15.32 5.72,15.31\"/><polygon fill=\"#fff\" points=\"19.00,13.46 19.62,15.31 21.57,15.32 20.00,16.48 20.59,18.34 19.00,17.21 17.41,18.34 18.00,16.48 16.43,15.32 18.38,15.31\"/><polygon fill=\"#fff\" points=\"31.67,13.46 32.28,15.31 34.23,15.32 32.67,16.48 33.25,18.34 31.67,17.21 30.08,18.34 30.67,16.48 29.10,15.32 31.05,15.31\"/><polygon fill=\"#fff\" points=\"44.33,13.46 44.95,15.31 46.90,15.32 45.33,16.48 45.92,18.34 44.33,17.21 42.75,18.34 43.33,16.48 41.77,15.32 43.72,15.31\"/><polygon fill=\"#fff\" points=\"57.00,13.46 57.62,15.31 59.57,15.32 58.00,16.48 58.59,18.34 57.00,17.21 55.41,18.34 56.00,16.48 54.43,15.32 56.38,15.31\"/><polygon fill=\"#fff\" points=\"69.67,13.46 70.28,15.31 72.23,15.32 70.67,16.48 71.25,18.34 69.67,17.21 68.08,18.34 68.67,16.48 67.10,15.32 69.05,15.31\"/><polygon fill=\"#fff\" points=\"12.67,18.84 13.28,20.69 15.23,20.71 13.67,21.86 14.25,23.72 12.67,22.59 11.08,23.72 11.67,21.86 10.10,20.71 12.05,20.69\"/><polygon fill=\"#fff\" points=\"25.33,18.84 25.95,20.69 27.90,20.71 26.33,21.86 26.92,23.72 25.33,22.59 23.75,23.72 24.33,21.86 22.77,20.71 24.72,20.69\"/><polygon fill=\"#fff\" points=\"38.00,18.84 38.62,20.69 40.57,20.71 39.00,21.86 39.59,23.72 38.00,22.59 36.41,23.72 37.00,21.86 35.43,20.71 37.38,20.69\"/><polygon fill=\"#fff\" points=\"50.67,18.84 51.28,20.69 53.23,20.71 51.67,21.86 52.25,23.72 50.67,22.59 49.08,23.72 49.67,21.86 48.10,20.71 50.05,20.69\"/><polygon fill=\"#fff\" points=\"63.33,18.84 63.95,20.69 65.90,20.71 64.33,21.86 64.92,23.72 63.33,22.59 61.75,23.72 62.33,21.86 60.77,20.71 62.72,20.69\"/><polygon fill=\"#fff\" points=\"6.33,24.23 6.95,26.08 8.90,26.09 7.33,27.25 7.92,29.11 6.33,27.98 4.75,29.11 5.33,27.25 3.77,26.09 5.72,26.08\"/><polygon fill=\"#fff\" points=\"19.00,24.23 19.62,26.08 21.57,26.09 20.00,27.25 20.59,29.11 19.00,27.98 17.41,29.11 18.00,27.25 16.43,26.09 18.38,26.08\"/><polygon fill=\"#fff\" points=\"31.67,24.23 32.28,26.08 34.23,26.09 32.67,27.25 33.25,29.11 31.67,27.98 30.08,29.11 30.67,27.25 29.10,26.09 31.05,26.08\"/><polygon fill=\"#fff\" points=\"44.33,24.23 44.95,26.08 46.90,26.09 45.33,27.25 45.92,29.11 44.33,27.98 42.75,29.11 43.33,27.25 41.77,26.09 43.72,26.08\"/><polygon fill=\"#fff\" points=\"57.00,24.23 57.62,26.08 59.57,26.09 58.00,27.25 58.59,29.11 57.00,27.98 55.41,29.11 56.00,27.25 54.43,26.09 56.38,26.08\"/><polygon fill=\"#fff\" points=\"69.67,24.23 70.28,26.08 72.23,26.09 70.67,27.25 71.25,29.11 69.67,27.98 68.08,29.11 68.67,27.25 67.10,26.09 69.05,26.08\"/><polygon fill=\"#fff\" points=\"12.67,29.61 13.28,31.46 15.23,31.48 13.67,32.63 14.25,34.49 12.67,33.36 11.08,34.49 11.67,32.63 10.10,31.48 12.05,31.46\"/><polygon fill=\"#fff\" points=\"25.33,29.61 25.95,31.46 27.90,31.48 26.33,32.63 26.92,34.49 25.33,33.36 23.75,34.49 24.33,32.63 22.77,31.48 24.72,31.46\"/><polygon fill=\"#fff\" points=\"38.00,29.61 38.62,31.46 40.57,31.48 39.00,32.63 39.59,34.49 38.00,33.36 36.41,34.49 37.00,32.63 35.43,31.48 37.38,31.46\"/><polygon fill=\"#fff\" points=\"50.67,29.61 51.28,31.46 53.23,31.48 51.67,32.63 52.25,34.49 50.67,33.36 49.08,34.49 49.67,32.63 48.10,31.48 50.05,31.46\"/><polygon fill=\"#fff\" points=\"63.33,29.61 63.95,31.46 65.90,31.48 64.33,32.63 64.92,34.49 63.33,33.36 61.75,34.49 62.33,32.63 60.77,31.48 62.72,31.46\"/><polygon fill=\"#fff\" points=\"6.33,34.99 6.95,36.85 8.90,36.86 7.33,38.02 7.92,39.88 6.33,38.74 4.75,39.88 5.33,38.02 3.77,36.86 5.72,36.85\"/><polygon fill=\"#fff\" points=\"19.00,34.99 19.62,36.85 21.57,36.86 20.00,38.02 20.59,39.88 19.00,38.74 17.41,39.88 18.00,38.02 16.43,36.86 18.38,36.85\"/><polygon fill=\"#fff\" points=\"31.67,34.99 32.28,36.85 34.23,36.86 32.67,38.02 33.25,39.88 31.67,38.74 30.08,39.88 30.67,38.02 29.10,36.86 31.05,36.85\"/><polygon fill=\"#fff\" points=\"44.33,34.99 44.95,36.85 46.90,36.86 45.33,38.02 45.92,39.88 44.33,38.74 42.75,39.88 43.33,38.02 41.77,36.86 43.72,36.85\"/><polygon fill=\"#fff\" points=\"57.00,34.99 57.62,36.85 59.57,36.86 58.00,38.02 58.59,39.88 57.00,38.74 55.41,39.88 56.00,38.02 54.43,36.86 56.38,36.85\"/><polygon fill=\"#fff\" points=\"69.67,34.99 70.28,36.85 72.23,36.86 70.67,38.02 71.25,39.88 69.67,38.74 68.08,39.88 68.67,38.02 67.10,36.86 69.05,36.85\"/><polygon fill=\"#fff\" points=\"12.67,40.38 13.28,42.23 15.23,42.25 13.67,43.40 14.25,45.26 12.67,44.13 11.08,45.26 11.67,43.40 10.10,42.25 12.05,42.23\"/><polygon fill=\"#fff\" points=\"25.33,40.38 25.95,42.23 27.90,42.25 26.33,43.40 26.92,45.26 25.33,44.13 23.75,45.26 24.33,43.40 22.77,42.25 24.72,42.23\"/><polygon fill=\"#fff\" points=\"38.00,40.38 38.62,42.23 40.57,42.25 39.00,43.40 39.59,45.26 38.00,44.13 36.41,45.26 37.00,43.40 35.43,42.25 37.38,42.23\"/><polygon fill=\"#fff\" points=\"50.67,40.38 51.28,42.23 53.23,42.25 51.67,43.40 52.25,45.26 50.67,44.13 49.08,45.26 49.67,43.40 48.10,42.25 50.05,42.23\"/><polygon fill=\"#fff\" points=\"63.33,40.38 63.95,42.23 65.90,42.25 64.33,43.40 64.92,45.26 63.33,44.13 61.75,45.26 62.33,43.40 60.77,42.25 62.72,42.23\"/><polygon fill=\"#fff\" points=\"6.33,45.77 6.95,47.62 8.90,47.63 7.33,48.79 7.92,50.65 6.33,49.52 4.75,50.65 5.33,48.79 3.77,47.63 5.72,47.62\"/><polygon fill=\"#fff\" points=\"19.00,45.77 19.62,47.62 21.57,47.63 20.00,48.79 20.59,50.65 19.00,49.52 17.41,50.65 18.00,48.79 16.43,47.63 18.38,47.62\"/><polygon fill=\"#fff\" points=\"31.67,45.77 32.28,47.62 34.23,47.63 32.67,48.79 33.25,50.65 31.67,49.52 30.08,50.65 30.67,48.79 29.10,47.63 31.05,47.62\"/><polygon fill=\"#fff\" points=\"44.33,45.77 44.95,47.62 46.90,47.63 45.33,48.79 45.92,50.65 44.33,49.52 42.75,50.65 43.33,48.79 41.77,47.63 43.72,47.62\"/><polygon fill=\"#fff\" points=\"57.00,45.77 57.62,47.62 59.57,47.63 58.00,48.79 58.59,50.65 57.00,49.52 55.41,50.65 56.00,48.79 54.43,47.63 56.38,47.62\"/><polygon fill=\"#fff\" points=\"69.67,45.77 70.28,47.62 72.23,47.63 70.67,48.79 71.25,50.65 69.67,49.52 68.08,50.65 68.67,48.79 67.10,47.63 69.05,47.62\"/></svg>"][$fmLang],$fmLanguageSelector);
+$fmPageTitle=['hu'=>"Mover beállítások",'en'=>"Mover Settings",'de'=>"Mover-Einstellungen"][$fmLang];
+?>
+<script>(()=>{const label=<?=json_encode($fmPageTitle)?>;const host=document.querySelector('div.title > span.left');if(host){const node=Array.from(host.childNodes).find(n=>n.nodeType===3&&n.textContent.trim());if(node)node.nodeValue=label;}document.title=document.title.split('/')[0]+'/'+label;})();</script>
+<?php
+if($fmLang==='en'){ ?>
+<a href="/Dashboard#fejes-mover-dashboard" style="display:inline-block;margin:12px 16px;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← Back to dashboard card</a>
+<a href="/Tools/FejesMoverSelective" style="display:inline-block;margin:12px;padding:8px 12px">7 / 14 / 30 · Selective Mover</a>
+<?php
+echo $fmLanguageSelector;
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+echo $fmc['banner'];
+if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
+ echo '<div style="margin:24px"><h2>Mover Settings</h2><p>Script editing is disabled in this mode. Select Advanced mode to enable it.</p><a href="/Tools/FejesMoverSetup">Configure mode and pool</a></div>';
+ return;
+}
+$msMounted=$fmc['mounted'];
+$msToken=(parse_ini_file('/var/local/emhttp/var.ini')['csrf_token']??'');
+$msPath='/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script';
+$msEsc=fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');
+$msSource=@file_get_contents($msPath);
+if($msSource===false){
+ echo '<div style="max-width:900px;margin:30px auto"><h2>Mover Settings</h2><p>This optional page manages the existing Filmek_Mover_Threshold User Scripts automation. The script is not installed on this system.</p><p>Mover Monitor still works independently. This plugin does not install or schedule automatic transfers.</p><a href="/Tools/FejesMover">Back to Mover Monitor</a></div>';
+ return;
+}
+
+$msParse=function($s){$r=[];foreach(['KUSZOB_GIB','UJRA_PROBALKOZAS_MP'] as $k){if(preg_match_all('/^'.preg_quote($k,'/').'=(\d+)[ \t]*$/m',(string)$s,$m)!==1)throw new RuntimeException('The script parameters are ambiguous.');$r[$k]=(int)$m[1][0];}return $r;};
+$msTotal=$msMounted?@disk_total_space('/mnt/cache'):false;$msFree=$msMounted?@disk_free_space('/mnt/cache'):false;$msMax=$msTotal?max(1,(int)floor($msTotal/1073741824)-1):0;
+$msMessage='';$msError='';$msValues=['KUSZOB_GIB'=>300,'UJRA_PROBALKOZAS_MP'=>360];$msLock=null;$msTmp=null;
+try{
+ $msValues=$msParse($msSource);
+ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+  if(!is_string($_POST['ms_csrf']??null)||empty($msToken)||!hash_equals($msToken,$_POST['ms_csrf']))throw new RuntimeException('Session expired. Reload the page.');
+  $msNew=[];foreach(['KUSZOB_GIB'=>$msMax,'UJRA_PROBALKOZAS_MP'=>10080] as $k=>$max){$v=$_POST[$k]??null;if(!is_string($v)||!preg_match('/^[1-9][0-9]{0,4}$/D',$v)||(int)$v>$max)throw new RuntimeException('Invalid value or cache unavailable.');$msNew[$k]=(int)$v;}
+  $msLock=fopen('/var/run/fejes-mover-settings.lock','c');if(!$msLock||!flock($msLock,LOCK_EX|LOCK_NB))throw new RuntimeException('Another save is in progress.');
+  $msSource=file_get_contents($msPath);$msValues=$msParse($msSource);
+  if(!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$msSource),$_POST['source_hash']))throw new RuntimeException('The script changed in the meantime. Reload the page.');
+  if($msNew===$msValues){$msMessage='Verified: these values are already saved. Nothing changed.';}
+  else{
+   if(file_exists('/var/run/mover.pid'))throw new RuntimeException('Settings cannot be changed while Mover is running.');
+   $msChanged=$msSource;foreach($msNew as $k=>$v)$msChanged=preg_replace('/^'.preg_quote($k,'/').'=[0-9]+[ \t]*$/m',$k.'='.$v,$msChanged);
+   $msDir='/boot/config/plugins/fejes.mover.monitor/backups';if(!is_dir($msDir)&&!mkdir($msDir,0700,true))throw new RuntimeException('Unable to create the backup directory.');
+   $msBackup=$msDir.'/threshold-'.date('Ymd-His').'-'.bin2hex(random_bytes(3)).'.sh';
+   if(file_put_contents($msBackup,$msSource,LOCK_EX)!==strlen($msSource)||file_get_contents($msBackup)!==$msSource)throw new RuntimeException('Backup verification failed.');
+   $msTmp=tempnam(dirname($msPath),'.mover-');if(!$msTmp||file_put_contents($msTmp,$msChanged)!==strlen($msChanged))throw new RuntimeException('Unable to prepare the save.');
+   chmod($msTmp,fileperms($msPath)&0777);exec('/bin/bash -n '.escapeshellarg($msTmp).' 2>&1',$msOut,$msCode);if($msCode!==0)throw new RuntimeException('Script validation failed.');
+   if(file_get_contents($msPath)!==$msSource)throw new RuntimeException('The script changed in the meantime.');
+   if(!rename($msTmp,$msPath))throw new RuntimeException('Script replacement failed.');$msTmp=null;
+   if(file_get_contents($msPath)!==$msChanged)throw new RuntimeException('Read-back verification failed. Backup: '.$msBackup);
+   $msSource=$msChanged;$msValues=$msNew;$msMessage='Saved and verified. The next script run will use these values. Backup: '.basename($msBackup);
+  }
+ }
+}catch(Throwable $e){$msError=$e->getMessage();}
+finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock($msLock,LOCK_UN);fclose($msLock);}}
+?>
+<style>
+#ms{max-width:1100px;margin:22px auto;color:#dce8f5;font:15px/1.6 Arial,sans-serif}#ms *{box-sizing:border-box}#ms .hero,#ms .box{background:linear-gradient(130deg,#182738,#101b27);border:1px solid #30465e;border-radius:18px;padding:26px;margin-bottom:20px}#ms .hero{display:flex;justify-content:space-between;align-items:center}#ms h1{font-size:30px;color:#fff;margin:4px 0}#ms h2{font-size:20px;color:#fff;margin:0 0 12px}#ms p{color:#a9bdd0;margin:8px 0}#ms .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}#ms .kicker{color:#5fc4ff;letter-spacing:2px;font-size:12px}#ms input[type=number]{width:130px;font-size:26px;padding:10px;background:#0c1621;color:#fff;border:1px solid #4b6784;border-radius:10px}#ms input[type=range]{width:100%;accent-color:#58baff;margin:22px 0}#ms .bar{height:20px;border-radius:10px;background:#263c50;position:relative;margin:25px 0 12px;overflow:hidden}#ms .fill{height:100%;background:#399fdf}#ms .marker{position:absolute;top:0;bottom:0;width:4px;background:#ffbc57}#ms .badge{display:inline-block;border:1px solid #328b75;color:#8de1c3;border-radius:20px;padding:5px 12px;margin:5px 8px 5px 0}#ms .notice{padding:16px;border-radius:12px;margin-bottom:20px;background:#153b32;color:#a2f1d1}#ms .error{background:#502a26;color:#ffd0c0}#ms button,#ms .link{display:inline-block;border:1px solid #4c83ae;border-radius:10px;padding:11px 18px;background:#1d6094;color:#fff;text-decoration:none;cursor:pointer;font-size:15px}#ms .secondary{background:transparent;margin-left:10px}#ms .preview{font-size:18px;color:#fff;min-height:58px}#ms small{color:#a9bdd0}@media(max-width:750px){#ms .grid{grid-template-columns:1fr}#ms .hero{display:block}}
+
+/* Keep settings panels consistent with the surrounding Unraid interface. */
+#ms{font:inherit;color:inherit;max-width:1100px;margin:20px auto;padding:0 16px}
+#ms .hero,#ms .box{background:transparent;border:1px solid #8885;border-radius:4px;padding:20px;margin-bottom:16px}
+#ms .hero{border-left:3px solid #ef7d00}
+#ms h1{font-size:24px;color:inherit;font-weight:600}
+#ms h2{font-size:17px;color:inherit;font-weight:600}
+#ms p,#ms small{color:inherit;opacity:.8}
+#ms .kicker{color:#ef7d00;letter-spacing:1px}
+#ms input[type=number]{font:inherit;font-size:22px;padding:7px 10px;background:transparent;color:inherit;border:1px solid #8887;border-radius:3px}
+#ms input[type=range]{accent-color:#ef7d00;margin:18px 0}
+#ms .bar{height:12px;border-radius:2px;background:#8883;margin:20px 0 10px}
+#ms .fill{background:#ef7d00}
+#ms .marker{background:currentColor}
+#ms .preview{font-size:16px;color:inherit}
+#ms button,#ms .link{font:inherit;padding:8px 14px;border-radius:3px;border:1px solid #ef7d00;background:#d96312;color:white}
+#ms .secondary{background:transparent;color:inherit;border-color:#8887}
+#ms .notice{border-radius:3px;border-left:3px solid #64b99b}
+#ms .notice.error{border-left-color:#ef967a}
+#ms :is(button,input,a):focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
+</style>
+<div id="ms">
+ <div class="hero"><div><div class="kicker">FEJESNAS / MOVER SETUP</div><h1>Adjust your settings</h1><p>Filmek automation · cache → array</p></div><a class="link secondary" href="/Tools/FejesMover">← Mover Monitor</a></div>
+ <?php if($msMessage):?><div class="notice" role="status"><?=$msEsc($msMessage)?></div><?php endif?>
+ <?php if($msError):?><div class="notice error" role="alert"><?=$msEsc($msError)?></div><?php endif?>
+ <form method="post" action="/Tools/FejesMoverSettings">
+ <input type="hidden" name="csrf_token" value="<?=$msEsc($msToken??'')?>"><input type="hidden" name="ms_csrf" value="<?=$msEsc($msToken)?>"><input type="hidden" name="source_hash" value="<?=hash('sha256',(string)$msSource)?>">
+ <div class="grid">
+ <div class="box"><h2>01 · Free-space threshold</h2><p>Below this amount of free cache space, the script attempts to start the built-in Mover.</p><label for="ms-threshold">Threshold (GiB)</label><br><input id="ms-threshold" name="KUSZOB_GIB" type="number" min="1" max="<?=$msMax?>" required value="<?=$msValues['KUSZOB_GIB']?>"><input id="ms-slider" aria-label="Free-space threshold slider" type="range" min="1" max="<?=$msMax?>" value="<?=$msValues['KUSZOB_GIB']?>"><small>Higher value: may start sooner. Lower value: files stay in cache longer.</small></div>
+ <div class="box"><h2>02 · Retry interval</h2><p>Minimum time between two start attempts.</p><label for="ms-cooldown">Wait (minutes)</label><br><input id="ms-cooldown" name="UJRA_PROBALKOZAS_MP" type="number" min="1" max="10080" required value="<?=$msValues['UJRA_PROBALKOZAS_MP']?>"><p id="ms-hours"></p><small>The script check schedule separately determines when the next attempt occurs.</small></div>
+ </div>
+ <div class="box"><h2>Live settings preview</h2><p>Currently free: <strong><?= $msFree!==false?number_format($msFree/1073741824,1,'.',','):'—'?> GiB</strong> · Cache capacity: <?= $msTotal?number_format($msTotal/1073741824,1,'.',','):'—'?> GiB</p><div class="bar"><div class="fill" style="width:<?=$msTotal&&$msFree!==false?100*(1-$msFree/$msTotal):0?>%"></div><div class="marker" id="ms-marker"></div></div><small>Fill: current usage · Vertical marker: configured start threshold</small><p class="preview" id="ms-preview"></p></div>
+ <div class="box"><h2>Existing automation checks</h2><p>Your own script implements backup and parity guards; this settings page cannot verify them. Saving checks the Mover PID file.</p><p>Saving does not start Mover. The next script run uses the new values; a backup is created before each change.</p><button type="submit">Save settings</button><button type="reset" class="secondary">Reset changes</button><p><small>Change the schedule on the existing User Scripts page.</small></p></div>
+ </form>
+</div>
+<script>
+(()=>{const t=document.getElementById('ms-threshold'),s=document.getElementById('ms-slider'),c=document.getElementById('ms-cooldown'),free=<?=json_encode($msFree!==false?$msFree/1073741824:null)?>,total=<?=json_encode($msTotal?$msTotal/1073741824:null)?>;function preview(){document.getElementById('ms-hours').textContent=(Number(c.value)/60).toLocaleString('en-US',{maximumFractionDigits:2})+' hours';document.getElementById('ms-marker').style.left=Math.max(0,Math.min(100,100*(1-Number(t.value)/total)))+'%';document.getElementById('ms-preview').textContent=free===null?'Cache data is currently unavailable.':free<Number(t.value)?'Free space is already below the threshold. The next check decides whether to start based on guards and the retry interval.':'Another '+(free-Number(t.value)).toLocaleString('en-US',{maximumFractionDigits:1})+' GiB of free space can be used before reaching the threshold.';}t.addEventListener('input',()=>{s.value=t.value;preview()});s.addEventListener('input',()=>{t.value=s.value;preview()});c.addEventListener('input',preview);t.form.addEventListener('reset',()=>setTimeout(preview,0));preview();})();
+</script>
+
+
+
+<?php } elseif($fmLang==='de'){ ?>
+<a href="/Dashboard#fejes-mover-dashboard" style="display:inline-block;margin:12px 16px;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← Zurück zur Dashboard-Karte</a>
+<a href="/Tools/FejesMoverSelective" style="display:inline-block;margin:12px;padding:8px 12px">7 / 14 / 30 · Selective Mover</a>
+<?php
+echo $fmLanguageSelector;
+$fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+echo $fmc['banner'];
+if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
+ echo '<div style="margin:24px"><h2>Mover-Einstellungen</h2><p>Skriptbearbeitung ist in diesem Modus gesperrt. Zum Aktivieren den erweiterten Modus wählen.</p><a href="/Tools/FejesMoverSetup">Modus und Pool einstellen</a></div>';
+ return;
+}
+$msMounted=$fmc['mounted'];
+$msToken=(parse_ini_file('/var/local/emhttp/var.ini')['csrf_token']??'');
+$msPath='/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script';
+$msEsc=fn($v)=>htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');
+$msSource=@file_get_contents($msPath);
+if($msSource===false){
+ echo '<div style="max-width:900px;margin:30px auto"><h2>Mover-Einstellungen</h2><p>Diese optionale Seite verwaltet die vorhandene Filmek_Mover_Threshold-Automatisierung in User Scripts. Das Skript ist auf diesem System nicht installiert.</p><p>Der Mover-Monitor funktioniert unabhängig davon. Dieses Plugin installiert oder plant keine automatischen Übertragungen.</p><a href="/Tools/FejesMover">Zurück zum Mover-Monitor</a></div>';
+ return;
+}
+
+$msParse=function($s){$r=[];foreach(['KUSZOB_GIB','UJRA_PROBALKOZAS_MP'] as $k){if(preg_match_all('/^'.preg_quote($k,'/').'=(\d+)[ \t]*$/m',(string)$s,$m)!==1)throw new RuntimeException('Die Skriptparameter sind nicht eindeutig.');$r[$k]=(int)$m[1][0];}return $r;};
+$msTotal=$msMounted?@disk_total_space('/mnt/cache'):false;$msFree=$msMounted?@disk_free_space('/mnt/cache'):false;$msMax=$msTotal?max(1,(int)floor($msTotal/1073741824)-1):0;
+$msMessage='';$msError='';$msValues=['KUSZOB_GIB'=>300,'UJRA_PROBALKOZAS_MP'=>360];$msLock=null;$msTmp=null;
+try{
+ $msValues=$msParse($msSource);
+ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+  if(!is_string($_POST['ms_csrf']??null)||empty($msToken)||!hash_equals($msToken,$_POST['ms_csrf']))throw new RuntimeException('Sitzung abgelaufen. Seite neu laden.');
+  $msNew=[];foreach(['KUSZOB_GIB'=>$msMax,'UJRA_PROBALKOZAS_MP'=>10080] as $k=>$max){$v=$_POST[$k]??null;if(!is_string($v)||!preg_match('/^[1-9][0-9]{0,4}$/D',$v)||(int)$v>$max)throw new RuntimeException('Ungültiger Wert oder Cache nicht verfügbar.');$msNew[$k]=(int)$v;}
+  $msLock=fopen('/var/run/fejes-mover-settings.lock','c');if(!$msLock||!flock($msLock,LOCK_EX|LOCK_NB))throw new RuntimeException('Ein anderer Speichervorgang läuft.');
+  $msSource=file_get_contents($msPath);$msValues=$msParse($msSource);
+  if(!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$msSource),$_POST['source_hash']))throw new RuntimeException('Das Skript wurde zwischenzeitlich geändert. Seite neu laden.');
+  if($msNew===$msValues){$msMessage='Geprüft: Diese Werte sind bereits gespeichert. Keine Änderung vorgenommen.';}
+  else{
+   if(file_exists('/var/run/mover.pid'))throw new RuntimeException('Während Mover läuft, können die Werte nicht geändert werden.');
+   $msChanged=$msSource;foreach($msNew as $k=>$v)$msChanged=preg_replace('/^'.preg_quote($k,'/').'=[0-9]+[ \t]*$/m',$k.'='.$v,$msChanged);
+   $msDir='/boot/config/plugins/fejes.mover.monitor/backups';if(!is_dir($msDir)&&!mkdir($msDir,0700,true))throw new RuntimeException('Der Sicherungsordner kann nicht erstellt werden.');
+   $msBackup=$msDir.'/threshold-'.date('Ymd-His').'-'.bin2hex(random_bytes(3)).'.sh';
+   if(file_put_contents($msBackup,$msSource,LOCK_EX)!==strlen($msSource)||file_get_contents($msBackup)!==$msSource)throw new RuntimeException('Prüfung der Sicherung fehlgeschlagen.');
+   $msTmp=tempnam(dirname($msPath),'.mover-');if(!$msTmp||file_put_contents($msTmp,$msChanged)!==strlen($msChanged))throw new RuntimeException('Speichern konnte nicht vorbereitet werden.');
+   chmod($msTmp,fileperms($msPath)&0777);exec('/bin/bash -n '.escapeshellarg($msTmp).' 2>&1',$msOut,$msCode);if($msCode!==0)throw new RuntimeException('Skriptprüfung fehlgeschlagen.');
+   if(file_get_contents($msPath)!==$msSource)throw new RuntimeException('Das Skript wurde zwischenzeitlich geändert.');
+   if(!rename($msTmp,$msPath))throw new RuntimeException('Ersetzen des Skripts fehlgeschlagen.');$msTmp=null;
+   if(file_get_contents($msPath)!==$msChanged)throw new RuntimeException('Prüfung durch erneutes Lesen fehlgeschlagen. Sicherung: '.$msBackup);
+   $msSource=$msChanged;$msValues=$msNew;$msMessage='Gespeichert und geprüft. Der nächste Skriptlauf verwendet diese Werte. Sicherung: '.basename($msBackup);
+  }
+ }
+}catch(Throwable $e){$msError=$e->getMessage();}
+finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock($msLock,LOCK_UN);fclose($msLock);}}
+?>
+<style>
+#ms{max-width:1100px;margin:22px auto;color:#dce8f5;font:15px/1.6 Arial,sans-serif}#ms *{box-sizing:border-box}#ms .hero,#ms .box{background:linear-gradient(130deg,#182738,#101b27);border:1px solid #30465e;border-radius:18px;padding:26px;margin-bottom:20px}#ms .hero{display:flex;justify-content:space-between;align-items:center}#ms h1{font-size:30px;color:#fff;margin:4px 0}#ms h2{font-size:20px;color:#fff;margin:0 0 12px}#ms p{color:#a9bdd0;margin:8px 0}#ms .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}#ms .kicker{color:#5fc4ff;letter-spacing:2px;font-size:12px}#ms input[type=number]{width:130px;font-size:26px;padding:10px;background:#0c1621;color:#fff;border:1px solid #4b6784;border-radius:10px}#ms input[type=range]{width:100%;accent-color:#58baff;margin:22px 0}#ms .bar{height:20px;border-radius:10px;background:#263c50;position:relative;margin:25px 0 12px;overflow:hidden}#ms .fill{height:100%;background:#399fdf}#ms .marker{position:absolute;top:0;bottom:0;width:4px;background:#ffbc57}#ms .badge{display:inline-block;border:1px solid #328b75;color:#8de1c3;border-radius:20px;padding:5px 12px;margin:5px 8px 5px 0}#ms .notice{padding:16px;border-radius:12px;margin-bottom:20px;background:#153b32;color:#a2f1d1}#ms .error{background:#502a26;color:#ffd0c0}#ms button,#ms .link{display:inline-block;border:1px solid #4c83ae;border-radius:10px;padding:11px 18px;background:#1d6094;color:#fff;text-decoration:none;cursor:pointer;font-size:15px}#ms .secondary{background:transparent;margin-left:10px}#ms .preview{font-size:18px;color:#fff;min-height:58px}#ms small{color:#a9bdd0}@media(max-width:750px){#ms .grid{grid-template-columns:1fr}#ms .hero{display:block}}
+
+/* Keep settings panels consistent with the surrounding Unraid interface. */
+#ms{font:inherit;color:inherit;max-width:1100px;margin:20px auto;padding:0 16px}
+#ms .hero,#ms .box{background:transparent;border:1px solid #8885;border-radius:4px;padding:20px;margin-bottom:16px}
+#ms .hero{border-left:3px solid #ef7d00}
+#ms h1{font-size:24px;color:inherit;font-weight:600}
+#ms h2{font-size:17px;color:inherit;font-weight:600}
+#ms p,#ms small{color:inherit;opacity:.8}
+#ms .kicker{color:#ef7d00;letter-spacing:1px}
+#ms input[type=number]{font:inherit;font-size:22px;padding:7px 10px;background:transparent;color:inherit;border:1px solid #8887;border-radius:3px}
+#ms input[type=range]{accent-color:#ef7d00;margin:18px 0}
+#ms .bar{height:12px;border-radius:2px;background:#8883;margin:20px 0 10px}
+#ms .fill{background:#ef7d00}
+#ms .marker{background:currentColor}
+#ms .preview{font-size:16px;color:inherit}
+#ms button,#ms .link{font:inherit;padding:8px 14px;border-radius:3px;border:1px solid #ef7d00;background:#d96312;color:white}
+#ms .secondary{background:transparent;color:inherit;border-color:#8887}
+#ms .notice{border-radius:3px;border-left:3px solid #64b99b}
+#ms .notice.error{border-left-color:#ef967a}
+#ms :is(button,input,a):focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
+</style>
+<div id="ms">
+ <div class="hero"><div><div class="kicker">FEJESNAS / MOVER SETUP</div><h1>Einstellungen anpassen</h1><p>Filmek-Automatisierung · Cache → Array</p></div><a class="link secondary" href="/Tools/FejesMover">← Mover-Monitor</a></div>
+ <?php if($msMessage):?><div class="notice" role="status"><?=$msEsc($msMessage)?></div><?php endif?>
+ <?php if($msError):?><div class="notice error" role="alert"><?=$msEsc($msError)?></div><?php endif?>
+ <form method="post" action="/Tools/FejesMoverSettings">
+ <input type="hidden" name="csrf_token" value="<?=$msEsc($msToken??'')?>"><input type="hidden" name="ms_csrf" value="<?=$msEsc($msToken)?>"><input type="hidden" name="source_hash" value="<?=hash('sha256',(string)$msSource)?>">
+ <div class="grid">
+ <div class="box"><h2>01 · Schwellenwert für freien Speicher</h2><p>Unterhalb dieses freien Cache-Speichers versucht das Skript, den integrierten Mover zu starten.</p><label for="ms-threshold">Schwellenwert (GiB)</label><br><input id="ms-threshold" name="KUSZOB_GIB" type="number" min="1" max="<?=$msMax?>" required value="<?=$msValues['KUSZOB_GIB']?>"><input id="ms-slider" aria-label="Regler für den freien Speicher" type="range" min="1" max="<?=$msMax?>" value="<?=$msValues['KUSZOB_GIB']?>"><small>Höherer Wert: früherer Start möglich. Niedrigerer Wert: Dateien bleiben länger im Cache.</small></div>
+ <div class="box"><h2>02 · Wiederholungsintervall</h2><p>Mindestzeit zwischen zwei Startversuchen.</p><label for="ms-cooldown">Wartezeit (Minuten)</label><br><input id="ms-cooldown" name="UJRA_PROBALKOZAS_MP" type="number" min="1" max="10080" required value="<?=$msValues['UJRA_PROBALKOZAS_MP']?>"><p id="ms-hours"></p><small>Der Prüfzeitplan des Skripts bestimmt unabhängig davon den nächsten Versuch.</small></div>
+ </div>
+ <div class="box"><h2>Live-Vorschau der Einstellungen</h2><p>Derzeit frei: <strong><?= $msFree!==false?number_format($msFree/1073741824,1,',',' '):'—'?> GiB</strong> · Cache-Kapazität: <?= $msTotal?number_format($msTotal/1073741824,1,',',' '):'—'?> GiB</p><div class="bar"><div class="fill" style="width:<?=$msTotal&&$msFree!==false?100*(1-$msFree/$msTotal):0?>%"></div><div class="marker" id="ms-marker"></div></div><small>Füllung: aktuelle Belegung · Senkrechte Markierung: eingestellter Startschwellenwert</small><p class="preview" id="ms-preview"></p></div>
+ <div class="box"><h2>Prüfungen der vorhandenen Automatisierung</h2><p>Dein eigenes Skript setzt Sicherungs- und Paritätsschutz um; diese Einstellungsseite kann sie nicht verifizieren. Beim Speichern wird die Mover-PID-Datei geprüft.</p><p>Speichern startet Mover nicht. Der nächste Skriptlauf verwendet die neuen Werte; vor jeder Änderung wird eine Sicherung erstellt.</p><button type="submit">Einstellungen speichern</button><button type="reset" class="secondary">Änderungen zurücksetzen</button><p><small>Den Zeitplan auf der vorhandenen User-Scripts-Seite ändern.</small></p></div>
+ </form>
+</div>
+<script>
+(()=>{const t=document.getElementById('ms-threshold'),s=document.getElementById('ms-slider'),c=document.getElementById('ms-cooldown'),free=<?=json_encode($msFree!==false?$msFree/1073741824:null)?>,total=<?=json_encode($msTotal?$msTotal/1073741824:null)?>;function preview(){document.getElementById('ms-hours').textContent=(Number(c.value)/60).toLocaleString('de-DE',{maximumFractionDigits:2})+' Stunden';document.getElementById('ms-marker').style.left=Math.max(0,Math.min(100,100*(1-Number(t.value)/total)))+'%';document.getElementById('ms-preview').textContent=free===null?'Cache-Daten sind derzeit nicht verfügbar.':free<Number(t.value)?'Der freie Speicher liegt bereits unter dem Schwellenwert. Die nächste Prüfung entscheidet anhand der Schutzbedingungen und der Wartezeit über den Start.':'Noch '+(free-Number(t.value)).toLocaleString('de-DE',{maximumFractionDigits:1})+' GiB freier Speicher bis zum Schwellenwert.';}t.addEventListener('input',()=>{s.value=t.value;preview()});s.addEventListener('input',()=>{t.value=s.value;preview()});c.addEventListener('input',preview);t.form.addEventListener('reset',()=>setTimeout(preview,0));preview();})();
+</script>
+
+
+
+<?php } else{ ?>
+<a href="/Dashboard#fejes-mover-dashboard" style="display:inline-block;margin:12px 16px;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← Vissza a főoldali kártyához</a>
+<a href="/Tools/FejesMoverSelective" style="display:inline-block;margin:12px;padding:8px 12px">7 / 14 / 30 · Selective Mover</a>
+<?php
+echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 echo $fmc['banner'];
 if($fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||$fmc['error']){
@@ -91,3 +291,6 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 </script>
 
 
+
+<?php } ?>
+<script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
