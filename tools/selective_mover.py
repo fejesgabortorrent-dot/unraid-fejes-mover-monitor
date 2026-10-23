@@ -19,7 +19,7 @@ import time
 
 import selective_preview as inventory_adapter
 from selective_preview import canonical, read_json, atomic_json
-from selection_policy import plan, age_days, within
+from selection_policy import plan, age_days, within, waiting_table
 from torrent_preflight import read_snapshot, host_path, assess
 from fejes_service import dry_run
 
@@ -27,6 +27,7 @@ BASE = Path('/boot/config/plugins/fejes.mover.monitor')
 CONFIG = BASE/'selective.json'
 INVENTORY = BASE/'selective-inventory.json'
 LAST = BASE/'selective-last.json'
+FORECAST = BASE/'selective-forecast.json'
 SOURCE = Path('/mnt/cache/Filmek')
 ROOT = '/mnt/user/Filmek'
 ENGINE = '/usr/libexec/unraid/move'
@@ -175,16 +176,21 @@ def collect(update=False,owned=False):
     items,mounts=torrent_snapshot()
     protection=guards(owned)
     selection=plan(files,items,mounts,protection,days=days,now=time.time(),observed_at=now,root=ROOT)
-    if update: atomic_json(INVENTORY,{'version':1,'files':current})
+    if update:
+        atomic_json(INVENTORY,{'version':1,'files':current})
+        atomic_json(FORECAST,waiting_table(files,items,mounts,current,protection,
+                                          days=days,now=time.time(),root=ROOT))
     return selection,files,current,items,mounts,protection
 
 
 def preview(update=False):
-    selection,files,_,_,_,protection=collect(update)
+    selection,files,current,items,mounts,protection=collect(update)
     return {'execution_allowed':False,'live_movement':'available','age_days':selection['age_days'],
             'decision':selection['decision'],'candidate_count':len(selection['candidates']),
             'file_count':len(files),'skipped_counts':dict(Counter(x['reason'] for x in selection['skipped'])),
-            'blockers':selection['blockers'],'guards':protection,'inventory_updated':update}
+            'blockers':selection['blockers'],'guards':protection,'inventory_updated':update,
+            'forecast':waiting_table(files,items,mounts,current,protection,
+                                     days=selection['age_days'],now=time.time(),root=ROOT)}
 
 
 def fresh_candidate(key,expected,days,owned=True):

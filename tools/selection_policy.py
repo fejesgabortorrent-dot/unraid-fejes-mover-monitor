@@ -119,6 +119,41 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
     return result
 
 
+def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root,
+                  max_bytes=16*1024**3):
+    """Private read-only age forecast, never an execution time or authorization."""
+    diagnostic = plan(files,torrents,mounts,{k:'pass' for k in REQUIRED_GUARDS},
+                      days=days,now=now,observed_at=now,root=root)
+    if diagnostic['decision']=='unknown':
+        raise ValueError('Forecast snapshot unavailable')
+    reasons={x['path']:x['reason'] for x in diagnostic['skipped']}
+    resolved=[(host_path(t['content_path'],mounts),t) for t in torrents]
+    rows=[]
+    for item in files:
+        key=item['path'];reason=reasons.get(key,'ready')
+        size=inventory[key]['signature'][2]
+        if type(size) is not int or size<0: raise ValueError('Unverifiable size')
+        ready=None
+        related=[t for path,t in resolved if within(key,path) or within(path,key)]
+        quiet=all(t['progress']==1 and t['state'] in QUIET_STATES and
+                  t.get('upspeed')==0 and t.get('dlspeed')==0 for t in related)
+        if reason=='protected_content' and quiet and item.get('open') is False and item.get('stable') is True and item.get('regular') is True and item.get('symlink') is False and item.get('nlink')==1:
+            # A known, recently completed idle torrent has a calculable age date.
+            reason='too_young'
+        if reason in ('ready','too_young'):
+            dates=[timestamp(item['mtime']),timestamp(item['first_seen'])]
+            dates.extend(timestamp(t['completion_on']) for t in related)
+            ready=max(dates)+days*86400
+        if size>max_bytes:
+            reason='file_exceeds_batch_limit';ready=None
+        rows.append({'file':key[len(root)+1:],'bytes':size,'age_ready_at':ready,'reason':reason})
+    rows.sort(key=lambda r:(r['age_ready_at'] is None,r['age_ready_at'] or 0,r['file']))
+    return {'version':1,'observed_at':now,'age_days':days,'rows':rows,
+            'file_count':len(rows),'total_bytes':sum(r['bytes'] for r in rows),
+            'blockers':[k for k in REQUIRED_GUARDS if guards.get(k)!='pass'],
+            'execution_allowed':False}
+
+
 def main(argv=None):
     import argparse
     import json

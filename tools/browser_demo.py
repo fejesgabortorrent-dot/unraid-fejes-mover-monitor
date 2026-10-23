@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import tempfile
 import threading
+import time
 from localize import compile_page
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,12 @@ class Demo:
         (lab/'pools/cache.cfg').write_text('fixture\n')
         (lab/'config').mkdir()
         (lab/'config/selective.json').write_text('{"version":1,"age_days":7}')
+        now=time.time()
+        (lab/'config/selective-forecast.json').write_text(json.dumps({
+            'version':1,'age_days':7,'observed_at':now,'total_bytes':8*1073741824,'blockers':[],
+            'rows':[{'file':'Example series/episode-01.mkv','bytes':3*1073741824,'age_ready_at':now+86400+3600,'reason':'too_young'},
+                    {'file':'Example movie.mkv','bytes':4*1073741824,'age_ready_at':now+3*86400,'reason':'too_young'},
+                    {'file':'Example download/part-01.mkv','bytes':1073741824,'age_ready_at':None,'reason':'protected_content'}]}))
         (lab/'config/selective-last.json').write_text(json.dumps({
             'state':'completed','moved_files':3,'moved_bytes':12*1073741824,
             'skipped':{'too_young':18,'protected_content':4,'busy_or_unverified':1}}))
@@ -55,6 +62,7 @@ class Demo:
             '/boot/config/plugins/fejes.mover.monitor/settings.json':lab/'config/settings.json',
             '/boot/config/plugins/fejes.mover.monitor/selective.json':lab/'config/selective.json',
             '/boot/config/plugins/fejes.mover.monitor/selective-last.json':lab/'config/selective-last.json',
+            '/boot/config/plugins/fejes.mover.monitor/selective-forecast.json':lab/'config/selective-forecast.json',
             '/var/run/fejes-selective-inventory.lock':lab/'selective.lock',
             '/boot/config/pools/':str(lab/'pools')+'/',
             '/var/run/fejes-mover-config.lock':lab/'mode.lock',
