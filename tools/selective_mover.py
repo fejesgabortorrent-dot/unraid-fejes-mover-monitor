@@ -271,8 +271,11 @@ def run():
         log(f'started; age={selection["age_days"]} days, candidates={len(selection["candidates"])}')
         skips=Counter(report['skipped'])
         for key in sorted(selection['candidates']):
-            if report['moved_files']>=MAX_FILES: break
             size=current[key]['signature'][2]
+            if size>MAX_BYTES:
+                skips['file_exceeds_batch_limit']+=1;continue
+            if report['moved_files']>=MAX_FILES:
+                skips['batch_file_limit']+=1;continue
             if report['moved_bytes']+size>MAX_BYTES:
                 skips['batch_size_limit']+=1;continue
             report['active_file_started']=True
@@ -283,6 +286,8 @@ def run():
                 log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
             else: skips[outcome['reason']]+=1
             report['skipped']=dict(skips);atomic_json(LAST,report)
+        # Trailing limit skips never reach the per-file write above.
+        report['skipped']=dict(skips)
         final,_=torrent_snapshot()
         # Names/hashes remain private; publish only continuity booleans.
         pre={x['hash']:x for x in items};post={x['hash']:x for x in final}
@@ -291,7 +296,7 @@ def run():
             'completed_in_seed_states':all(h in post and post[h]['state'] in {'uploading','stalledUP','queuedUP','forcedUP','stoppedUP','pausedUP'} for h,x in pre.items() if x['progress']==1),
             'paths_unchanged':all(h in post and post[h]['content_path']==x['content_path'] for h,x in pre.items())}
         if not all(report['torrent_continuity'].values()): raise RuntimeError('Torrent continuity changed; inspect before next run')
-        report['state']='completed'
+        report['state']='completed' if report['moved_files'] else 'no_files_moved'
         if report['moved_files']: ATTEMPT.write_text(str(int(time.time()))+'\n')
         log(f'finished; verified files={report["moved_files"]}, bytes={report["moved_bytes"]}')
     except BlockingIOError:

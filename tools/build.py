@@ -5,7 +5,7 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.10.23.992'
+version='2026.10.23.993'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_preview.py','selective_mover.py','wire_selective.py')]
 
@@ -14,6 +14,10 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.10.23.993
+- Preserve every batch-limit skip in the final selective movement report.
+- Distinguish files larger than the fixed 16 GiB limit from files deferred by this batch.
+- Report zero-movement runs explicitly; preserve all movement guards and limits.
 ### 2026.10.23.992
 - Add opt-in age-filtered native movement for cache/Filmek, excluding young, incomplete, active and open content.
 - Keep Observer default and preserve existing schedules on install. Authenticated Advanced mode supports manual start.

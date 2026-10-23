@@ -1,4 +1,6 @@
 import importlib.util
+import io
+import json
 import os
 from pathlib import Path
 import sys
@@ -110,5 +112,59 @@ class DispatchSafety(unittest.TestCase):
         self.assertEqual(rewrite_launcher(changed),changed)
         with self.assertRaises(ValueError): rewrite_launcher(changed,remove=True)
         with self.assertRaises(ValueError): prepare(guarded+'\n# unexpected drift\n')
+
+class BatchReporting(unittest.TestCase):
+    def run_batch(self,sizes,retained=False):
+        from contextlib import ExitStack
+        with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
+            root=Path(folder)
+            candidates=[f'/mnt/user/Filmek/{i:02}.bin' for i in range(len(sizes))]
+            inventory={key:{'signature':[1,i,size,0,0]} for i,(key,size) in enumerate(zip(candidates,sizes))}
+            writes=[]
+            stack.enter_context(patch.object(mover,'LAST',root/'last.json'))
+            stack.enter_context(patch.object(mover,'PID',root/'mover.pid'))
+            attempt=root/'attempt';stack.enter_context(patch.object(mover,'ATTEMPT',attempt))
+            stack.enter_context(patch.object(mover,'open',side_effect=lambda *a,**k:io.StringIO(),create=True))
+            stack.enter_context(patch.object(mover.fcntl,'flock'))
+            stack.enter_context(patch.object(mover,'read_json',return_value={}))
+            stack.enter_context(patch.object(mover,'atomic_json',side_effect=lambda p,r:writes.append(json.loads(json.dumps(r)))))
+            stack.enter_context(patch.object(mover,'log'))
+            stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'candidates':candidates,'blockers':[],'skipped':[]},[],inventory,[],[],{})))
+            stack.enter_context(patch.object(mover,'torrent_snapshot',return_value=([],[])))
+            execute=stack.enter_context(patch.object(mover,'execute_file',side_effect=lambda key,*a:{'state':'skipped','reason':'native_retained_source'} if retained else {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'fixture'}))
+            result=mover.run()
+            self.assertEqual(writes[-1],result)
+            self.assertFalse((root/'mover.pid').exists())
+            return result,execute.call_count,attempt.exists()
+
+    def test_all_oversized_files_are_counted_without_execution(self):
+        result,calls,attempt=self.run_batch([mover.MAX_BYTES+1]*3)
+        self.assertEqual(result['state'],'no_files_moved')
+        self.assertEqual(result['skipped'],{'file_exceeds_batch_limit':3})
+        self.assertEqual(calls,0);self.assertFalse(attempt)
+
+    def test_trailing_byte_limit_skips_are_persisted(self):
+        result,calls,_=self.run_batch([mover.MAX_BYTES,1,1])
+        self.assertEqual(result['state'],'completed')
+        self.assertEqual(result['moved_bytes'],mover.MAX_BYTES)
+        self.assertEqual(result['skipped'],{'batch_size_limit':2})
+        self.assertEqual(calls,1)
+
+    def test_file_count_limit_records_every_deferred_candidate(self):
+        result,calls,_=self.run_batch([1]*(mover.MAX_FILES+3))
+        self.assertEqual(result['skipped'],{'batch_file_limit':3})
+        self.assertEqual(calls,mover.MAX_FILES)
+
+    def test_oversized_file_does_not_prevent_independent_small_file(self):
+        result,calls,attempt=self.run_batch([mover.MAX_BYTES+1,1])
+        self.assertEqual(result['moved_files'],1)
+        self.assertEqual(result['skipped'],{'file_exceeds_batch_limit':1})
+        self.assertEqual(calls,1);self.assertTrue(attempt)
+
+    def test_native_retained_source_is_not_reported_as_moved(self):
+        result,calls,attempt=self.run_batch([1],retained=True)
+        self.assertEqual(result['state'],'no_files_moved')
+        self.assertEqual(result['skipped'],{'native_retained_source':1})
+        self.assertEqual(calls,1);self.assertFalse(attempt)
 
 if __name__=='__main__': unittest.main()
