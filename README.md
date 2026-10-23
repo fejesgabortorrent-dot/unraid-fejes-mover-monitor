@@ -20,21 +20,27 @@ Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/F
 
 ## Screenshots / Képernyőképek
 
-**Local browser demo with simulated data — not a live NAS.** These older images illustrate the monitor; current selective-movement evidence and its limits are recorded in the release status.
+**English interface previews with simulated data — not a live NAS or transfer-test evidence.** Rendered from the current plugin pages in a standalone dark preview wrapper; the surrounding Unraid theme can differ. The monitor footer still contains some Hungarian text. Current test evidence and limitations are recorded in the release status.
 
 **Helyi demó, szimulált adatokkal.** A képek nem az élő NAS-ról készültek.
 
 ### Mover Monitor / Figyelő
 
-![Mover Monitor — Hungarian demo](docs/images/monitor-hu-demo.png)
+![Mover Monitor — English simulated preview](docs/images/store-en-monitor-20261023.jpg)
 
 ### Dashboard card / Dashboard-kártya
 
-![Dashboard card — Hungarian demo](docs/images/dashboard-hu-demo.png)
+![Dashboard card — English simulated preview](docs/images/store-en-dashboard-20261023.jpg)
 
 ### Settings / Beállítások
 
-![Settings — Hungarian demo](docs/images/settings-hu-demo.png)
+![Settings — English simulated preview](docs/images/store-en-settings-20261023.jpg)
+
+### Selective movement / Szelektív mozgatás
+
+![Selective movement — English simulated preview](docs/images/store-en-selective-20261023.jpg)
+
+To refresh the gallery after a design change, run `tools/export_store_preview.py` with PHP and Bash on PATH, serve the exported HTML on loopback, and capture the pages in a browser. Inspect every image for private information and rendering errors. Use new dated filenames and update both this gallery and the `<Screenshot>` entries in `plugins/fejes-mover-monitor.xml`; Community Applications may take time to refresh its index. Screenshot-only updates do not require a plugin reinstall.
 
 ## Features
 
