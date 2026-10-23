@@ -1,0 +1,16 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const page=fs.readFileSync(__dirname+'/../src/FejesMoverSelective.page','utf8');
+const source=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]).find(x=>x.includes('function applyFilters'));
+assert.ok(source);
+const row=(name,reason,video)=>({textContent:name,dataset:{reason,video},hidden:false});
+const rows=[row('Series/EPISODE.mkv','too_young','1'),row('Series/poster.jpg','too_young','0'),row('Other/movie.mp4','ready','1'),row('Other/blocked.mkv','protected_content','1'),row('Large/huge.mkv','file_exceeds_batch_limit','1')];
+const control=()=>({value:'',checked:false,addEventListener(type,fn){this[type]=fn}});
+const ids={'fms-search':control(),'fms-filter':control(),'fms-video':control(),'fms-visible':{},'fms-no-results':{}};ids['fms-filter'].value='all';
+vm.runInNewContext(source.replace(/<\?=[\s\S]*?\?>/g,JSON.stringify('label')),{document:{hidden:false,querySelectorAll:q=>q==='[data-fms-row]'?rows:[],getElementById:id=>ids[id]},Date,Number,String,Array,Math,setInterval(){},setTimeout(){},clearTimeout(){},AbortController});
+assert.equal(ids['fms-visible'].textContent,'5 / 5');
+ids['fms-search'].value='series/episode';ids['fms-search'].input();assert.deepEqual(rows.map(r=>r.hidden),[false,true,true,true,true]);
+ids['fms-search'].value='';ids['fms-video'].checked=true;ids['fms-video'].change();assert.equal(ids['fms-visible'].textContent,'4 / 5');
+ids['fms-filter'].value='too_young';ids['fms-filter'].change();assert.equal(ids['fms-visible'].textContent,'1 / 5');
+ids['fms-filter'].value='other';ids['fms-filter'].change();assert.equal(rows[4].hidden,false);assert.equal(ids['fms-visible'].textContent,'1 / 5');
+ids['fms-search'].value='absent';ids['fms-search'].input();assert.equal(ids['fms-no-results'].hidden,false);
+console.log('Queue search, combined status/video filters and empty state passed.');

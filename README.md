@@ -10,7 +10,7 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.23.995 · Experimental beta · Unraid 7.x**
+**2026.10.23.996 · Experimental beta · Unraid 7.x**
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
@@ -43,6 +43,8 @@ Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/F
 To refresh the gallery after a design change, run `tools/export_store_preview.py` with PHP and Bash on PATH, serve the exported HTML on loopback, and capture the pages in a browser. Inspect every image for private information and rendering errors. Use new dated filenames and update both this gallery and the `<Screenshot>` entries in `plugins/fejes-mover-monitor.xml`; Community Applications may take time to refresh its index. Screenshot-only updates do not require a plugin reinstall.
 
 ## Features
+
+- Selective page organized around summary cards and the file queue, with local filename/path search, status and video-only filters, expandable full paths, folded settings and a separate confirmed manual-action section. Filters only change the display, never the execution scope.
 
 - Private waiting table on the selective page: per-file size, earliest age eligibility, live countdown and blockers. Use Read-only check for a fresh snapshot; ordinary page refreshes do not scan storage or query torrents. Dates are age eligibility only, not guaranteed movement start/finish times. Active/incomplete/open content and files above the fixed batch limit have no promised date. Cache and torrent activity can change after observation.
 
