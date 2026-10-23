@@ -18,7 +18,7 @@ import threading
 from localize import compile_page
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGES = {'/Tools/FejesMover':'FejesMover.page', '/Tools/FejesMoverSettings':'FejesMoverSettings.page', '/Tools/FejesMoverSetup':'FejesMoverSetup.page', '/Dashboard':'FejesMover.Dashboard.page'}
+PAGES = {'/Tools/FejesMover':'FejesMover.page', '/Tools/FejesMoverSettings':'FejesMoverSettings.page', '/Tools/FejesMoverSetup':'FejesMoverSetup.page', '/Tools/FejesMoverSelective':'FejesMoverSelective.page', '/Dashboard':'FejesMover.Dashboard.page'}
 STATES = {'idle':'Várakozik', 'running':'Mover fut', 'full':'Cache megtelt', 'missing':'Cache nincs csatolva', 'stale':'Bizonytalan PID'}
 
 class Demo:
@@ -34,6 +34,11 @@ class Demo:
         (lab/'cache').mkdir()
         (lab/'pools').mkdir()
         (lab/'pools/cache.cfg').write_text('fixture\n')
+        (lab/'config').mkdir()
+        (lab/'config/selective.json').write_text('{"version":1,"age_days":7}')
+        (lab/'config/selective-last.json').write_text(json.dumps({
+            'state':'completed','moved_files':3,'moved_bytes':12*1073741824,
+            'skipped':{'too_young':18,'protected_content':4,'busy_or_unverified':1}}))
 
     def render(self, name, state, language, post):
         lab=self.lab
@@ -48,6 +53,9 @@ class Demo:
         replacements={
             '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php':lab/'FejesMoverRuntime.php',
             '/boot/config/plugins/fejes.mover.monitor/settings.json':lab/'config/settings.json',
+            '/boot/config/plugins/fejes.mover.monitor/selective.json':lab/'config/selective.json',
+            '/boot/config/plugins/fejes.mover.monitor/selective-last.json':lab/'config/selective-last.json',
+            '/var/run/fejes-selective-inventory.lock':lab/'selective.lock',
             '/boot/config/pools/':str(lab/'pools')+'/',
             '/var/run/fejes-mover-config.lock':lab/'mode.lock',
             '/proc/self/mountinfo':lab/'mountinfo', '/var/local/emhttp/var.ini':lab/'var.ini',
