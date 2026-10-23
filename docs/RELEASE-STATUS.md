@@ -1,4 +1,4 @@
-# Experimental beta — 2026.10.23.996
+# Experimental beta — 2026.10.23.997
 
 The .995 follow-up fixes long filename and status wrapping under the surrounding Unraid theme. Forecast calculations and movement behavior are unchanged.
 

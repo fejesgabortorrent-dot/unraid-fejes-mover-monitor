@@ -53,6 +53,38 @@ return (static function ($configWrite) {
         : $esc($t('Figyelt pool: ','Monitored pool: ','Überwachter Pool: ').$pool);
     if ($error) $banner .= '<p role="alert">'.$esc($t('A konfiguráció nem olvasható biztonságosan. A szerkesztés tiltva.','Configuration cannot be safely read. Editing is disabled.','Konfiguration kann nicht sicher gelesen werden. Bearbeitung gesperrt.')).'</p>';
     $banner .= ' · <a href="/Tools/FejesMoverSetup">'.$esc($t('Mód és pool beállítása','Configure mode and pool','Modus und Pool einstellen')).'</a></div>';
+    $theme = <<<'HTML'
+<style id="fejes-theme-style">
+.fmc-theme{float:right;display:inline-flex;gap:8px;align-items:center;margin:0 0 8px 16px}.fmc-theme select{width:auto!important;padding:5px 8px!important;border:1px solid #8888!important;border-radius:5px!important}
+html[data-fejes-theme="light"]{--fejes-bg:#f5f6f8;--fejes-panel:#fff;--fejes-fg:#202632;--fejes-line:#c7cdd5;--fejes-link:#985000;--fejes-scheme:light}
+html[data-fejes-theme="dark"]{--fejes-bg:#171b22;--fejes-panel:#222833;--fejes-fg:#edf0f5;--fejes-line:#4a5362;--fejes-link:#ffb567;--fejes-scheme:dark}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode){background:var(--fejes-bg)!important;color:var(--fejes-fg)!important;color-scheme:var(--fejes-scheme);border-radius:8px}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard){padding:18px!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(h1,h2,h3,p,span,strong,small,label,legend,summary,td,th,pre){color:var(--fejes-fg)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(section,fieldset,.fm-card,.ms-card,.fms-panel,.fms-cards>div){background:var(--fejes-panel)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(input,select,button,thead th){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) a{color:var(--fejes-link)!important}
+html[data-fejes-theme] #fms .fms-primary{background:#a95206!important;color:#fff!important;border-color:#a95206!important}
+html[data-fejes-theme] #fms .fms-danger{border-color:#d65b51!important}
+html[data-fejes-theme] #fm-monitor .fm-donut span{background:var(--fejes-panel)!important}
+@media(max-width:600px){.fmc-theme{float:none;display:flex;margin:0 0 10px}}
+</style>
+<label class="fmc-theme">THEME_LABEL <select data-fejes-theme-select aria-label="THEME_LABEL"><option value="auto">AUTO_LABEL</option><option value="light">LIGHT_LABEL</option><option value="dark">DARK_LABEL</option></select></label>
+<script>(()=>{
+if(window.fejesMoverTheme)return;window.fejesMoverTheme=true;
+const key='fejesMoverTheme',valid=v=>['auto','light','dark'].includes(v)?v:'auto';
+function apply(value){value=valid(value);if(value==='auto')document.documentElement.removeAttribute('data-fejes-theme');else document.documentElement.setAttribute('data-fejes-theme',value);document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>el.value=value);}
+function saved(){try{return valid(localStorage.getItem(key));}catch{return 'auto';}}
+let choice=saved();apply(choice);document.addEventListener('change',event=>{if(!event.target.matches('[data-fejes-theme-select]'))return;const value=valid(event.target.value);try{localStorage.setItem(key,value);}catch{}choice=value;apply(choice);});
+window.addEventListener('storage',event=>{if(event.key===key){choice=saved();apply(choice);}});
+// Polling can replace the banner without executing scripts in the response.
+new MutationObserver(()=>{const value=choice;document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>{if(el.value!==value)el.value=value;});}).observe(document.body,{childList:true,subtree:true});
+})();</script>
+HTML;
+    $theme=str_replace(['THEME_LABEL','AUTO_LABEL','LIGHT_LABEL','DARK_LABEL'],array_map($esc,[
+        $t('Megjelenés','Appearance','Darstellung'),$t('Rendszerkövető','Follow Unraid','Unraid folgen'),
+        $t('Világos','Light','Hell'),$t('Sötét','Dark','Dunkel')]),$theme);
+    $banner=str_replace('<strong>', $theme.'<strong>',$banner);
     $token = @parse_ini_file('/var/local/emhttp/var.ini');
     return ['mode'=>$mode,'pool'=>$pool,'path'=>'/mnt/'.$pool,'mounted'=>$mounted,'pools'=>$pools,
         'error'=>$error,'lockError'=>$lockError,'readError'=>$readError,'configInvalid'=>!$valid,
