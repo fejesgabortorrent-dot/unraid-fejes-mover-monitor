@@ -110,6 +110,15 @@ $states=[
 <?php foreach(($report['skipped_counts']??[]) as $key=>$count):?><p><?=$e($skipLabels[$key]??$t('Bizonytalan vagy nem támogatott','Unverifiable or unsupported','Ungeprüft oder nicht unterstützt'))?>: <?=$e($count)?></p><?php endforeach?>
 <?php if(!empty($report['blockers'])):?><p><?=$e($t('Indítási akadályok','Start blockers','Startblockaden'))?>: <?=$e(implode(', ',$report['blockers']))?></p><?php endif?>
 <?php endif?>
+<style>
+#fms table.fms-queue{table-layout:fixed!important;width:100%!important}
+#fms table.fms-queue th,#fms table.fms-queue td{white-space:normal!important;height:auto!important;vertical-align:top;overflow-wrap:anywhere;word-break:break-word}
+#fms table.fms-queue th:first-child{width:32%}
+#fms table.fms-queue th:nth-child(2){width:10%}
+#fms table.fms-queue th:nth-child(3){width:19%}
+#fms table.fms-queue th:nth-child(4){width:17%}
+#fms table.fms-queue th:nth-child(5){width:22%}
+</style>
 <section id="fms-waiting" style="border:1px solid #8886;padding:18px;margin-top:24px">
 <h3><?=$e($t('Mikor kerülhet sorra?','When can files become eligible?','Wann können Dateien an die Reihe kommen?'))?></h3>
 <p><?=$e($t('A táblázat a korhatár legkorábbi lejártát mutatja, nem garantált indulást vagy befejezést. A torrent aktivitása, a szabad hely, a várakozási idő és minden védelem továbbra is számít.','The table shows the earliest age eligibility, not a guaranteed start or finish. Torrent activity, free space, cooldown and every safety guard still apply.','Die Tabelle zeigt die früheste Altersfreigabe, keinen garantierten Start oder Abschluss. Torrent-Aktivität, Freiplatz, Wartezeit und Schutzprüfungen gelten weiterhin.'))?></p>
