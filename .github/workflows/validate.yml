@@ -38,6 +38,7 @@ jobs:
           node tools/theme_ui_test.js
           node tools/depth_nav_test.js
           node tools/queue_sort_test.js
+          node tools/selective_refresh_test.js
       - name: Require stale generated artifacts to fail
         run: python3 tools/check_test.py
       - name: Require validation to leave tracked files unchanged

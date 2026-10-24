@@ -1,4 +1,4 @@
-# Experimental beta — 2026.10.24.5
+# Experimental beta — 2026.10.24.6
 
 Candidate .24.1 adds optional ratio priority and an explicit batch size selector. Ratio affects order only after eligibility; low/missing ratios never withhold candidates. Shared ownership uses the minimum ratio, unknown values remain unknown. The private queue gains a ratio column. Existing configs default to priority disabled and 16 GiB. Saves retain config backups and reject concurrent/stale forms. Neither feature overrides age, torrent activity, maintenance or integrity guards. No production media or live reboot acceptance is claimed for this candidate.
 
@@ -70,3 +70,16 @@ The queue headers and a mobile-accessible sort selector support ascending and
 descending filename, raw size, ratio, age date, remaining-time and status order.
 Unknown numeric/date values stay last in both directions. Original order can be
 restored, active filters stay applied, and sorting never changes execution order.
+
+
+## Refresh correctness (.24.6)
+
+Dashboard polling retains the shared depth stylesheet in the replaced mode banner.
+Selective polling rejects a successful HTTP response that lacks the selective
+status (for example a sign-in page), shows last-known-data feedback and disables
+manual movement locally. A subsequent valid response restores the server-provided
+button state. Display freshness and the inventory observation timestamp remain
+separate. Executor rules, schedules and stored configuration are unchanged.
+
+Selective polling now refreshes the status and cache summary cards as well as
+the detailed report. Queue rows, sort direction and local filters are retained.

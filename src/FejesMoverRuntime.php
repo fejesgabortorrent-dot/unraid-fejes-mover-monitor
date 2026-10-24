@@ -144,7 +144,10 @@ HTML;
         $t('Mover navigáció','Mover navigation','Mover-Navigation'),$t('Vissza','Back','Zurück'),$t('Előre','Forward','Vorwärts'),$t('Főoldal','Home','Startseite'),
         $t('Mover figyelő','Monitor','Monitor'),$t('Mozgatás','Movement','Verschieben'),$t('Beállítások','Settings','Einstellungen'),$t('Mód és pool','Mode and pool','Modus und Pool')]),$design);
     $banner=str_replace('<strong>', $theme.'<strong>',$banner);
-    $banner .= $design;
+    // Dashboard polling keeps only .fmc-mode: carry the shared stylesheet with it.
+    $designStyleEnd = strpos($design, '</style>') + strlen('</style>');
+    $banner = substr_replace($banner, substr($design, 0, $designStyleEnd), strrpos($banner, '</div>'), 0);
+    $banner .= substr($design, $designStyleEnd);
     $token = @parse_ini_file('/var/local/emhttp/var.ini');
     return ['mode'=>$mode,'pool'=>$pool,'path'=>'/mnt/'.$pool,'mounted'=>$mounted,'pools'=>$pools,
         'error'=>$error,'lockError'=>$lockError,'readError'=>$readError,'configInvalid'=>!$valid,
