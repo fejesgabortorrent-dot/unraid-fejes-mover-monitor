@@ -114,7 +114,7 @@ class DispatchSafety(unittest.TestCase):
         with self.assertRaises(ValueError): prepare(guarded+'\n# unexpected drift\n')
 
 class BatchReporting(unittest.TestCase):
-    def run_batch(self,sizes,retained=False):
+    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES):
         from contextlib import ExitStack
         with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
             root=Path(folder)
@@ -129,13 +129,20 @@ class BatchReporting(unittest.TestCase):
             stack.enter_context(patch.object(mover,'read_json',return_value={}))
             stack.enter_context(patch.object(mover,'atomic_json',side_effect=lambda p,r:writes.append(json.loads(json.dumps(r)))))
             stack.enter_context(patch.object(mover,'log'))
-            stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'candidates':candidates,'blockers':[],'skipped':[]},[],inventory,[],[],{})))
+            stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'max_bytes':limit,'candidates':candidates,'blockers':[],'skipped':[]},[],inventory,[],[],{})))
             stack.enter_context(patch.object(mover,'torrent_snapshot',return_value=([],[])))
             execute=stack.enter_context(patch.object(mover,'execute_file',side_effect=lambda key,*a:{'state':'skipped','reason':'native_retained_source'} if retained else {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'fixture'}))
             result=mover.run()
             self.assertEqual(writes[-1],result)
             self.assertFalse((root/'mover.pid').exists())
             return result,execute.call_count,attempt.exists()
+
+    def test_explicit_larger_batch_admits_large_file_but_respects_total(self):
+        gib=1024**3
+        result,calls,_=self.run_batch([18*gib,15*gib],limit=32*gib)
+        self.assertEqual(result['moved_bytes'],18*gib)
+        self.assertEqual(result['skipped'],{'batch_size_limit':1})
+        self.assertEqual(calls,1)
 
     def test_all_oversized_files_are_counted_without_execution(self):
         result,calls,attempt=self.run_batch([mover.MAX_BYTES+1]*3)

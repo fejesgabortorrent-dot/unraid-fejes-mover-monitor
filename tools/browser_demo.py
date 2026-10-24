@@ -40,7 +40,7 @@ class Demo:
         now=time.time()
         (lab/'config/selective-forecast.json').write_text(json.dumps({
             'version':1,'age_days':7,'observed_at':now,'total_bytes':8*1073741824,'blockers':[],
-            'rows':[{'file':'Example series/episode-01.mkv','bytes':3*1073741824,'age_ready_at':now+86400+3600,'reason':'too_young'},
+            'rows':[{'file':'Example series/episode-01.mkv','bytes':3*1073741824,'age_ready_at':now+86400+3600,'reason':'too_young','ratio':1.25,'ratio_target_met':False},
                     {'file':'Example movie.mkv','bytes':4*1073741824,'age_ready_at':now+3*86400,'reason':'too_young'},
                     {'file':'Example download/part-01.mkv','bytes':1073741824,'age_ready_at':None,'reason':'protected_content'}]}))
         (lab/'config/selective-last.json').write_text(json.dumps({

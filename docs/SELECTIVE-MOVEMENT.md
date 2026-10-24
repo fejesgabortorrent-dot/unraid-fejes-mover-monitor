@@ -82,3 +82,10 @@ torrent API state were not falsified.
 The live `Filmek` scan correctly moved zero files because none had yet met the
 verified observation age. Production-media movement, live NAS reboot persistence
 and broad hardware/configuration compatibility remain unverified.
+
+
+## Ratio priority and larger batches (2026.10.24.1)
+
+In Selective → Settings, choose a ratio target (0 = disabled) and batch limit (16/32/64/128 GiB). Save settings, then refresh the observation. Both settings are private to the NAS and backed up before changes. The ratio is the qBittorrent snapshot value; shared files use the lowest owner ratio, and missing/invalid values show an em dash. Reaching the target prioritizes an already eligible file; it never bypasses age or safety checks, and a lower/unknown ratio never blocks movement. Files without torrents remain movable under the existing rules. This feature does not change tracker obligations or stop/remove torrents.
+
+The batch limit defaults to 16 GiB. A larger value admits larger individual files and increases total work per batch; the 8-file cap, exact native-file invocation, fresh checks, SHA256 and metadata verification remain. Existing schedules are untouched. This candidate has isolated regression validation; production-media acceptance remains outstanding.

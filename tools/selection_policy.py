@@ -30,6 +30,41 @@ def within(path, parent):
     return path == parent or path.startswith(parent.rstrip('/') + '/')
 
 
+def batch_bytes(value=16):
+    if type(value) is not int or value not in (16, 32, 64, 128):
+        raise ValueError('Batch size must be 16, 32, 64 or 128 GiB')
+    return value * 1024**3
+
+
+def ratio_target(value):
+    if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 100:
+        raise ValueError('Ratio target must be between 0 and 100')
+    return float(value)
+
+
+def content_ratio(key, torrents, mounts):
+    """Minimum across all owners; missing/invalid values remain unknown."""
+    related = [t for t in torrents if within(key, host_path(t.get('content_path'), mounts))
+               or within(host_path(t.get('content_path'), mounts), key)]
+    if not related:
+        return None
+    values = [t.get('ratio') for t in related]
+    if any(type(v) not in (int, float) or not math.isfinite(v) or v < 0 for v in values):
+        return None
+    return min(values)
+
+
+def prioritize(candidates, torrents, mounts, target=0):
+    """Order already eligible files only. Ratio never grants eligibility."""
+    target = ratio_target(target)
+    if target == 0:
+        return sorted(candidates)
+    def order(key):
+        ratio = content_ratio(key, torrents, mounts)
+        return (0 if ratio is not None and ratio >= target else 1, key)
+    return sorted(candidates, key=order)
+
+
 def protected_content(torrents, mounts, now, days):
     # Reuse fail-closed validation, but never turn a global DEFER into a start.
     assess(torrents, mounts)
@@ -120,8 +155,9 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
 
 
 def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root,
-                  max_bytes=16*1024**3):
+                  max_bytes=16*1024**3, target_ratio=0):
     """Private read-only age forecast, never an execution time or authorization."""
+    target_ratio = ratio_target(target_ratio)
     diagnostic = plan(files,torrents,mounts,{k:'pass' for k in REQUIRED_GUARDS},
                       days=days,now=now,observed_at=now,root=root)
     if diagnostic['decision']=='unknown':
@@ -146,10 +182,12 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
             ready=max(dates)+days*86400
         if size>max_bytes:
             reason='file_exceeds_batch_limit';ready=None
-        rows.append({'file':key[len(root)+1:],'bytes':size,'age_ready_at':ready,'reason':reason})
+        ratio=content_ratio(key,torrents,mounts)
+        rows.append({'file':key[len(root)+1:],'bytes':size,'age_ready_at':ready,'reason':reason,
+                     'ratio':ratio,'ratio_target_met':ratio is not None and target_ratio>0 and ratio>=target_ratio})
     rows.sort(key=lambda r:(r['age_ready_at'] is None,r['age_ready_at'] or 0,r['file']))
     return {'version':1,'observed_at':now,'age_days':days,'rows':rows,
-            'file_count':len(rows),'total_bytes':sum(r['bytes'] for r in rows),
+            'max_bytes':max_bytes,'ratio_target':target_ratio,'file_count':len(rows),'total_bytes':sum(r['bytes'] for r in rows),
             'blockers':[k for k in REQUIRED_GUARDS if guards.get(k)!='pass'],
             'execution_allowed':False}
 

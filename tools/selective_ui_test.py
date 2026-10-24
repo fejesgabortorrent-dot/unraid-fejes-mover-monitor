@@ -39,7 +39,9 @@ class SelectiveInterface(unittest.TestCase):
                 runner=runner.replace(key,json.dumps(value))
             result=subprocess.run(['php'],input=runner,text=True,capture_output=True,check=True)
             self.assertEqual(result.stderr,'')
-            return json.loads(result.stdout)
+            output=json.loads(result.stdout)
+            output['config']=json.loads((lab/'selective.json').read_text())
+            return output
 
     def request(self,**extra):
         return dict(fejes_csrf='test-token',source_hash='CURRENT',action='run',**extra)
@@ -98,5 +100,29 @@ class SelectiveInterface(unittest.TestCase):
         result=self.render(request)
         self.assertEqual(len(result['calls']),1)
         self.assertTrue(result['calls'][0].endswith('selective_mover.py preview 2>/dev/null'))
+
+
+    def test_ratio_settings_are_localized_and_validate_before_saving(self):
+        for lang,label in [('hu','Megosztási arány'),('en','Share ratio'),('de','Freigabeverhältnis')]:
+            self.assertIn(label,self.render(lang=lang)['html'])
+        for ratio in ['-1','101','NaN','1e2','<script>',[]]:
+            result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='7',ratio_target=ratio))
+            self.assertIn('role="alert"',result['html'])
+            self.assertEqual(result['config'],{'version':1,'age_days':7})
+            self.assertFalse(result['calls'])
+
+    def test_valid_ratio_saves_without_starting_worker(self):
+        result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='14',ratio_target='1.25'))
+        self.assertEqual(result['config'],{'version':1,'age_days':14,'ratio_target':1.25,'batch_gib':16})
+        self.assertFalse(result['calls'])
+
+    def test_larger_batch_is_explicit_and_saved_without_movement(self):
+        result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='7',ratio_target='1',batch_gib='32'))
+        self.assertEqual(result['config']['batch_gib'],32)
+        self.assertIn('8 fájl / 32 GiB',result['html'])
+        self.assertFalse(result['calls'])
+        for value in ['0','-1','256','32.0',[]]:
+            result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='7',batch_gib=value))
+            self.assertEqual(result['config'],{'version':1,'age_days':7})
 
 if __name__=='__main__':unittest.main()
