@@ -1,0 +1,16 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const text=fs.readFileSync(__dirname+'/../src/FejesMoverSelective.page','utf8');
+const source=[...text.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).find(s=>s.includes('function applyFilters')).replace(/<\?=[\s\S]*?\?>/g,s=>JSON.stringify(s.includes('⚠')?'STALE':s.includes('Display refreshed')?'FRESH: ':'label'));
+const ids={'fms-run':{disabled:false},'fms-refresh-state':{textContent:'loaded'},'fms-last':{dataset:{running:'0'},replaceWith(){replaced++}}};
+let intervals=[],scenario='network',fetches=0,replaced=0,serverDisabled=false,cardsUpdated=0;
+const document={hidden:false,querySelectorAll:()=>[],querySelector:s=>({replaceWith(){cardsUpdated++}}),getElementById:id=>ids[id]};
+const context={window:{},document,location:{pathname:'/Tools/FejesMoverSelective'},Date,Number,String,Array,Math,AbortController,setTimeout(){return 1},clearTimeout(){},setInterval:f=>intervals.push(f),fetch:async()=>{fetches++;if(scenario==='network')throw Error('offline');return{ok:scenario!=='http',text:async()=>scenario}},DOMParser:class{parseFromString(){return{getElementById:id=>id==='fms-last'?(scenario==='login'?null:{dataset:{running:'0'}}):id==='fms-run'?{disabled:serverDisabled}:null,querySelector:()=>({})}}}};
+vm.runInNewContext(source,context);const poll=intervals.at(-1);
+(async()=>{await poll();assert.equal(ids['fms-refresh-state'].textContent,'STALE');assert.equal(ids['fms-run'].disabled,true);assert.equal(replaced,0);
+ scenario='valid';await poll();assert.match(ids['fms-refresh-state'].textContent,/^FRESH:/);assert.equal(ids['fms-run'].disabled,false);assert.equal(replaced,1);assert.equal(cardsUpdated,2);
+ scenario='login';await poll();assert.equal(ids['fms-refresh-state'].textContent,'STALE');assert.equal(ids['fms-run'].disabled,true);assert.equal(replaced,1);assert.equal(cardsUpdated,2);
+ scenario='valid';serverDisabled=true;await poll();assert.equal(ids['fms-run'].disabled,true);assert.equal(replaced,2);
+ scenario='http';await poll();assert.equal(ids['fms-refresh-state'].textContent,'STALE');assert.equal(replaced,2);
+ document.hidden=true;const before=fetches;await poll();assert.equal(fetches,before);
+ console.log('Selective offline/HTTP/login failures, stale feedback, recovery, server-disabled state and hidden-tab pause passed.');
+})().catch(e=>{console.error(e);process.exitCode=1});

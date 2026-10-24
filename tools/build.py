@@ -5,7 +5,7 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.10.24.5'
+version='2026.10.24.6'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_preview.py','selective_mover.py','wire_selective.py')]
 
@@ -14,6 +14,10 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.10.24.6 (experimental beta)
+- Preserve raised-card styling through dashboard polling replacements.
+- Refresh selective status/cache summary cards alongside the detailed report without resetting filters or sorting.
+- Show stale selective data after refresh/sign-in failures and disable manual movement until a valid refresh restores server state.
 ### 2026.10.24.5 (experimental beta)
 - Add optional raised/flat styling, responsive queue cards and accessible controls in Hungarian, English and German.
 - Add ascending/descending queue sorting, with unknown values last; display order never changes execution order.
