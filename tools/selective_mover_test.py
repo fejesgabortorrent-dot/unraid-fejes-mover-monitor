@@ -119,7 +119,7 @@ class DispatchSafety(unittest.TestCase):
         with self.assertRaises(ValueError): prepare(guarded+'\n# unexpected drift\n')
 
 class BatchReporting(unittest.TestCase):
-    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False):
+    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False,inspection_on_lock=False):
         from contextlib import ExitStack
         with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
             root=Path(folder)
@@ -130,9 +130,17 @@ class BatchReporting(unittest.TestCase):
             stack.enter_context(patch.object(mover,'PID',root/'mover.pid'))
             attempt=root/'attempt';stack.enter_context(patch.object(mover,'ATTEMPT',attempt))
             stack.enter_context(patch.object(mover,'open',side_effect=lambda *a,**k:io.StringIO(),create=True))
-            stack.enter_context(patch.object(mover.fcntl,'flock'))
-            stack.enter_context(patch.object(mover,'read_json',return_value={}))
-            stack.enter_context(patch.object(mover,'atomic_json',side_effect=lambda p,r:writes.append(json.loads(json.dumps(r)))))
+            prior={};lock_count=0
+            def acquire(*args):
+                nonlocal lock_count
+                lock_count+=1
+                if inspection_on_lock and lock_count==4:prior['requires_inspection']=True
+            def save(path,value):
+                if path==attempt:path.write_text(json.dumps(value))
+                else:writes.append(json.loads(json.dumps(value)))
+            stack.enter_context(patch.object(mover.fcntl,'flock',side_effect=acquire))
+            stack.enter_context(patch.object(mover,'read_json',side_effect=lambda *args:dict(prior)))
+            stack.enter_context(patch.object(mover,'atomic_json',side_effect=save))
             stack.enter_context(patch.object(mover,'log'))
             stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'max_bytes':limit,'candidates':candidates,'blockers':[],'skipped':[]},[],inventory,[],[],{})))
             stack.enter_context(patch.object(mover,'torrent_snapshot',return_value=([],[])))
@@ -143,6 +151,20 @@ class BatchReporting(unittest.TestCase):
             if execute.call_count:self.assertTrue(any(w.get('active_file_started') is True for w in writes))
             self.assertFalse((root/'mover.pid').exists())
             return result,execute.call_count,attempt.exists()
+
+    def test_lock_setup_error_preserves_saved_outcome(self):
+        import io
+        saved=[]
+        with patch.object(mover,'open',side_effect=[io.StringIO(),OSError('lock unavailable')],create=True),patch.object(mover.fcntl,'flock'),patch.object(mover,'atomic_json',side_effect=lambda *args:saved.append(args)):
+            result=mover.run()
+        self.assertEqual(result['state'],'error')
+        self.assertEqual(saved,[])
+
+    def test_failure_recorded_by_previous_lock_owner_cannot_be_erased(self):
+        result,calls,attempt=self.run_batch([1],inspection_on_lock=True)
+        self.assertEqual(result['state'],'error')
+        self.assertTrue(result['requires_inspection'])
+        self.assertEqual(calls,0);self.assertFalse(attempt)
 
     def test_explicit_larger_batch_admits_large_file_but_respects_total(self):
         gib=1024**3
