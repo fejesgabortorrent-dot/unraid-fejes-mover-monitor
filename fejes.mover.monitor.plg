@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.24.1" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
+<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.24.2" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
 <CHANGES>
+### 2026.10.24.2 (experimental beta)
+- Add explicit one-day age option; existing installations retain their saved age and the seven-day default.
+- Cache arrival, modification and torrent completion must all satisfy the selected age; active/open content and maintenance guards remain protected.
 ### 2026.10.24.1 (experimental beta)
 - Add optional share-ratio priority and private per-file ratio display; low or unknown ratios never block eligible files.
 - Add explicit 16/32/64/128 GiB batch choices, keeping the default at 16 GiB and the 8-file cap.
@@ -70,7 +73,7 @@
 - Optional legacy threshold settings, retained only on systems with the existing script.
 - Installer validates PHP before activation and preserves local backup files.
 </CHANGES>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
 ---
 <?php
 $fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
@@ -167,7 +170,7 @@ HTML;
 
 <?php } ?>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Monitor"
 Icon="fa-exchange"
 Tag="cogs"
@@ -464,7 +467,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
 Title="FejesMover védelem"
 Icon="fa-shield"
 Tag="cogs"
@@ -827,7 +830,7 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
 // Shared, fail-closed runtime configuration. No settings or automation writes here.
 return (static function ($configWrite) {
     $language = $_COOKIE['fejes_mover_lang'] ?? 'hu';
@@ -923,7 +926,7 @@ HTML;
         't'=>$t,'esc'=>$esc,'banner'=>$banner];
 })(!empty($fmcConfigWrite));
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/FejesMoverSelective.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/FejesMoverSelective.page"><INLINE><![CDATA[Menu="Utilities"
 
 Title="Mover · Selective"
 
@@ -947,13 +950,13 @@ $path='/boot/config/plugins/fejes.mover.monitor/selective.json';
 $raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;$ratioTarget=0;$batchGiB=16;
 try {
  if(is_link($path)||($raw===false&&file_exists($path)))throw new RuntimeException('Configuration unavailable');
- if($raw!==false){$settings=json_decode($raw,true,512,JSON_THROW_ON_ERROR);if(($settings['version']??null)!==1||!in_array($settings['age_days']??null,[7,14,30],true))throw new RuntimeException('Invalid configuration');$days=$settings['age_days'];$batchGiB=$settings['batch_gib']??16;if(!in_array($batchGiB,[16,32,64,128],true))throw new RuntimeException('Invalid batch size');$ratioTarget=$settings['ratio_target']??0;if((!is_int($ratioTarget)&&!is_float($ratioTarget))||!is_finite((float)$ratioTarget)||$ratioTarget<0||$ratioTarget>100)throw new RuntimeException('Invalid ratio target');}
+ if($raw!==false){$settings=json_decode($raw,true,512,JSON_THROW_ON_ERROR);if(($settings['version']??null)!==1||!in_array($settings['age_days']??null,[1,7,14,30],true))throw new RuntimeException('Invalid configuration');$days=$settings['age_days'];$batchGiB=$settings['batch_gib']??16;if(!in_array($batchGiB,[16,32,64,128],true))throw new RuntimeException('Invalid batch size');$ratioTarget=$settings['ratio_target']??0;if((!is_int($ratioTarget)&&!is_float($ratioTarget))||!is_finite((float)$ratioTarget)||$ratioTarget<0||$ratioTarget>100)throw new RuntimeException('Invalid ratio target');}
  if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   if($fmc['error']||$fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||!$fmc['mounted'])throw new RuntimeException('Advanced cache mode required');
   if(!is_string($_POST['fejes_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fejes_csrf']))throw new RuntimeException('Invalid session');
   $action=$_POST['action']??null;
   if($action==='save'){
-   $new=$_POST['age_days']??null;if(!is_string($new)||!in_array($new,['7','14','30'],true))throw new RuntimeException('Invalid age');
+   $new=$_POST['age_days']??null;if(!is_string($new)||!in_array($new,['1','7','14','30'],true))throw new RuntimeException('Invalid age');
    $batch=$_POST['batch_gib']??(string)$batchGiB;if(!is_string($batch)||!in_array($batch,['16','32','64','128'],true))throw new RuntimeException('Invalid batch size');
    $ratio=$_POST['ratio_target']??(string)$ratioTarget;if(!is_string($ratio)||!preg_match('/^(?:[0-9]{1,3})(?:\.[0-9]{1,2})?$/D',$ratio)||(float)$ratio>100)throw new RuntimeException('Invalid ratio target');
    $lock=fopen('/var/run/fejes-selective-inventory.lock','c');if(!$lock||!flock($lock,LOCK_EX|LOCK_NB))throw new RuntimeException('Busy');
@@ -1071,7 +1074,7 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <?php else:?><p><?=$e($t('Még nincs aktuális felmérés ehhez a korhatárhoz. Nyomd meg a Friss állapot lekérése gombot: ez nem mozgat fájlt.','No current observation for this age setting. Press Refresh status; it does not move files.','Keine aktuelle Erfassung für dieses Alter. Status aktualisieren drücken; dabei werden keine Dateien verschoben.'))?></p><?php endif?>
 </section>
 <details class="fms-panel"><summary><?=$e($t('Beállítások · korhatár és felmérés','Settings · age and observation','Einstellungen · Alter und Erfassung'))?></summary><fieldset><legend><?=$e($t('Minimumkor','Minimum age','Mindestalter'))?></legend>
-<?php foreach([7,14,30] as $choice):?><label style="margin-right:22px"><input type="radio" name="age_days" value="<?=$choice?>" <?=$days===$choice?'checked':''?>> <?=$choice?> <?=$e($t('nap','days','Tage'))?></label><?php endforeach?>
+<?php foreach([1,7,14,30] as $choice):?><label style="margin-right:22px"><input type="radio" name="age_days" value="<?=$choice?>" <?=$days===$choice?'checked':''?>> <?=$choice?> <?=$e($t('nap','days','Tage'))?></label><?php endforeach?>
 </fieldset>
 <fieldset><legend><?=$e($t('Mozgatási kör méretkorlátja','Movement batch limit','Größenlimit pro Lauf'))?></legend>
 <label for="fms-batch"><?=$e($t('Legfeljebb GiB körönként','Maximum GiB per batch','Maximale GiB pro Lauf'))?></label><select id="fms-batch" name="batch_gib"><?php foreach([16,32,64,128] as $limit):?><option value="<?=$limit?>" <?=$batchGiB===$limit?'selected':''?>><?=$limit?> GiB</option><?php endforeach?></select>
@@ -1107,7 +1110,7 @@ if(search&&filter&&video){search.addEventListener('input',applyFilters);filter.a
 let busy=false;setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),timer=setTimeout(()=>c.abort(),8000);try{const response=await fetch(location.pathname,{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!response.ok)throw Error();const doc=new DOMParser().parseFromString(await response.text(),'text/html');const part=doc.getElementById('fms-last'),current=document.getElementById('fms-last');if(part&&current)current.replaceWith(part);tick();}catch{}finally{clearTimeout(timer);busy=false;}},5000);
 })();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Settings"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1404,7 +1407,7 @@ finally{if($msTmp&&is_file($msTmp))unlink($msTmp);if(is_resource($msLock)){flock
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover · Mód és pool"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1599,7 +1602,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Read-only, conservative qBittorrent gate for an external Mover launcher."""
 import argparse
 import json
@@ -1715,7 +1718,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Run an existing generated Bunker schedule with live torrent exclusions."""
 import argparse
 import pathlib
@@ -1817,7 +1820,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Route the existing File Integrity cron job through its reviewed preflight."""
 import argparse
 import datetime
@@ -1925,7 +1928,7 @@ if __name__ == "__main__":
               "errno=" + str(getattr(exc, "errno", None)))
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Shared read-only diagnostics and an opt-in guarded legacy Mover launcher."""
 import argparse
 import fcntl
@@ -2152,7 +2155,7 @@ def main(argv=None):
 if __name__ == '__main__':
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Add an opt-in torrent gate to the reviewed legacy threshold script."""
 import argparse
 import datetime
@@ -2289,7 +2292,7 @@ if __name__ == '__main__':
         print('Mover wiring did not complete:', type(exc).__name__)
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/selection_policy.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/selection_policy.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Pure selection policy; never authorizes or executes a live move.
 
 Inputs must be collected by a trusted host adapter. Files and torrent content
@@ -2298,7 +2301,7 @@ paths must use one canonical host namespace (not mixed /mnt/user and disk paths)
 import math
 from torrent_preflight import absolute_path, host_path, assess
 
-AGE_OPTIONS = (7, 14, 30)
+AGE_OPTIONS = (1, 7, 14, 30)
 DEFAULT_AGE_DAYS = 7
 QUIET_STATES = {'stalledUP', 'queuedUP', 'stoppedUP', 'pausedUP'}
 REQUIRED_GUARDS = ('backup', 'parity', 'integrity', 'mount', 'mover',
@@ -2307,7 +2310,7 @@ REQUIRED_GUARDS = ('backup', 'parity', 'integrity', 'mount', 'mover',
 
 def age_days(value):
     if type(value) is not int or value not in AGE_OPTIONS:
-        raise ValueError('Age must be 7, 14 or 30 days')
+        raise ValueError('Age must be 1, 7, 14 or 30 days')
     return value
 
 
@@ -2511,7 +2514,7 @@ if __name__ == '__main__':
     import sys
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/selective_preview.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/selective_preview.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Live inventory and read-only selection preview. No movement entry point."""
 import argparse
 import fcntl
@@ -2699,7 +2702,7 @@ def main():
 if __name__ == '__main__':
     raise SystemExit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/selective_mover.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/selective_mover.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Age-filtered native Unraid movement. No global mover invocation.
 
 Production scope is fixed to cache/Filmek -> the array with unchanged user-share
@@ -3054,7 +3057,7 @@ def main():
 
 if __name__=='__main__': raise SystemExit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.1/wire_selective.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.24.2/wire_selective.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Reviewed opt-in dispatch; default is check-only, never starts movement."""
 import argparse
 import datetime
@@ -3113,7 +3116,7 @@ if __name__=='__main__':
 ]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.10.24.1
+src=/tmp/fejes-mover-monitor-2026.10.24.2
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }

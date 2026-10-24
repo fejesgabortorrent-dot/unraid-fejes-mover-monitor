@@ -7,7 +7,7 @@ paths must use one canonical host namespace (not mixed /mnt/user and disk paths)
 import math
 from torrent_preflight import absolute_path, host_path, assess
 
-AGE_OPTIONS = (7, 14, 30)
+AGE_OPTIONS = (1, 7, 14, 30)
 DEFAULT_AGE_DAYS = 7
 QUIET_STATES = {'stalledUP', 'queuedUP', 'stoppedUP', 'pausedUP'}
 REQUIRED_GUARDS = ('backup', 'parity', 'integrity', 'mount', 'mover',
@@ -16,7 +16,7 @@ REQUIRED_GUARDS = ('backup', 'parity', 'integrity', 'mount', 'mover',
 
 def age_days(value):
     if type(value) is not int or value not in AGE_OPTIONS:
-        raise ValueError('Age must be 7, 14 or 30 days')
+        raise ValueError('Age must be 1, 7, 14 or 30 days')
     return value
 
 
