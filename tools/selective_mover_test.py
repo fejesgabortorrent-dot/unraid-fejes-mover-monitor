@@ -75,6 +75,11 @@ class NativeSafety(unittest.TestCase):
         with patch.object(mover,'read_json',return_value={'requires_inspection':True}):
             with self.assertRaises(ValueError): mover.guards()
 
+    def test_interrupted_running_report_blocks_before_storage_access(self):
+        for prior in [{'state':'running'},{'active_file_started':True}]:
+            with patch.object(mover,'read_json',return_value=prior):
+                with self.assertRaises(ValueError):mover.guards()
+
     def test_no_native_invocation_when_fresh_check_fails(self):
         with patch.object(mover,'fresh_candidate',return_value=(Path('/unused'),False)),patch.object(mover.subprocess,'run') as native:
             self.assertEqual(mover.execute_file('/unused',{},7)['state'],'skipped')
@@ -114,7 +119,7 @@ class DispatchSafety(unittest.TestCase):
         with self.assertRaises(ValueError): prepare(guarded+'\n# unexpected drift\n')
 
 class BatchReporting(unittest.TestCase):
-    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES):
+    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False):
         from contextlib import ExitStack
         with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
             root=Path(folder)
@@ -132,8 +137,10 @@ class BatchReporting(unittest.TestCase):
             stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'max_bytes':limit,'candidates':candidates,'blockers':[],'skipped':[]},[],inventory,[],[],{})))
             stack.enter_context(patch.object(mover,'torrent_snapshot',return_value=([],[])))
             execute=stack.enter_context(patch.object(mover,'execute_file',side_effect=lambda key,*a:{'state':'skipped','reason':'native_retained_source'} if retained else {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'fixture'}))
+            if io_error:execute.side_effect=BlockingIOError('fixture file I/O unavailable')
             result=mover.run()
             self.assertEqual(writes[-1],result)
+            if execute.call_count:self.assertTrue(any(w.get('active_file_started') is True for w in writes))
             self.assertFalse((root/'mover.pid').exists())
             return result,execute.call_count,attempt.exists()
 
@@ -142,6 +149,12 @@ class BatchReporting(unittest.TestCase):
         result,calls,_=self.run_batch([18*gib,15*gib],limit=32*gib)
         self.assertEqual(result['moved_bytes'],18*gib)
         self.assertEqual(result['skipped'],{'batch_size_limit':1})
+        self.assertEqual(calls,1)
+
+    def test_io_contention_during_execution_is_an_inspection_error(self):
+        result,calls,_=self.run_batch([1],io_error=True)
+        self.assertEqual(result['state'],'error')
+        self.assertTrue(result['requires_inspection'])
         self.assertEqual(calls,1)
 
     def test_all_oversized_files_are_counted_without_execution(self):
