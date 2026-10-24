@@ -10,13 +10,15 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.24.4 · Experimental beta · Unraid 7.x**
+**2026.10.24.5 · Experimental beta · Unraid 7.x**
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
 Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Installation and mode changes never start movement or install a schedule. Advanced/cache mode includes authenticated, opt-in age-filtered movement for the existing `Filmek` share and reviewed threshold automation. The app is listed in the owner's Community Applications search; listing is not broad hardware certification.
 
 **Magyar:** Az új szelektív mozgató kihagyja a túl fiatal, félkész, aktív, megnyitott vagy megváltozott fájlokat. A korhatár 1 / 7 / 14 / 30 nap; a cache-ben igazolt első megfigyelés is számít. A natív Unraid-mozgatót használja, a célon SHA-256-ot és metaadatokat ellenőriz. Az automatikus bekötés külön, mentéssel történik; telepítéskor nem változik a meglévő ütemezés.
+
+Raised / flat cards, consistent Back / Forward / Home navigation, and bidirectional queue sorting are available in Hungarian, English and German. Display preferences and sorting never alter movement rules or schedules.
 
 ## Screenshots / Képernyőképek
 
@@ -26,19 +28,19 @@ Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/F
 
 ### Mover Monitor / Figyelő
 
-![Mover Monitor — English simulated preview](docs/images/store-en-monitor-20261023.jpg)
+![Mover Monitor — English simulated preview](docs/images/store-en-monitor-20261024.jpg)
 
 ### Dashboard card / Dashboard-kártya
 
-![Dashboard card — English simulated preview](docs/images/store-en-dashboard-20261023.jpg)
+![Dashboard card — English simulated preview](docs/images/store-en-dashboard-20261024.jpg)
 
 ### Settings / Beállítások
 
-![Settings — English simulated preview](docs/images/store-en-settings-20261023.jpg)
+![Settings — English simulated preview](docs/images/store-en-settings-20261024.jpg)
 
 ### Selective movement / Szelektív mozgatás
 
-![Selective movement — English simulated preview](docs/images/store-en-selective-20261023.jpg)
+![Selective movement — English simulated preview](docs/images/store-en-selective-20261024.jpg)
 
 To refresh the gallery after a design change, run `tools/export_store_preview.py` with PHP and Bash on PATH, serve the exported HTML on loopback, and capture the pages in a browser. Inspect every image for private information and rendering errors. Use new dated filenames and update both this gallery and the `<Screenshot>` entries in `plugins/fejes-mover-monitor.xml`; Community Applications may take time to refresh its index. Screenshot-only updates do not require a plugin reinstall.
 

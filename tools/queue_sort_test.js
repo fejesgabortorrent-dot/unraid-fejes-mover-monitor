@@ -1,0 +1,17 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const text=fs.readFileSync(__dirname+'/../src/FejesMoverSelective.page','utf8');
+const script=[...text.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).find(s=>s.includes('const collator='));
+const row=(name,size,ratio,ready)=>({dataset:{sortName:name,sortSize:size,sortRatio:ratio,sortReady:ready},lastElementChild:{textContent:name},hidden:false});
+const rows=[row('episode10','10737418240','2','200'),row('episode2','2147483648','0.5','100'),row('unknown','1','','')];let ordered=rows.slice();
+const control=()=>({value:'original',disabled:false,addEventListener(k,f){this[k]=f}}),select=control(),direction=control();
+const heads=['name','size','ratio','ready','remaining','status'].map(key=>({dataset:{fmsSort:key},parentElement:{attrs:{},setAttribute(k,v){this.attrs[k]=v}},arrow:{},querySelector(){return this.arrow},addEventListener(k,f){this[k]=f}}));
+const body={querySelectorAll:()=>rows,appendChild(r){ordered=ordered.filter(x=>x!==r);ordered.push(r)}};
+const table={querySelector:()=>body,querySelectorAll:()=>heads};
+vm.runInNewContext(script.replace(/<\?=[\s\S]*?\?>/g,JSON.stringify('direction')),{document:{querySelector:()=>table,getElementById:id=>id==='fms-sort-key'?select:direction},Intl,Number,Array,Map});
+const names=()=>ordered.map(r=>r.dataset.sortName);
+heads[3].click();assert.deepEqual(names(),['episode2','episode10','unknown']);assert.equal(heads[3].parentElement.attrs['aria-sort'],'ascending');heads[3].click();assert.deepEqual(names(),['episode10','episode2','unknown']);assert.equal(heads[3].parentElement.attrs['aria-sort'],'descending');
+select.value='size';select.change();assert.deepEqual(names(),['unknown','episode2','episode10']);direction.click();assert.deepEqual(names(),['episode10','episode2','unknown']);
+select.value='ratio';select.change();assert.deepEqual(names(),['episode2','episode10','unknown']);direction.click();assert.deepEqual(names(),['episode10','episode2','unknown']);
+rows[1].hidden=true;heads[0].click();assert.deepEqual(names(),['episode2','episode10','unknown']);assert.equal(rows[1].hidden,true);
+select.value='original';select.change();assert.deepEqual(names(),['episode10','episode2','unknown']);assert.equal(direction.disabled,true);
+console.log('Chronological directions, raw numeric size/ratio, unknown-last, natural names, filter preservation and original order passed.');
