@@ -10,7 +10,7 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.24.3 · Experimental beta · Unraid 7.x**
+**2026.10.24.4 · Experimental beta · Unraid 7.x**
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
@@ -43,6 +43,8 @@ Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/F
 To refresh the gallery after a design change, run `tools/export_store_preview.py` with PHP and Bash on PATH, serve the exported HTML on loopback, and capture the pages in a browser. Inspect every image for private information and rendering errors. Use new dated filenames and update both this gallery and the `<Screenshot>` entries in `plugins/fejes-mover-monitor.xml`; Community Applications may take time to refresh its index. Screenshot-only updates do not require a plugin reinstall.
 
 ## Features
+
+- Shared, localized navigation on plugin views and the Dashboard card: deterministic Back, Home, Monitor, Movement, Settings and Mode/pool links. The current page is marked; links do not submit forms. Selective settings are open by default, with a ratio slider and Off/1.0/2.0 presets. Values still require an explicit settings save; movement remains a separate confirmed action.
 
 - Optional share-ratio priority (0 disables it, target up to 100): already eligible files whose torrents meet the target go first. Low or unknown ratios never withhold a file. Shared content uses the lowest known owner ratio; missing owner values remain unknown. Ratio is not a tracker seed-time exemption and never bypasses age, activity or safety guards.
 - Explicit batch-size selection for larger media: 16 / 32 / 64 / 128 GiB, still at most 8 files. Existing installations keep 16 GiB until an authenticated settings save. No schedule or live configuration is changed by installation.

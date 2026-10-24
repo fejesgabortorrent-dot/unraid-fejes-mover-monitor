@@ -130,4 +130,11 @@ class SelectiveInterface(unittest.TestCase):
         self.assertEqual(result['config']['age_days'],1)
         self.assertFalse(result['calls'])
 
+    def test_ratio_presets_are_non_submitting_controls(self):
+        html=self.render()['html']
+        self.assertIn('data-fms-ratio-slider',html)
+        for value in [0,1,2]:
+            self.assertIn(f'type="button" data-fms-ratio-preset="{value}"',html)
+        self.assertIn('<details class="fms-panel" open>',html)
+
 if __name__=='__main__':unittest.main()

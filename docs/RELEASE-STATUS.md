@@ -1,4 +1,4 @@
-# Experimental beta — 2026.10.24.3
+# Experimental beta — 2026.10.24.4
 
 Candidate .24.1 adds optional ratio priority and an explicit batch size selector. Ratio affects order only after eligibility; low/missing ratios never withhold candidates. Shared ownership uses the minimum ratio, unknown values remain unknown. The private queue gains a ratio column. Existing configs default to priority disabled and 16 GiB. Saves retain config backups and reject concurrent/stale forms. Neither feature overrides age, torrent activity, maintenance or integrity guards. No production media or live reboot acceptance is claimed for this candidate.
 
@@ -41,3 +41,9 @@ Do not clear the inspection flag or remove a running report automatically: first
 check the source, destination, user-share view and torrent state. Controlled
 fixtures cover interrupted reports and file-I/O failures. This does not certify
 physical power-loss or real-NAS reboot recovery.
+
+
+The .24.4 interface candidate adds shared deterministic navigation, current-page
+indication, expanded selective settings and ratio slider/preset controls. No
+configuration, schedule or movement policy is changed by navigation or presets.
+Browser visual acceptance remains outstanding; do not label this as live-tested UI.

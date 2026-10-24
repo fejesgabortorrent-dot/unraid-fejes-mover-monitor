@@ -5,8 +5,9 @@ assert.ok(source);
 const row=(name,reason,video)=>({textContent:name,dataset:{reason,video},hidden:false});
 const rows=[row('Series/EPISODE.mkv','too_young','1'),row('Series/poster.jpg','too_young','0'),row('Other/movie.mp4','ready','1'),row('Other/blocked.mkv','protected_content','1'),row('Large/huge.mkv','file_exceeds_batch_limit','1')];
 const control=()=>({value:'',checked:false,addEventListener(type,fn){this[type]=fn}});
-const ids={'fms-search':control(),'fms-filter':control(),'fms-video':control(),'fms-visible':{},'fms-no-results':{}};ids['fms-filter'].value='all';
-vm.runInNewContext(source.replace(/<\?=[\s\S]*?\?>/g,JSON.stringify('label')),{document:{hidden:false,querySelectorAll:q=>q==='[data-fms-row]'?rows:[],getElementById:id=>ids[id]},Date,Number,String,Array,Math,setInterval(){},setTimeout(){},clearTimeout(){},AbortController});
+const presets=[0,1,2].map(n=>Object.assign(control(),{dataset:{fmsRatioPreset:String(n)}}));
+const ids={'fms-ratio':Object.assign(control(),{validity:{valid:true}}),'fms-ratio-slider':control(),'fms-search':control(),'fms-filter':control(),'fms-video':control(),'fms-visible':{},'fms-no-results':{}};ids['fms-filter'].value='all';
+vm.runInNewContext(source.replace(/<\?=[\s\S]*?\?>/g,JSON.stringify('label')),{document:{hidden:false,querySelectorAll:q=>q==='[data-fms-row]'?rows:q==='[data-fms-ratio-preset]'?presets:[],getElementById:id=>ids[id]},Date,Number,String,Array,Math,setInterval(){},setTimeout(){},clearTimeout(){},AbortController});
 assert.equal(ids['fms-visible'].textContent,'5 / 5');
 ids['fms-search'].value='series/episode';ids['fms-search'].input();assert.deepEqual(rows.map(r=>r.hidden),[false,true,true,true,true]);
 ids['fms-search'].value='';ids['fms-video'].checked=true;ids['fms-video'].change();assert.equal(ids['fms-visible'].textContent,'4 / 5');
@@ -14,3 +15,8 @@ ids['fms-filter'].value='too_young';ids['fms-filter'].change();assert.equal(ids[
 ids['fms-filter'].value='other';ids['fms-filter'].change();assert.equal(rows[4].hidden,false);assert.equal(ids['fms-visible'].textContent,'1 / 5');
 ids['fms-search'].value='absent';ids['fms-search'].input();assert.equal(ids['fms-no-results'].hidden,false);
 console.log('Queue search, combined status/video filters and empty state passed.');
+
+ids['fms-ratio-slider'].value='1.5';ids['fms-ratio-slider'].input();assert.equal(ids['fms-ratio'].value,'1.5');
+ids['fms-ratio'].value='2';ids['fms-ratio'].input();assert.equal(ids['fms-ratio-slider'].value,'2');
+presets[0].click();assert.equal(ids['fms-ratio'].value,'0');assert.equal(ids['fms-ratio-slider'].value,'0');
+console.log('Ratio slider, numeric input and non-submitting presets stay synchronized.');

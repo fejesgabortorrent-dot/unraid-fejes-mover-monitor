@@ -145,7 +145,7 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 </tbody></table></div>
 <?php else:?><p><?=$e($t('Még nincs aktuális felmérés ehhez a korhatárhoz. Nyomd meg a Friss állapot lekérése gombot: ez nem mozgat fájlt.','No current observation for this age setting. Press Refresh status; it does not move files.','Keine aktuelle Erfassung für dieses Alter. Status aktualisieren drücken; dabei werden keine Dateien verschoben.'))?></p><?php endif?>
 </section>
-<details class="fms-panel"><summary><?=$e($t('Beállítások · korhatár és felmérés','Settings · age and observation','Einstellungen · Alter und Erfassung'))?></summary><fieldset><legend><?=$e($t('Minimumkor','Minimum age','Mindestalter'))?></legend>
+<details class="fms-panel" open><summary><?=$e($t('Beállítások · korhatár és felmérés','Settings · age and observation','Einstellungen · Alter und Erfassung'))?></summary><fieldset><legend><?=$e($t('Minimumkor','Minimum age','Mindestalter'))?></legend>
 <?php foreach([1,7,14,30] as $choice):?><label style="margin-right:22px"><input type="radio" name="age_days" value="<?=$choice?>" <?=$days===$choice?'checked':''?>> <?=$choice?> <?=$e($t('nap','days','Tage'))?></label><?php endforeach?>
 </fieldset>
 <fieldset><legend><?=$e($t('Mozgatási kör méretkorlátja','Movement batch limit','Größenlimit pro Lauf'))?></legend>
@@ -154,6 +154,8 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <fieldset><legend><?=$e($t('Megosztási arány · sorrendezés','Share ratio · priority','Freigabeverhältnis · Priorität'))?></legend>
 <label for="fms-ratio"><?=$e($t('Célérték (0 = kikapcsolva)','Target (0 = disabled)','Ziel (0 = deaktiviert)'))?></label>
 <input id="fms-ratio" type="number" name="ratio_target" min="0" max="100" step="0.01" value="<?=$e($ratioTarget)?>">
+<div class="fms-ratio-controls"><input type="range" min="0" max="100" step="0.01" value="<?=$e($ratioTarget)?>" id="fms-ratio-slider" data-fms-ratio-slider aria-label="<?=$e($t('Aránycél csúszka','Ratio target slider','Regler für Verhältnisziel'))?>">
+<?php foreach([0,1,2] as $preset):?><button type="button" data-fms-ratio-preset="<?=$preset?>"><?=$preset===0?$e($t('Kikapcsolva','Disabled','Deaktiviert')):$preset.'.0'?></button><?php endforeach?></div>
 <p><?=$e($t('A célértéket elért torrentek alkalmas fájljai előre kerülnek. Az alacsony vagy ismeretlen arány nem akadályozza a mozgatást. A korhatár és minden védelem továbbra is érvényes; a seedelés folytatódhat.','Eligible files whose torrents meet the target go first. Low or unknown ratios do not block movement. Age and all safety guards still apply; seeding can continue.','Geeignete Dateien mit erreichtem Torrent-Ziel werden bevorzugt. Niedrige oder unbekannte Werte blockieren nichts. Alter und alle Schutzbedingungen gelten weiterhin; Seeding kann fortgesetzt werden.'))?></p></fieldset>
 <p><button name="action" value="save"><?=$e($t('Beállítások mentése','Save settings','Einstellungen speichern'))?></button>
 </p><button name="action" value="observe"><?=$e($t('Felmérés rögzítése','Record observation','Erfassung speichern'))?></button><p><a href="/Tools/FejesMoverSettings"><?=$e($t('Szabadhely-küszöb és várakozási idő','Free-space threshold and cooldown','Freiplatzgrenze und Wartezeit'))?></a></p></details>
@@ -174,6 +176,8 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 </main>
 <script>(()=>{
 const readyLabel=<?=json_encode($t('Korhatár lejárt','Age eligible now','Alter erfüllt'))?>,dayLabel=<?=json_encode($t('nap','days','Tage'))?>;
+const ratioInput=document.getElementById('fms-ratio'),ratioSlider=document.getElementById('fms-ratio-slider');
+if(ratioInput&&ratioSlider){ratioSlider.addEventListener('input',()=>{ratioInput.value=ratioSlider.value;});ratioInput.addEventListener('input',()=>{if(ratioInput.value!==''&&ratioInput.validity.valid)ratioSlider.value=ratioInput.value;});document.querySelectorAll('[data-fms-ratio-preset]').forEach(button=>button.addEventListener('click',()=>{ratioInput.value=button.dataset.fmsRatioPreset;ratioSlider.value=ratioInput.value;}));}
 function tick(){document.querySelectorAll('[data-fms-time]').forEach(el=>{const ms=Number(el.dataset.fmsTime)*1000;if(Number.isFinite(ms))el.textContent=new Date(ms).toLocaleString();});document.querySelectorAll('[data-fms-countdown]').forEach(el=>{const seconds=Math.max(0,Math.ceil(Number(el.dataset.fmsCountdown)-Date.now()/1000));if(!Number.isFinite(seconds))return;const days=Math.floor(seconds/86400),hours=Math.floor(seconds%86400/3600),minutes=Math.floor(seconds%3600/60),secs=seconds%60;el.textContent=seconds===0?readyLabel:(days?days+' '+dayLabel+' ':'')+[hours,minutes,secs].map(n=>String(n).padStart(2,'0')).join(':');});}tick();setInterval(tick,1000);
 
 const rows=Array.from(document.querySelectorAll('[data-fms-row]')),search=document.getElementById('fms-search'),filter=document.getElementById('fms-filter'),video=document.getElementById('fms-video');
