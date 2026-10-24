@@ -5,7 +5,7 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.10.23.998'
+version='2026.10.24.1'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_preview.py','selective_mover.py','wire_selective.py')]
 
@@ -14,6 +14,10 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.10.24.1 (experimental beta)
+- Add optional share-ratio priority and private per-file ratio display; low or unknown ratios never block eligible files.
+- Add explicit 16/32/64/128 GiB batch choices, keeping the default at 16 GiB and the 8-file cap.
+- Keep age, active/open torrent exclusions, native movement, SHA256 verification and schedules unchanged.
 ### 2026.10.23.998
 - Override host table-cell backgrounds in explicit palettes to preserve text contrast.
 ### 2026.10.23.997

@@ -19,27 +19,29 @@ echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $t=$fmc['t'];$e=$fmc['esc'];echo $fmc['banner'];
 $path='/boot/config/plugins/fejes.mover.monitor/selective.json';
-$raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;
+$raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;$ratioTarget=0;$batchGiB=16;
 try {
  if(is_link($path)||($raw===false&&file_exists($path)))throw new RuntimeException('Configuration unavailable');
- if($raw!==false){$settings=json_decode($raw,true,512,JSON_THROW_ON_ERROR);if(($settings['version']??null)!==1||!in_array($settings['age_days']??null,[7,14,30],true))throw new RuntimeException('Invalid configuration');$days=$settings['age_days'];}
+ if($raw!==false){$settings=json_decode($raw,true,512,JSON_THROW_ON_ERROR);if(($settings['version']??null)!==1||!in_array($settings['age_days']??null,[7,14,30],true))throw new RuntimeException('Invalid configuration');$days=$settings['age_days'];$batchGiB=$settings['batch_gib']??16;if(!in_array($batchGiB,[16,32,64,128],true))throw new RuntimeException('Invalid batch size');$ratioTarget=$settings['ratio_target']??0;if((!is_int($ratioTarget)&&!is_float($ratioTarget))||!is_finite((float)$ratioTarget)||$ratioTarget<0||$ratioTarget>100)throw new RuntimeException('Invalid ratio target');}
  if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   if($fmc['error']||$fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||!$fmc['mounted'])throw new RuntimeException('Advanced cache mode required');
   if(!is_string($_POST['fejes_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fejes_csrf']))throw new RuntimeException('Invalid session');
   $action=$_POST['action']??null;
   if($action==='save'){
    $new=$_POST['age_days']??null;if(!is_string($new)||!in_array($new,['7','14','30'],true))throw new RuntimeException('Invalid age');
+   $batch=$_POST['batch_gib']??(string)$batchGiB;if(!is_string($batch)||!in_array($batch,['16','32','64','128'],true))throw new RuntimeException('Invalid batch size');
+   $ratio=$_POST['ratio_target']??(string)$ratioTarget;if(!is_string($ratio)||!preg_match('/^(?:[0-9]{1,3})(?:\.[0-9]{1,2})?$/D',$ratio)||(float)$ratio>100)throw new RuntimeException('Invalid ratio target');
    $lock=fopen('/var/run/fejes-selective-inventory.lock','c');if(!$lock||!flock($lock,LOCK_EX|LOCK_NB))throw new RuntimeException('Busy');
    try {
     $current=@file_get_contents($path);if($current!==$raw||!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
-    $data=json_encode(['version'=>1,'age_days'=>(int)$new],JSON_THROW_ON_ERROR)."\n";
+    $data=json_encode(array_replace($settings??[],['version'=>1,'age_days'=>(int)$new,'ratio_target'=>(float)$ratio,'batch_gib'=>(int)$batch]),JSON_THROW_ON_ERROR)."\n";
     if($data!==$raw){
      if($raw!==false){$backup=$path.'.before-'.date('Ymd-His').'-'.bin2hex(random_bytes(3));if(file_put_contents($backup,$raw,LOCK_EX)!==strlen($raw)||file_get_contents($backup)!==$raw)throw new RuntimeException('Backup failed');}
      $tmp=tempnam(dirname($path),'.selective-');if(!$tmp)throw new RuntimeException('Save failed');
      try{if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$path))throw new RuntimeException('Save failed');}finally{if(is_file($tmp))unlink($tmp);}
      if(file_get_contents($path)!==$data)throw new RuntimeException('Readback failed');$raw=$data;
     }
-    $days=(int)$new;$message=$t('A mozgatás korhatára elmentve.','Movement age saved.','Verschiebealter gespeichert.');
+    $days=(int)$new;$ratioTarget=(float)$ratio;$batchGiB=(int)$batch;$message=$t('A mozgatás korhatára elmentve.','Movement age saved.','Verschiebealter gespeichert.');
    }finally{flock($lock,LOCK_UN);fclose($lock);}
   }elseif(in_array($action,['preview','observe','run'],true)){
    if(!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
@@ -62,14 +64,14 @@ if(!is_array($forecast)){
  $forecastRaw=is_link($forecastPath)?false:@file_get_contents($forecastPath);
  $forecast=is_string($forecastRaw)?json_decode($forecastRaw,true):null;
 }
-if(!is_array($forecast)||($forecast['version']??null)!==1||($forecast['age_days']??null)!==$days||!is_array($forecast['rows']??null))$forecast=null;
+if(!is_array($forecast)||($forecast['version']??null)!==1||($forecast['age_days']??null)!==$days||(float)($forecast['ratio_target']??0)!==(float)$ratioTarget||($forecast['max_bytes']??17179869184)!==$batchGiB*1073741824||!is_array($forecast['rows']??null))$forecast=null;
 $skipLabels=[
  'too_young'=>$t('Még túl fiatal','Too young','Noch zu jung'),
  'protected_content'=>$t('Félkész vagy aktív torrenttartalom','Incomplete or active torrent content','Unvollständiger oder aktiver Torrent-Inhalt'),
  'busy_or_unverified'=>$t('Megnyitott vagy megváltozott fájl','Open or changed file','Geöffnete oder veränderte Datei'),
  'unsupported_file'=>$t('Nem támogatott fájltípus vagy többes hivatkozás','Unsupported file type or hard link','Nicht unterstützter Dateityp oder Hardlink'),
  'batch_size_limit'=>$t('Egy kör méretkorlátja','Batch size limit','Größenlimit pro Lauf'),
- 'file_exceeds_batch_limit'=>$t('16 GiB-nál nagyobb fájl: ezzel a korláttal később sem mozgatható','File larger than 16 GiB: cannot move under this limit','Datei größer als 16 GiB: mit diesem Limit nicht verschiebbar'),
+ 'file_exceeds_batch_limit'=>$t(''.$batchGiB.' GiB-nál nagyobb fájl: ezzel a korláttal később sem mozgatható','File larger than '.$batchGiB.' GiB: cannot move under this limit','Datei größer als '.$batchGiB.' GiB: mit diesem Limit nicht verschiebbar'),
  'batch_file_limit'=>$t('Egy kör fájlszámkorlátja: következő futásra marad','Batch file limit: deferred to a later run','Dateilimit pro Lauf: auf späteren Lauf verschoben'),
  'existing_array_copy'=>$t('Már létező célpéldány, nincs felülírás','Existing target, no overwrite','Ziel vorhanden, kein Überschreiben'),
  'native_retained_source'=>$t('A natív mozgató kihagyta','Skipped by native mover','Vom nativen Mover übersprungen'),
@@ -115,11 +117,12 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 
 #fms table.fms-queue{table-layout:fixed!important;width:100%!important}
 #fms table.fms-queue th,#fms table.fms-queue td{white-space:normal!important;height:auto!important;vertical-align:top;overflow-wrap:anywhere;word-break:break-word}
-#fms table.fms-queue th:first-child{width:32%}
+#fms table.fms-queue th:first-child{width:28%}
 #fms table.fms-queue th:nth-child(2){width:10%}
-#fms table.fms-queue th:nth-child(3){width:19%}
+#fms table.fms-queue th:nth-child(3){width:12%}
 #fms table.fms-queue th:nth-child(4){width:17%}
-#fms table.fms-queue th:nth-child(5){width:22%}
+#fms table.fms-queue th:nth-child(5){width:15%}
+#fms table.fms-queue th:nth-child(6){width:18%}
 </style>
 <section id="fms-waiting" style="border:1px solid #8886;padding:18px;margin-top:24px">
 <h3><?=$e($t('Mikor kerülhet sorra?','When can files become eligible?','Wann können Dateien an die Reihe kommen?'))?></h3>
@@ -130,10 +133,11 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <?php if(!empty($forecast['blockers'])):?><p><?=$e($t('A felméréskor indítást akadályozó feltételek','Start blockers at observation','Startblockaden bei der Erfassung'))?>: <?=$e(implode(', ',$forecast['blockers']))?></p><?php endif?>
 <div class="fms-filters"><input type="search" id="fms-search" aria-label="<?=$e($t('Fájl keresése','Search files','Dateien suchen'))?>" placeholder="<?=$e($t('Keresés fájlnév vagy útvonal alapján…','Search filename or path…','Dateiname oder Pfad suchen…'))?>"><select id="fms-filter" aria-label="<?=$e($t('Állapotszűrő','Status filter','Statusfilter'))?>">
 <?php foreach(['all'=>$t('Minden állapot','All states','Alle Zustände'),'too_young'=>$t('Túl fiatal','Too young','Zu jung'),'protected_content'=>$t('Torrentvédelem','Torrent protection','Torrent-Schutz'),'ready'=>$t('Kor szerint alkalmas','Age eligible','Alter erfüllt'),'other'=>$t('Egyéb akadály','Other blocker','Andere Blockade')] as $value=>$label):?><option value="<?=$e($value)?>"><?=$e($label)?></option><?php endforeach?></select><label><input type="checkbox" id="fms-video"> <?=$e($t('Csak videók','Videos only','Nur Videos'))?></label><span class="fms-count" id="fms-visible" role="status" aria-live="polite"></span></div><p id="fms-no-results" hidden><?=$e($t('Nincs találat ezekkel a szűrőkkel.','No files match these filters.','Keine Dateien entsprechen diesen Filtern.'))?></p><div style="max-height:540px;overflow:auto"><table style="width:100%;border-collapse:collapse;text-align:left" class="fms-queue"><thead><tr>
-<?php foreach([$t('Fájl a Filmek megosztásban','File in Filmek share','Datei in der Filmek-Freigabe'),$t('Méret','Size','Größe'),$t('Korhatár lejárta','Age eligible from','Altersfreigabe ab'),$t('Korhatárig hátra','Time until age eligible','Zeit bis Altersfreigabe'),$t('Állapot / akadály','Status / blocker','Status / Blockade')] as $heading):?><th style="padding:9px;border-bottom:1px solid #888"><?=$e($heading)?></th><?php endforeach?>
+<?php foreach([$t('Fájl a Filmek megosztásban','File in Filmek share','Datei in der Filmek-Freigabe'),$t('Méret','Size','Größe'),$t('Megosztási arány','Share ratio','Freigabeverhältnis'),$t('Korhatár lejárta','Age eligible from','Altersfreigabe ab'),$t('Korhatárig hátra','Time until age eligible','Zeit bis Altersfreigabe'),$t('Állapot / akadály','Status / blocker','Status / Blockade')] as $heading):?><th style="padding:9px;border-bottom:1px solid #888"><?=$e($heading)?></th><?php endforeach?>
 </tr></thead><tbody>
 <?php foreach($forecast['rows'] as $row): if(!is_array($row))continue; $ready=$row['age_ready_at']??null;$reason=$row['reason']??'unknown'; ?>
 <tr data-fms-row data-reason="<?=$e($reason)?>" data-video="<?=in_array(strtolower(pathinfo($row['file']??'',PATHINFO_EXTENSION)),['mkv','mp4','avi','m4v','mov','ts','m2ts','webm','wmv','mpg','mpeg'],true)?'1':'0'?>"><td style="padding:9px"><details class="fms-file"><summary><?=$e(basename($row['file']??'—'))?></summary><small><?=$e($row['file']??'—')?></small></details></td><td style="padding:9px;white-space:nowrap"><?=$e(number_format(($row['bytes']??0)/1073741824,3))?> GiB</td>
+<td style="padding:9px;white-space:nowrap"><?php $ratio=$row['ratio']??null;echo $e(is_numeric($ratio)&&is_finite((float)$ratio)&&(float)$ratio>=0?number_format((float)$ratio,2):'—');if(($row['ratio_target_met']??false)===true):?><small> · <?=$e($t('Cél elérve','Target met','Ziel erreicht'))?></small><?php endif?></td>
 <td style="padding:9px;white-space:nowrap"><?php if(is_numeric($ready)):?><time data-fms-time="<?=$e($ready)?>"><?=$e(date('Y-m-d H:i:s',(int)$ready))?></time><?php else:?>—<?php endif?></td>
 <td style="padding:9px;white-space:nowrap" <?=is_numeric($ready)?'data-fms-countdown="'.$e($ready).'"':''?>><?=$e(is_numeric($ready)?$t('Számítás…','Calculating…','Berechnung…'):$t('Nem becsülhető','Cannot estimate','Nicht schätzbar'))?></td>
 <td style="padding:9px"><?=$e($reason==='ready'?$t('Kor szerint kész; a többi feltételt újra ellenőrzi','Age eligible; other conditions will be rechecked','Alter erfüllt; weitere Bedingungen werden erneut geprüft'):($skipLabels[$reason]??$t('Bizonytalan állapot','Unverifiable state','Ungeprüfter Zustand')))?></td></tr>
@@ -144,13 +148,20 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <details class="fms-panel"><summary><?=$e($t('Beállítások · korhatár és felmérés','Settings · age and observation','Einstellungen · Alter und Erfassung'))?></summary><fieldset><legend><?=$e($t('Minimumkor','Minimum age','Mindestalter'))?></legend>
 <?php foreach([7,14,30] as $choice):?><label style="margin-right:22px"><input type="radio" name="age_days" value="<?=$choice?>" <?=$days===$choice?'checked':''?>> <?=$choice?> <?=$e($t('nap','days','Tage'))?></label><?php endforeach?>
 </fieldset>
-<p><button name="action" value="save"><?=$e($t('Korhatár mentése','Save age','Alter speichern'))?></button>
+<fieldset><legend><?=$e($t('Mozgatási kör méretkorlátja','Movement batch limit','Größenlimit pro Lauf'))?></legend>
+<label for="fms-batch"><?=$e($t('Legfeljebb GiB körönként','Maximum GiB per batch','Maximale GiB pro Lauf'))?></label><select id="fms-batch" name="batch_gib"><?php foreach([16,32,64,128] as $limit):?><option value="<?=$limit?>" <?=$batchGiB===$limit?'selected':''?>><?=$limit?> GiB</option><?php endforeach?></select>
+<p><?=$e($t('Alapérték: 16 GiB. Nagyobb filmhez válassz nagyobb korlátot. Legfeljebb 8 fájl; a korhatár, a védelmek és az ellenőrzőösszeg-vizsgálat nem változik.','Default: 16 GiB. Select a higher limit for larger movies. Up to 8 files; age, safety guards and checksum verification remain unchanged.','Standard: 16 GiB. Für größere Filme ein höheres Limit wählen. Höchstens 8 Dateien; Alter, Schutz und Prüfsummenprüfung bleiben unverändert.'))?></p></fieldset>
+<fieldset><legend><?=$e($t('Megosztási arány · sorrendezés','Share ratio · priority','Freigabeverhältnis · Priorität'))?></legend>
+<label for="fms-ratio"><?=$e($t('Célérték (0 = kikapcsolva)','Target (0 = disabled)','Ziel (0 = deaktiviert)'))?></label>
+<input id="fms-ratio" type="number" name="ratio_target" min="0" max="100" step="0.01" value="<?=$e($ratioTarget)?>">
+<p><?=$e($t('A célértéket elért torrentek alkalmas fájljai előre kerülnek. Az alacsony vagy ismeretlen arány nem akadályozza a mozgatást. A korhatár és minden védelem továbbra is érvényes; a seedelés folytatódhat.','Eligible files whose torrents meet the target go first. Low or unknown ratios do not block movement. Age and all safety guards still apply; seeding can continue.','Geeignete Dateien mit erreichtem Torrent-Ziel werden bevorzugt. Niedrige oder unbekannte Werte blockieren nichts. Alter und alle Schutzbedingungen gelten weiterhin; Seeding kann fortgesetzt werden.'))?></p></fieldset>
+<p><button name="action" value="save"><?=$e($t('Beállítások mentése','Save settings','Einstellungen speichern'))?></button>
 </p><button name="action" value="observe"><?=$e($t('Felmérés rögzítése','Record observation','Erfassung speichern'))?></button><p><a href="/Tools/FejesMoverSettings"><?=$e($t('Szabadhely-küszöb és várakozási idő','Free-space threshold and cooldown','Freiplatzgrenze und Wartezeit'))?></a></p></details>
-<details class="fms-panel"><summary><?=$e($t('Kézi műveletek','Manual actions','Manuelle Aktionen'))?></summary><p><?=$e($t('Egy kör legfeljebb 8 fájl / 16 GiB. Az elmentett korhatár érvényes; a kereső és szűrők nem jelölik ki a mozgatandó fájlokat. Indulás előtt minden védelmi feltételt újra ellenőriz.','Up to 8 files / 16 GiB per batch. Uses the saved age; search and filters do not select files for movement. All guards are rechecked before starting.','Höchstens 8 Dateien / 16 GiB pro Lauf. Gespeichertes Alter gilt; Suche und Filter wählen keine Dateien zum Verschieben aus. Alle Schutzbedingungen werden erneut geprüft.'))?></p><button name="action" value="run" class="fms-danger" onclick="return window.confirm(this.dataset.confirm)" data-confirm="<?=$e($t('Az elmentett korhatárral, minden alkalmas fájlra indulhat egy kör (legfeljebb 8 fájl / 16 GiB). A táblázatszűrő nem fájlkijelölés. Folytatod?','Start a batch for all eligible files using the saved age (up to 8 files / 16 GiB)? Table filters do not select files for movement. Continue?','Einen Lauf für alle geeigneten Dateien mit gespeichertem Alter starten (höchstens 8 Dateien / 16 GiB)? Tabellenfilter wählen keine Dateien zum Verschieben aus. Fortfahren?'))?>" style="border:2px solid #ef7d00;padding:10px" <?=($fmc['error']||$fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||!$fmc['mounted'])?'disabled':''?>><?=$e($t('Érett fájlok ellenőrzött mozgatása','Move eligible files with verification','Geeignete Dateien geprüft verschieben'))?></button>
+<details class="fms-panel"><summary><?=$e($t('Kézi műveletek','Manual actions','Manuelle Aktionen'))?></summary><p><?=$e($t('Egy kör legfeljebb 8 fájl / '.$batchGiB.' GiB. Az elmentett korhatár érvényes; a kereső és szűrők nem jelölik ki a mozgatandó fájlokat. Indulás előtt minden védelmi feltételt újra ellenőriz.','Up to 8 files / '.$batchGiB.' GiB per batch. Uses the saved age; search and filters do not select files for movement. All guards are rechecked before starting.','Höchstens 8 Dateien / '.$batchGiB.' GiB pro Lauf. Gespeichertes Alter gilt; Suche und Filter wählen keine Dateien zum Verschieben aus. Alle Schutzbedingungen werden erneut geprüft.'))?></p><button name="action" value="run" class="fms-danger" onclick="return window.confirm(this.dataset.confirm)" data-confirm="<?=$e($t('Az elmentett korhatárral, minden alkalmas fájlra indulhat egy kör (legfeljebb 8 fájl / '.$batchGiB.' GiB). A táblázatszűrő nem fájlkijelölés. Folytatod?','Start a batch for all eligible files using the saved age (up to 8 files / '.$batchGiB.' GiB)? Table filters do not select files for movement. Continue?','Einen Lauf für alle geeigneten Dateien mit gespeichertem Alter starten (höchstens 8 Dateien / '.$batchGiB.' GiB)? Tabellenfilter wählen keine Dateien zum Verschieben aus. Fortfahren?'))?>" style="border:2px solid #ef7d00;padding:10px" <?=($fmc['error']||$fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||!$fmc['mounted'])?'disabled':''?>><?=$e($t('Érett fájlok ellenőrzött mozgatása','Move eligible files with verification','Geeignete Dateien geprüft verschieben'))?></button>
 </details></form>
 <details class="fms-panel"><summary><?=$e($t('Működés és védelmek','How it works and protections','Funktionsweise und Schutz'))?></summary><p><?=$e($t('Csak cache/Filmek → lemeztömb. A félkész, aktív, megnyitott, megváltozott vagy túl fiatal tartalom kimarad. A felhasználói útvonal változatlan.','Only cache/Filmek → array. Incomplete, active, open, changed or young content is skipped. The user-share path is preserved.','Nur cache/Filmek → Array. Unvollständige, aktive, geöffnete, veränderte oder zu junge Inhalte werden übersprungen. Der Benutzerpfad bleibt erhalten.'))?></p>
 <p><?=$e($t('A kor a legutóbbi módosítástól, a cache-ben történt első igazolt megfigyeléstől és a torrent befejezésétől is számít. Régi fájldátummal sem lehet az új érkezést megkerülni.','Age includes last modification, first verified cache observation and torrent completion. An old timestamp cannot bypass a recent arrival.','Das Alter berücksichtigt Änderung, erste bestätigte Cache-Erfassung und Torrent-Abschluss. Ein altes Datum umgeht keine neue Ankunft.'))?></p>
-<p><?=$e($t('A szabad hely küszöbe és a várakozási idő is érvényes. Mentés, scrub, paritás, másik Mover vagy bizonytalan állapot esetén nincs indulás. Egy kör legfeljebb 8 fájl / 16 GiB.','Free-space threshold and cooldown also apply. Backup, scrub, parity, another Mover or unknown state prevents starting. Each batch is limited to 8 files / 16 GiB.','Freiplatzgrenze und Wartezeit gelten ebenfalls. Backup, Scrub, Parität, anderer Mover oder unbekannter Zustand verhindern den Start. Pro Lauf höchstens 8 Dateien / 16 GiB.'))?></p>
+<p><?=$e($t('A szabad hely küszöbe és a várakozási idő is érvényes. Mentés, scrub, paritás, másik Mover vagy bizonytalan állapot esetén nincs indulás. Egy kör legfeljebb 8 fájl / '.$batchGiB.' GiB.','Free-space threshold and cooldown also apply. Backup, scrub, parity, another Mover or unknown state prevents starting. Each batch is limited to 8 files / '.$batchGiB.' GiB.','Freiplatzgrenze und Wartezeit gelten ebenfalls. Backup, Scrub, Parität, anderer Mover oder unbekannter Zustand verhindern den Start. Pro Lauf höchstens 8 Dateien / '.$batchGiB.' GiB.'))?></p>
 </details>
 <details class="fms-panel"><summary><?=$e($t('Utolsó futás részletei és napló','Last run details and log','Letzter Lauf und Protokoll'))?></summary><section id="fms-last" style="border:1px solid #8886;padding:18px;margin-top:24px">
 <h3><?=$e($t('Utolsó szelektív futás','Last selective run','Letzter selektiver Lauf'))?></h3>

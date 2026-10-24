@@ -10,7 +10,7 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.23.998 · Experimental beta · Unraid 7.x**
+**2026.10.24.1 · Experimental beta · Unraid 7.x**
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
@@ -44,6 +44,9 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 
 ## Features
 
+- Optional share-ratio priority (0 disables it, target up to 100): already eligible files whose torrents meet the target go first. Low or unknown ratios never withhold a file. Shared content uses the lowest known owner ratio; missing owner values remain unknown. Ratio is not a tracker seed-time exemption and never bypasses age, activity or safety guards.
+- Explicit batch-size selection for larger media: 16 / 32 / 64 / 128 GiB, still at most 8 files. Existing installations keep 16 GiB until an authenticated settings save. No schedule or live configuration is changed by installation.
+
 - Appearance selector in the mode banner: Follow Unraid (default), Light or Dark. Explicit palettes affect plugin surfaces only; the Unraid shell stays unchanged. The browser remembers the selection locally; blocked browser storage falls back to Follow Unraid.
 
 - Selective page organized around summary cards and the file queue, with local filename/path search, status and video-only filters, expandable full paths, folded settings and a separate confirmed manual-action section. Filters only change the display, never the execution scope.
@@ -70,7 +73,7 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 - The optional threshold panel requires the pre-existing script at `/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script`. It is not distributed here. Without it, monitoring still works and settings explain that the optional automation is unavailable.
 - The settings panel changes only `KUSZOB_GIB` and `UJRA_PROBALKOZAS_MP`, after CSRF, version, range, lock and shell-syntax checks. It saves a backup first. The legacy UI interprets `UJRA_PROBALKOZAS_MP` as minutes; check your script's semantics before using this panel with a different script.
 - Installation never creates a schedule or starts movement. The optional selective executor has backup/parity/scrub/mount/integrity/cooldown guards. It supports **cache/Filmek → Array** with user-share torrent bindings. Observer monitoring remains available for other configured pools.
-- Selection uses the newest of mtime, verified first observation and torrent completion. Old-looking files may need the full new observation window. A batch is limited to 8 files / 16 GiB; larger files are skipped.
+- Selection uses the newest of mtime, verified first observation and torrent completion. Old-looking files may need the full new observation window. A batch is limited to 8 files and a configurable 16 / 32 / 64 / 128 GiB (default 16 GiB); files larger than the selected limit are skipped.
 
 ## Experimental beta installation
 

@@ -19,7 +19,7 @@ import time
 
 import selective_preview as inventory_adapter
 from selective_preview import canonical, read_json, atomic_json
-from selection_policy import plan, age_days, within, waiting_table
+from selection_policy import plan, age_days, within, waiting_table, ratio_target, prioritize, batch_bytes
 from torrent_preflight import read_snapshot, host_path, assess
 from fejes_service import dry_run
 
@@ -167,6 +167,8 @@ def collect(update=False,owned=False):
     settings=read_json(CONFIG,{'version':1,'age_days':7})
     if settings.get('version')!=1: raise ValueError('Unknown configuration')
     days=age_days(settings.get('age_days'))
+    target=ratio_target(settings.get('ratio_target',0))
+    limit=batch_bytes(settings.get('batch_gib',16))
     previous=read_json(INVENTORY,{'version':1,'files':{}})
     if previous.get('version')!=1 or not isinstance(previous.get('files'),dict):
         raise ValueError('Unknown inventory')
@@ -176,10 +178,13 @@ def collect(update=False,owned=False):
     items,mounts=torrent_snapshot()
     protection=guards(owned)
     selection=plan(files,items,mounts,protection,days=days,now=time.time(),observed_at=now,root=ROOT)
+    selection['ratio_target']=target
+    selection['max_bytes']=limit
+    selection['candidates']=prioritize(selection['candidates'],items,mounts,target)
     if update:
         atomic_json(INVENTORY,{'version':1,'files':current})
         atomic_json(FORECAST,waiting_table(files,items,mounts,current,protection,
-                                          days=days,now=time.time(),root=ROOT))
+                                          days=days,now=time.time(),root=ROOT,target_ratio=target,max_bytes=limit))
     return selection,files,current,items,mounts,protection
 
 
@@ -190,7 +195,7 @@ def preview(update=False):
             'file_count':len(files),'skipped_counts':dict(Counter(x['reason'] for x in selection['skipped'])),
             'blockers':selection['blockers'],'guards':protection,'inventory_updated':update,
             'forecast':waiting_table(files,items,mounts,current,protection,
-                                     days=selection['age_days'],now=time.time(),root=ROOT)}
+                                     days=selection['age_days'],now=time.time(),root=ROOT,target_ratio=selection['ratio_target'],max_bytes=selection['max_bytes'])}
 
 
 def fresh_candidate(key,expected,days,owned=True):
@@ -275,14 +280,16 @@ def run():
         os.write(fd,str(os.getpid()).encode()); os.close(fd);own_pid=True
         report['state']='running';atomic_json(LAST,report)
         log(f'started; age={selection["age_days"]} days, candidates={len(selection["candidates"])}')
+        limit=selection.get('max_bytes',MAX_BYTES)
+        report['batch_bytes_limit']=limit
         skips=Counter(report['skipped'])
-        for key in sorted(selection['candidates']):
+        for key in selection['candidates']:
             size=current[key]['signature'][2]
-            if size>MAX_BYTES:
+            if size>limit:
                 skips['file_exceeds_batch_limit']+=1;continue
             if report['moved_files']>=MAX_FILES:
                 skips['batch_file_limit']+=1;continue
-            if report['moved_bytes']+size>MAX_BYTES:
+            if report['moved_bytes']+size>limit:
                 skips['batch_size_limit']+=1;continue
             report['active_file_started']=True
             outcome=execute_file(key,current[key],selection['age_days'])

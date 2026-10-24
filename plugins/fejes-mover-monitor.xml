@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Plugin>
   <Name>Fejes Mover Monitor</Name>
+  <PluginAuthor>FejesNAS</PluginAuthor>
   <PluginURL>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg</PluginURL>
   <Support>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues</Support>
   <Project>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor</Project>
