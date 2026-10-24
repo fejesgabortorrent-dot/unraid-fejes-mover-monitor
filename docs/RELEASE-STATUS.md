@@ -1,4 +1,4 @@
-# Experimental beta — 2026.10.24.3
+# Experimental beta — 2026.10.24.4
 
 Candidate .24.1 adds optional ratio priority and an explicit batch size selector. Ratio affects order only after eligibility; low/missing ratios never withhold candidates. Shared ownership uses the minimum ratio, unknown values remain unknown. The private queue gains a ratio column. Existing configs default to priority disabled and 16 GiB. Saves retain config backups and reject concurrent/stale forms. Neither feature overrides age, torrent activity, maintenance or integrity guards. No production media or live reboot acceptance is claimed for this candidate.
 
@@ -41,3 +41,16 @@ Do not clear the inspection flag or remove a running report automatically: first
 check the source, destination, user-share view and torrent state. Controlled
 fixtures cover interrupted reports and file-I/O failures. This does not certify
 physical power-loss or real-NAS reboot recovery.
+
+
+## Locked recovery state (.24.4)
+
+Read the prior outcome after acquiring coordination locks, so a preceding lock
+owner's inspection requirement cannot be replaced by an older clean snapshot.
+Successful cooldown timestamps use synchronized atomic replacement.
+
+The Linux recovery fixture terminates a child process before and after a
+disposable file operation, verifies the persisted intent and remaining payload
+hash, then confirms a new invocation refuses execution and retains the
+inspection requirement. This is process-exit evidence, not physical power-loss
+or live NAS reboot certification. The targeted Linux suite passed 26 tests.

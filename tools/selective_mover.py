@@ -257,10 +257,9 @@ def execute_file(key,expected,days):
 
 
 def run():
-    prior=read_json(LAST,{})
     report={'version':1,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
-            'requires_inspection':bool(prior.get('requires_inspection') or prior.get('state')=='running' or prior.get('active_file_started'))}
+            'requires_inspection':False}
     locks=[]; own_pid=False
     try:
         # Same ordering for every executor; no cron/settings rewrites.
@@ -269,6 +268,12 @@ def run():
             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         config_lock=open('/var/run/fejes-mover-config.lock','a');locks.append(config_lock)
         fcntl.flock(config_lock,fcntl.LOCK_SH|fcntl.LOCK_NB)
+        # Read only after the previous owner has released all coordination locks.
+        # A pre-lock snapshot could otherwise erase its newly recorded failure.
+        prior=read_json(LAST,{})
+        report['requires_inspection']=bool(prior.get('requires_inspection') or prior.get('state')=='running' or prior.get('active_file_started'))
+        if report['requires_inspection']:
+            raise ValueError('Previous movement requires inspection')
         if PID.exists(): raise ValueError('Mover PID already present')
         selection,_,current,items,_,_=collect(True)
         report.update(age_days=selection['age_days'],candidate_count=len(selection['candidates']),blockers=selection['blockers'],
@@ -313,7 +318,7 @@ def run():
             'paths_unchanged':all(h in post and post[h]['content_path']==x['content_path'] for h,x in pre.items())}
         if not all(report['torrent_continuity'].values()): raise RuntimeError('Torrent continuity changed; inspect before next run')
         report['state']='completed' if report['moved_files'] else 'no_files_moved'
-        if report['moved_files']: ATTEMPT.write_text(str(int(time.time()))+'\n')
+        if report['moved_files']: atomic_json(ATTEMPT,int(time.time()))
         log(f'finished; verified files={report["moved_files"]}, bytes={report["moved_bytes"]}')
     except BlockingIOError:
         # Lock contention before launch is different from EAGAIN during file I/O.
