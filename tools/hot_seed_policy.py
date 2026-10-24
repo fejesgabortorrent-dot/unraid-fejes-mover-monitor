@@ -29,6 +29,7 @@ def demand(previous, current, now, minimum_bytes):
 
 def plan(files, guards, *, now, observed_at, free_bytes, reserve_bytes=300*1024**3,
          batch_bytes=32*1024**3, max_files=2, cooldown=86400,
+         seed_cache_bytes=None, seed_cache_limit=100*1024**3,
          minimum_uploaded=64*1024**2, root='/mnt/user/Filmek'):
     """Suggest array -> cache candidates, with reserve and anti-ping-pong guards.
 
@@ -41,8 +42,9 @@ def plan(files, guards, *, now, observed_at, free_bytes, reserve_bytes=300*1024*
             'direction':'array_to_cache','candidates':[],'skipped':[],
             'planned_bytes':0,'blockers':[]}
     try:
-        for value in (now,observed_at,free_bytes,reserve_bytes,batch_bytes,cooldown,minimum_uploaded):number(value)
-        if (type(free_bytes) is not int or type(reserve_bytes) is not int or
+        for value in (now,observed_at,free_bytes,reserve_bytes,batch_bytes,cooldown,minimum_uploaded,seed_cache_bytes,seed_cache_limit):number(value)
+        if (type(seed_cache_bytes) is not int or type(seed_cache_limit) is not int or
+            type(free_bytes) is not int or type(reserve_bytes) is not int or
             type(batch_bytes) is not int or type(max_files) is not int or
             not 1 <= max_files <= 8 or batch_bytes==0 or cooldown<86400 or
             minimum_uploaded==0 or not 0 <= now-observed_at <= 30):
@@ -53,7 +55,7 @@ def plan(files, guards, *, now, observed_at, free_bytes, reserve_bytes=300*1024*
         result['blockers']=[key for key in REQUIRED_GUARDS if guards.get(key)!='pass']
         if result['blockers']:
             result['decision']='blocked';return result
-        budget=max(0,min(batch_bytes,free_bytes-reserve_bytes))
+        budget=max(0,min(batch_bytes,free_bytes-reserve_bytes,seed_cache_limit-seed_cache_bytes))
         seen=set();eligible=[]
         for item in files:
             key=absolute_path(item['path'])
@@ -85,7 +87,9 @@ def plan(files, guards, *, now, observed_at, free_bytes, reserve_bytes=300*1024*
             else:
                 result['candidates'].append(key);result['planned_bytes']+=size;continue
             result['skipped'].append({'path':key,'reason':reason})
-        result.update(decision='preview_only',remaining_free_bytes=free_bytes-result['planned_bytes'])
+        result.update(decision='preview_only',remaining_free_bytes=free_bytes-result['planned_bytes'],
+                      projected_seed_cache_bytes=seed_cache_bytes+result['planned_bytes'],
+                      seed_cache_limit=seed_cache_limit)
     except (ValueError,TypeError,KeyError,AttributeError):
         result.update(decision='unknown',candidates=[],skipped=[],planned_bytes=0,blockers=['unverifiable_snapshot'])
     return result

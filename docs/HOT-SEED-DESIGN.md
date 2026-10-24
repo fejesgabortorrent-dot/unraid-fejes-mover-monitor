@@ -52,3 +52,13 @@ private paths, tracker tokens or raw torrent identifiers in public reports.
 
 The current outbound owner test is separate evidence, not reverse-executor
 acceptance. Do not describe this development prototype as active tiering.
+
+
+## Total resident cap
+
+The planner now also requires verified current seed-cache bytes and an overall
+resident limit (default 100 GiB). Budget is the smallest of per-batch bytes,
+free space minus reserve, and resident limit minus current residents. Unknown
+accounting fails closed; zero disables new promotions. See
+[the Hungarian implementation plan](SEED-CACHE-TERV-HU.md) for recurring-demand
+windows, shared residency coordination and staged acceptance requirements.
