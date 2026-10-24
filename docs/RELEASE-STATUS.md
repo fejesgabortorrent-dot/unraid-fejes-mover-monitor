@@ -1,4 +1,4 @@
-# Experimental beta — 2026.10.24.4
+# Experimental beta — 2026.10.24.5
 
 Candidate .24.1 adds optional ratio priority and an explicit batch size selector. Ratio affects order only after eligibility; low/missing ratios never withhold candidates. Shared ownership uses the minimum ratio, unknown values remain unknown. The private queue gains a ratio column. Existing configs default to priority disabled and 16 GiB. Saves retain config backups and reject concurrent/stale forms. Neither feature overrides age, torrent activity, maintenance or integrity guards. No production media or live reboot acceptance is claimed for this candidate.
 
@@ -54,3 +54,19 @@ disposable file operation, verifies the persisted intent and remaining payload
 hash, then confirms a new invocation refuses execution and retains the
 inspection requirement. This is process-exit evidence, not physical power-loss
 or live NAS reboot certification. The targeted Linux suite passed 26 tests.
+
+
+## Raised appearance and navigation (.24.5)
+
+Raised cards and flat appearance are independent from Follow Unraid / Light / Dark.
+The preference stays in this browser and never changes NAS settings. Motion follows
+the reduced-motion preference. The selective queue becomes labelled cards on small
+screens; keyboard focus and 44-pixel controls remain visible. Back/Forward uses a
+validated, tab-local history limited to the plugin pages and Unraid Dashboard.
+Home always links directly to Dashboard. With storage unavailable the direct
+navigation remains usable. Movement, age rules, guards and schedules are unchanged.
+
+The queue headers and a mobile-accessible sort selector support ascending and
+descending filename, raw size, ratio, age date, remaining-time and status order.
+Unknown numeric/date values stay last in both directions. Original order can be
+restored, active filters stay applied, and sorting never changes execution order.

@@ -5,7 +5,7 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.10.24.4'
+version='2026.10.24.5'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_preview.py','selective_mover.py','wire_selective.py')]
 
@@ -14,6 +14,10 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.10.24.5 (experimental beta)
+- Add optional raised/flat styling, responsive queue cards and accessible controls in Hungarian, English and German.
+- Add ascending/descending queue sorting, with unknown values last; display order never changes execution order.
+- Add scoped Back/Forward history, Home and consistent plugin navigation; movement and schedules are unchanged.
 ### 2026.10.24.4 (experimental beta)
 - Read the previous execution outcome only after coordination locks; preserve inspection errors recorded by a preceding owner.
 - Persist successful cooldown timestamps atomically and test abrupt process exits in disposable fixtures.
