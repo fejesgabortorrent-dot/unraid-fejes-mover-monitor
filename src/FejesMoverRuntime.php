@@ -85,6 +85,22 @@ HTML;
         $t('Megjelenés','Appearance','Darstellung'),$t('Rendszerkövető','Follow Unraid','Unraid folgen'),
         $t('Világos','Light','Hell'),$t('Sötét','Dark','Dunkel')]),$theme);
     $banner=str_replace('<strong>', $theme.'<strong>',$banner);
+    $current=parse_url($_SERVER['REQUEST_URI']??'',PHP_URL_PATH);
+    $routes=[
+        '/Dashboard#fejes-mover-dashboard'=>$t('Főoldal','Home','Startseite'),
+        '/Tools/FejesMover'=>$t('Mover figyelő','Monitor','Monitor'),
+        '/Tools/FejesMoverSelective'=>$t('Mozgatás','Movement','Verschieben'),
+        '/Tools/FejesMoverSettings'=>$t('Beállítások','Settings','Einstellungen'),
+        '/Tools/FejesMoverSetup'=>$t('Mód és pool','Mode and pool','Modus und Pool')];
+    $parent=in_array($current,['/Tools/FejesMoverSelective','/Tools/FejesMoverSettings','/Tools/FejesMoverSetup','/Tools/FejesMoverProtection'],true)?'/Tools/FejesMover':'/Dashboard#fejes-mover-dashboard';
+    $nav='<nav class="fmc-nav" aria-label="'.$esc($t('Mover navigáció','Mover navigation','Mover-Navigation')).'">';
+    $nav.='<a href="'.$esc($parent).'">← '.$esc($t('Vissza','Back','Zurück')).'</a>';
+    foreach($routes as $url=>$label){
+        $active=parse_url($url,PHP_URL_PATH)===$current;
+        $nav.='<a href="'.$esc($url).'"'.($active?' aria-current="page"':'').'>'.$esc($label).'</a>';
+    }
+    $nav.='</nav><style>.fmc-nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 16px;padding:12px;border:1px solid #8885;border-radius:8px}.fmc-nav a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border:1px solid #8888;border-radius:7px;text-decoration:none!important;color:inherit!important;background:transparent;font-weight:600;box-sizing:border-box}.fmc-nav a[aria-current="page"]{border:2px solid #ef7d00;background:#ef7d0020}.fmc-nav a:focus-visible{outline:3px solid #ef7d00;outline-offset:3px}@media(max-width:550px){.fmc-nav a{flex:1 1 40%;padding:0 10px}}</style>';
+    $banner.=$nav;
     $token = @parse_ini_file('/var/local/emhttp/var.ini');
     return ['mode'=>$mode,'pool'=>$pool,'path'=>'/mnt/'.$pool,'mounted'=>$mounted,'pools'=>$pools,
         'error'=>$error,'lockError'=>$lockError,'readError'=>$readError,'configInvalid'=>!$valid,
