@@ -152,6 +152,14 @@ class BatchReporting(unittest.TestCase):
             self.assertFalse((root/'mover.pid').exists())
             return result,execute.call_count,attempt.exists()
 
+    def test_lock_setup_error_preserves_saved_outcome(self):
+        import io
+        saved=[]
+        with patch.object(mover,'open',side_effect=[io.StringIO(),OSError('lock unavailable')],create=True),patch.object(mover.fcntl,'flock'),patch.object(mover,'atomic_json',side_effect=lambda *args:saved.append(args)):
+            result=mover.run()
+        self.assertEqual(result['state'],'error')
+        self.assertEqual(saved,[])
+
     def test_failure_recorded_by_previous_lock_owner_cannot_be_erased(self):
         result,calls,attempt=self.run_batch([1],inspection_on_lock=True)
         self.assertEqual(result['state'],'error')

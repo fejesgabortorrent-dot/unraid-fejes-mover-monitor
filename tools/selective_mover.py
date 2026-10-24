@@ -260,7 +260,7 @@ def run():
     report={'version':1,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
             'requires_inspection':False}
-    locks=[]; own_pid=False
+    locks=[]; own_pid=False; coordinated=False
     try:
         # Same ordering for every executor; no cron/settings rewrites.
         for name in ('fejes-mover-launch.lock','fejes-integrity-cron.lock','fejes-selective-inventory.lock'):
@@ -268,6 +268,7 @@ def run():
             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         config_lock=open('/var/run/fejes-mover-config.lock','a');locks.append(config_lock)
         fcntl.flock(config_lock,fcntl.LOCK_SH|fcntl.LOCK_NB)
+        coordinated=True
         # Read only after the previous owner has released all coordination locks.
         # A pre-lock snapshot could otherwise erase its newly recorded failure.
         prior=read_json(LAST,{})
@@ -333,7 +334,7 @@ def run():
     finally:
         if own_pid and PID.exists() and PID.read_text()==str(os.getpid()): PID.unlink()
         report['finished']=time.time()
-        if locks and report['state']!='checking': atomic_json(LAST,report)
+        if coordinated and report['state']!='checking': atomic_json(LAST,report)
         for lock in reversed(locks): lock.close()
     return report
 
