@@ -110,7 +110,9 @@ def torrent_snapshot():
 
 
 def guards(owned=False):
-    if read_json(LAST,{}).get('requires_inspection') is True:
+    prior=read_json(LAST,{})
+    if (prior.get('requires_inspection') is True or
+        (not owned and (prior.get('state')=='running' or prior.get('active_file_started') is True))):
         raise ValueError('Previous movement requires inspection')
     runtime=read_json(BASE/'settings.json',{})
     if runtime.get('version')!=1 or runtime.get('mode')!='advanced' or runtime.get('pool')!='cache':
@@ -258,7 +260,7 @@ def run():
     prior=read_json(LAST,{})
     report={'version':1,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
-            'requires_inspection':prior.get('requires_inspection',False)}
+            'requires_inspection':bool(prior.get('requires_inspection') or prior.get('state')=='running' or prior.get('active_file_started'))}
     locks=[]; own_pid=False
     try:
         # Same ordering for every executor; no cron/settings rewrites.
@@ -292,6 +294,7 @@ def run():
             if report['moved_bytes']+size>limit:
                 skips['batch_size_limit']+=1;continue
             report['active_file_started']=True
+            atomic_json(LAST,report)  # Durable intent before any native file operation.
             outcome=execute_file(key,current[key],selection['age_days'])
             report['active_file_started']=False
             if outcome['state']=='moved':
@@ -313,8 +316,12 @@ def run():
         if report['moved_files']: ATTEMPT.write_text(str(int(time.time()))+'\n')
         log(f'finished; verified files={report["moved_files"]}, bytes={report["moved_bytes"]}')
     except BlockingIOError:
-        # Do not overwrite the report of the active owner of these locks.
-        return {'state':'deferred','reason':'another_operation_active','moved_files':0}
+        # Lock contention before launch is different from EAGAIN during file I/O.
+        if report['state']=='checking':
+            return {'state':'deferred','reason':'another_operation_active','moved_files':0}
+        report['state']='error'
+        report['error']='File operation unavailable; inspect before another run.'
+        report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])
     except ERRORS:
         report['state']='error';report['error']='Required state changed or could not be verified. No further files will be started; inspect the private system log.'
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])

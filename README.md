@@ -10,7 +10,7 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.24.2 · Experimental beta · Unraid 7.x**
+**2026.10.24.3 · Experimental beta · Unraid 7.x**
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
@@ -77,7 +77,7 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 
 ## Experimental beta installation
 
-Read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. Owner acceptance on Unraid 7.3.3 used self-created files outside Emby. Production-media movement and live NAS reboot persistence remain unverified.
+Read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. Owner acceptance on Unraid 7.3.3 used self-created files outside Emby. A bounded owner run moved 8 production-content files (8.929 GiB) with verified checksums/metadata and unchanged torrent paths/completeness/seed states; actual peer upload, tracker credit and live NAS reboot persistence remain unverified.
 
 In Unraid, open **Plugins → Install Plugin**, then enter:
 

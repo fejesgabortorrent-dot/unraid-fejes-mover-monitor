@@ -40,6 +40,9 @@ def atomic_json(path, data):
         if Path(temporary).read_bytes() != payload:
             raise OSError('Readback failed')
         os.replace(temporary, path)
+        directory=os.open(path.parent,os.O_RDONLY|os.O_DIRECTORY)
+        try:os.fsync(directory)
+        finally:os.close(directory)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
