@@ -125,4 +125,9 @@ class SelectiveInterface(unittest.TestCase):
             result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='7',batch_gib=value))
             self.assertEqual(result['config'],{'version':1,'age_days':7})
 
+    def test_one_day_age_is_explicit_and_does_not_start_worker(self):
+        result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='1'))
+        self.assertEqual(result['config']['age_days'],1)
+        self.assertFalse(result['calls'])
+
 if __name__=='__main__':unittest.main()

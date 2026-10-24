@@ -31,3 +31,15 @@ class RatioPriority(unittest.TestCase):
         for n in (16,32,64,128):self.assertEqual(batch_bytes(n),n*1024**3)
         for n in (0,-1,256,16.0,True,'32'):
             with self.assertRaises(ValueError):batch_bytes(n)
+
+    def test_one_day_age_still_requires_cache_arrival_and_completion_age(self):
+        now=2_000_000_000;key=self.root+'/b'
+        item=dict(path=key,regular=True,symlink=False,nlink=1,open=False,stable=True,mtime=now-3*86400,first_seen=now-2*86400)
+        torrent=dict(content_path='/data/b',ratio=2,progress=1,state='stalledUP',completion_on=now-2*86400,upspeed=0,dlspeed=0)
+        def eligible(i,t):
+            return plan([i],[t],self.mounts,{k:'pass' for k in REQUIRED_GUARDS},days=1,now=now,observed_at=now,root=self.root)['candidates']
+        self.assertEqual(eligible(item,torrent),[key])
+        self.assertEqual(eligible(dict(item,first_seen=now-3600),torrent),[])
+        self.assertEqual(eligible(item,dict(torrent,completion_on=now-3600)),[])
+        self.assertEqual(eligible(dict(item,open=True),torrent),[])
+        self.assertEqual(eligible(item,dict(torrent,state='uploading',upspeed=1)),[])
