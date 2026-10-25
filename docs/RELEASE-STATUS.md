@@ -1,99 +1,46 @@
-# Experimental beta — 2026.10.25.1
+# Release Candidate 1 — 2026.10.25.2
 
-Candidate .24.1 adds optional ratio priority and an explicit batch size selector. Ratio affects order only after eligibility; low/missing ratios never withhold candidates. Shared ownership uses the minimum ratio, unknown values remain unknown. The private queue gains a ratio column. Existing configs default to priority disabled and 16 GiB. Saves retain config backups and reject concurrent/stale forms. Neither feature overrides age, torrent activity, maintenance or integrity guards. No production media or live reboot acceptance is claimed for this candidate.
+RC1 is a prerelease for the documented Unraid 7.x owner-tested scope. See
+[RC1 release notes](RC1.md) and [selection/execution rules](SELECTIVE-MOVEMENT.md).
 
-The .995 follow-up fixes long filename and status wrapping under the surrounding Unraid theme. Forecast calculations and movement behavior are unchanged.
+The package provides monitoring, optional age-filtered native movement, per-content
+torrent exclusions, checksum/metadata verification and explicit maintenance
+blocking. RC1 fixes small-file domination of the eight-file batch by ordering
+larger eligible files first inside the existing ratio-priority groups. Low or
+unknown ratios never exclude an otherwise eligible file. File/byte caps, age,
+cooldown, maintenance and source/target guards are unchanged.
 
-The .994 follow-up adds a private, timestamped waiting table with per-file size, earliest age eligibility, countdown and blockers. Explicit preview returns a fresh read-only forecast; scheduled inventory observations cache a snapshot. Displayed dates never authorize movement or promise start/finish times. Changing the age setting hides an older forecast until refreshed. Movement safety checks and limits are unchanged.
+## Verification
 
-The .996 interface update adds summary cards, local queue search/status/video filters, expandable full paths and separate settings/manual-action sections. Manual start shows a confirmation explaining that filters do not select the execution scope. Eligibility rules, limits and schedules are unchanged.
+CI checks reproducible package/checksums, isolated install/update/rejection/remove,
+selection and executor behavior, three-language authenticated UI, configuration
+recovery, interruption blocking, depth/navigation, sorting and refresh failures.
+Ordering regressions cover tiny sidecars preceding large media, ratio precedence,
+missing sizes, deterministic ties and remaining byte-budget handling.
 
-Unraid 7.x / PHP 8+. Observer remains the default. Installation and mode changes do not start movement or create a schedule.
+Prior bounded owner movement acceptance is documented in
+[OWNER-MOVEMENT-20261024.md](OWNER-MOVEMENT-20261024.md). A read-only host preview
+also confirmed protected integrity/cooldown deferral. New RC1 ordering is tested
+in isolation; a fresh native RC1 run remains pending until all live guards pass.
+No successful live RC1 transfer is claimed from simulation or preview.
 
-## Reporting correction
+## Known limits
 
-The .993 follow-up preserves every batch-limit skip in the final selective-run report. A file larger than the fixed 16 GiB limit now has a distinct explanation; it cannot move under the current limit. Files deferred by the current batch are reported separately. A run that moves zero files no longer displays the verified-movement completion state. Movement limits and safety checks are unchanged.
+- Execution remains cache/Filmek to the array using reviewed existing automation;
+  Observer is the default and installation creates no schedule or transfer.
+- Files above the saved byte limit remain in cache. Eight-file and cooldown
+  limits may still constrain release rate; RC1 promises no transfer ETA or
+  guarantee against cache filling while writes exceed eligible movement.
+- Actual peer upload of moved content, tracker seed credit, reverse movement,
+  physical power-loss recovery, NAS reboot persistence and broad compatibility
+  remain unverified. Backup restore acceptance is separate from a successful job.
+- The catalog refreshes independently. GitHub publication and accessible image
+  URLs do not by themselves prove current Community Applications gallery content.
 
-## Validation scope
+## Delivery
 
-Regression cases cover oversized files, the exact byte boundary, trailing byte-limit skips, file-count deferrals, independent smaller files and native-retained sources. Authenticated UI fixtures check the new explanations in Hungarian, English and German. These isolated tests use synthetic inputs and mocked execution; they are not additional live-NAS movement evidence.
-
-The project validation also checks policy/native invocation/dispatch guards, existing PHP pages, mode guards, stale-artifact rejection, JavaScript refresh behavior, reproducible package/checksums and isolated install/reinstall/rejection/remove. Public CI never performs production movement.
-
-## Remaining limits
-
-A bounded owner production-content run is documented in OWNER-MOVEMENT-20261024.md. Actual peer upload, tracker seed credit, live NAS reboot persistence and broad hardware/configuration compatibility remain unverified. Earlier owner tests used self-created files outside media libraries. Selective execution is fixed to cache/Filmek to Array with user-share torrent bindings and an 8-file batch limit and explicitly configured 16/32/64/128-GiB cap (default 16 GiB). Age includes first observation; old mtime alone does not make a new cache file eligible. Unknown state stops execution.
-
-See [selective movement and recovery](SELECTIVE-MOVEMENT.md) for retained-helper uninstall semantics and explicit restoration of external wiring. Older archive-prototype and acceptance notes are historical.
-
-
-Candidate .24.2 adds an explicit one-day age option to avoid a mandatory week of observation on an established cache. Default remains seven days and upgrades preserve saved configuration. The newest of first cache observation, modification and torrent completion still controls eligibility. No active/open/incomplete content or maintenance guard is bypassed.
-
-
-## Interrupted execution hardening (.24.3)
-
-Persist an active-file intent before invoking the native executor. Atomic state
-writes fsync both the payload and containing directory. A saved running/active
-report without a completed outcome prevents a fresh unowned run. A new error
-report preserves that inspection requirement. EAGAIN during file execution is
-an inspection error; only prelaunch lock contention is a harmless deferral.
-Do not clear the inspection flag or remove a running report automatically: first
-check the source, destination, user-share view and torrent state. Controlled
-fixtures cover interrupted reports and file-I/O failures. This does not certify
-physical power-loss or real-NAS reboot recovery.
-
-
-## Locked recovery state (.24.4)
-
-Read the prior outcome after acquiring coordination locks, so a preceding lock
-owner's inspection requirement cannot be replaced by an older clean snapshot.
-Successful cooldown timestamps use synchronized atomic replacement.
-
-The Linux recovery fixture terminates a child process before and after a
-disposable file operation, verifies the persisted intent and remaining payload
-hash, then confirms a new invocation refuses execution and retains the
-inspection requirement. This is process-exit evidence, not physical power-loss
-or live NAS reboot certification. The targeted Linux suite passed 26 tests.
-
-
-## Raised appearance and navigation (.24.5)
-
-Raised cards and flat appearance are independent from Follow Unraid / Light / Dark.
-The preference stays in this browser and never changes NAS settings. Motion follows
-the reduced-motion preference. The selective queue becomes labelled cards on small
-screens; keyboard focus and 44-pixel controls remain visible. Back/Forward uses a
-validated, tab-local history limited to the plugin pages and Unraid Dashboard.
-Home always links directly to Dashboard. With storage unavailable the direct
-navigation remains usable. Movement, age rules, guards and schedules are unchanged.
-
-The queue headers and a mobile-accessible sort selector support ascending and
-descending filename, raw size, ratio, age date, remaining-time and status order.
-Unknown numeric/date values stay last in both directions. Original order can be
-restored, active filters stay applied, and sorting never changes execution order.
-
-
-## Refresh correctness (.24.6)
-
-Dashboard polling retains the shared depth stylesheet in the replaced mode banner.
-Selective polling rejects a successful HTTP response that lacks the selective
-status (for example a sign-in page), shows last-known-data feedback and disables
-manual movement locally. A subsequent valid response restores the server-provided
-button state. Display freshness and the inventory observation timestamp remain
-separate. Executor rules, schedules and stored configuration are unchanged.
-
-Selective polling now refreshes the status and cache summary cards as well as
-the detailed report. Queue rows, sort direction and local filters are retained.
-
-
-## Unraid form compatibility and integrity deferral (.25.1)
-
-Selective form controls use fms_action instead of shadowing the native form action
-property used by the Unraid layout. Legacy authenticated action posts remain
-accepted for compatibility. CSRF/mode/configuration checks are unchanged.
-
-An active File Integrity verification is a prelaunch integrity wait when the
-required listeners and wiring can be verified. No candidates can execute while
-that guard waits. Owned execution still aborts if hashing appears mid-run, and
-unknown wiring/listeners remain blocked. Preview can explain this maintenance
-state without classifying it as an unspecified worker failure. Schedules, age,
-file/byte limits, timestamps and existing integrity processes are unchanged.
+The validated main-branch build publishes the first RC1 prerelease and a versioned
+manifest, full source checksums, source ZIP and asset checksum list. Publishing is
+restricted to a successful main-branch push for this RC version; pull-request
+validation has read-only repository permissions. Existing published assets are
+not overwritten. Store metadata keeps the Beta flag for the candidate.

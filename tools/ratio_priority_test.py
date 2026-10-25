@@ -11,6 +11,27 @@ class RatioPriority(unittest.TestCase):
         files=[self.root+'/a',self.root+'/b',self.root+'/c']
         self.assertEqual(prioritize(files,self.torrents,self.mounts,1),[files[1],files[0],files[2]])
         self.assertEqual(prioritize(files,self.torrents,self.mounts,0),files)
+    def test_larger_files_first_with_ratio_priority_disabled(self):
+        files=[self.root+'/small',self.root+'/large',self.root+'/medium']
+        sizes=dict(zip(files,[12,12*1024**3,8*1024**3]))
+        self.assertEqual(prioritize(files,[],self.mounts,0,sizes=sizes),[files[1],files[2],files[0]])
+
+    def test_ratio_group_still_precedes_size_and_unknown_content_is_retained(self):
+        a,b,c=[self.root+'/'+name for name in ('a','b','c')]
+        sizes={a:20*1024**3,b:10,c:30*1024**3}
+        ordered=prioritize([a,b,c],self.torrents,self.mounts,1,sizes=sizes)
+        self.assertEqual(ordered,[b,c,a])
+        self.assertEqual(set(ordered),{a,b,c})
+
+    def test_equal_size_ties_are_deterministic(self):
+        files=[self.root+'/z',self.root+'/a']
+        self.assertEqual(prioritize(files,[],self.mounts,0,sizes={k:10 for k in files}),list(reversed(files)))
+
+    def test_missing_or_invalid_size_fails_closed(self):
+        key=self.root+'/a'
+        for sizes in ({},{key:-1},{key:True},{key:1.0},{key:'1'}):
+            with self.assertRaises(ValueError):prioritize([key],[],self.mounts,0,sizes=sizes)
+
     def test_shared_file_uses_lowest_owner_ratio(self):
         self.torrents.append(dict(content_path='/data/b',ratio=.1))
         self.assertEqual(content_ratio(self.root+'/b',self.torrents,self.mounts),.1)

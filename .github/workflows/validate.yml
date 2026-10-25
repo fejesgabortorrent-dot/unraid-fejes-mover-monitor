@@ -43,3 +43,50 @@ jobs:
         run: python3 tools/check_test.py
       - name: Require validation to leave tracked files unchanged
         run: git diff --exit-code
+
+  publish-rc1:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: isolated-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: fejes-mover-rc1-publication
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Publish tested RC1 without replacing published assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if ! python3 -c 'import sys,xml.etree.ElementTree as E; sys.exit(E.parse("fejes.mover.monitor.plg").getroot().get("version") != "2026.10.25.2")'; then
+            echo 'This build is not the RC1 version; publication skipped.'
+            exit 0
+          fi
+          tag='v2026.10.25.2-rc1'
+          if gh release view "$tag" --json isDraft --jq '.isDraft' > rc-draft-state.txt 2>/dev/null; then
+            if [ "$(cat rc-draft-state.txt)" = 'false' ]; then
+              echo 'RC1 is already published; nothing will be overwritten.'
+              exit 0
+            fi
+            target="$(gh release view "$tag" --json targetCommitish --jq '.targetCommitish')"
+            test "$target" = "$GITHUB_SHA"
+          else
+            gh release create "$tag" --target "$GITHUB_SHA" --draft --prerelease --title 'Fejes Mover Monitor RC1 — 2026.10.25.2' --notes-file docs/RC1.md
+          fi
+          git archive --format=zip --output=fejes-mover-monitor-rc1.zip HEAD
+          sha256sum fejes.mover.monitor.plg SHA256SUMS fejes-mover-monitor-rc1.zip > RC1-SHA256SUMS
+          for asset in fejes.mover.monitor.plg SHA256SUMS fejes-mover-monitor-rc1.zip RC1-SHA256SUMS; do
+            if gh release view "$tag" --json assets --jq '.assets[].name' | grep -Fxq "$asset"; then
+              echo "Asset already uploaded: $asset"
+            else
+              gh release upload "$tag" "$asset"
+            fi
+          done
+          gh release edit "$tag" --draft=false --prerelease
+          gh release view "$tag" --json url,isPrerelease,tagName

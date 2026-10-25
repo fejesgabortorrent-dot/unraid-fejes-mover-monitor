@@ -119,12 +119,13 @@ class DispatchSafety(unittest.TestCase):
         with self.assertRaises(ValueError): prepare(guarded+'\n# unexpected drift\n')
 
 class BatchReporting(unittest.TestCase):
-    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False,inspection_on_lock=False):
+    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False,inspection_on_lock=False,larger_first=False):
         from contextlib import ExitStack
         with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
             root=Path(folder)
             candidates=[f'/mnt/user/Filmek/{i:02}.bin' for i in range(len(sizes))]
             inventory={key:{'signature':[1,i,size,0,0]} for i,(key,size) in enumerate(zip(candidates,sizes))}
+            if larger_first:candidates=mover.prioritize(candidates,[],[],0,sizes={k:inventory[k]['signature'][2] for k in candidates})
             writes=[]
             stack.enter_context(patch.object(mover,'LAST',root/'last.json'))
             stack.enter_context(patch.object(mover,'PID',root/'mover.pid'))
@@ -151,6 +152,20 @@ class BatchReporting(unittest.TestCase):
             if execute.call_count:self.assertTrue(any(w.get('active_file_started') is True for w in writes))
             self.assertFalse((root/'mover.pid').exists())
             return result,execute.call_count,attempt.exists()
+
+    def test_sidecars_do_not_take_all_slots_before_large_media(self):
+        gib=1024**3
+        report,calls,attempt=self.run_batch([1]*8+[12*gib,10*gib],limit=32*gib,larger_first=True)
+        self.assertEqual(calls,8);self.assertTrue(attempt)
+        self.assertEqual(report['moved_bytes'],22*gib+6)
+        self.assertEqual(report['skipped']['batch_file_limit'],2)
+
+    def test_large_first_still_fills_only_remaining_byte_budget(self):
+        gib=1024**3
+        report,calls,_=self.run_batch([12*gib,10*gib,8*gib,2*gib,1*gib],limit=16*gib,larger_first=True)
+        self.assertEqual(report['moved_bytes'],15*gib)
+        self.assertEqual(calls,3)
+        self.assertEqual(report['skipped']['batch_size_limit'],2)
 
     def test_lock_setup_error_preserves_saved_outcome(self):
         import io

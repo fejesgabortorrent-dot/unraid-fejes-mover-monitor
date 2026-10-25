@@ -1,11 +1,11 @@
-# Selective native movement — 2026.10.23.992
+# Selective native movement — RC1 (2026.10.25.2)
 
 Default installation is Observer and creates no schedule. Selective execution is
 an opt-in Advanced/cache feature for `/mnt/cache/Filmek` → the array only.
 
 ## Selection
 
-Save 7, 14 or 30 days on Tools → Mover Selective. Age requires unchanged
+Save 1, 7, 14 or 30 days on Tools → Mover Selective. Age requires unchanged
 device/inode/size/mtime/ctime evidence, old mtime, verified cache observation
 history and, for torrents, old completion time. First observation starts a new
 age window; copied old timestamps do not bypass a recent cache arrival.
@@ -29,8 +29,12 @@ user-share path. Ownership, permissions, mtime and existing xattrs are compared.
 A movement/post-movement error stops further files and requires inspection before
 later movement. No automatic cleanup or deletion is attempted.
 
-Each batch is limited to **8 files / 16 GiB**. Larger files remain in cache and
-are reported. File positions in the monitor are observations, not verified ETA.
+Each batch is limited to **8 files** and the configured **16 / 32 / 64 / 128 GiB**
+(default 16 GiB). Files larger than the selected limit remain in cache and are
+reported. RC1 orders eligible files by the existing ratio-priority group, then
+by size descending, with deterministic pathname ties. Low/unknown ratios are
+retained, not blocked. A large file that does not fit the remaining byte budget
+is deferred; smaller independent files can still use the remainder. File positions in the monitor are observations, not verified ETA.
 
 ## Manual and automatic start
 
