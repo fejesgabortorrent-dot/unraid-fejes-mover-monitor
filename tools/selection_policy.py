@@ -54,14 +54,21 @@ def content_ratio(key, torrents, mounts):
     return min(values)
 
 
-def prioritize(candidates, torrents, mounts, target=0):
-    """Order already eligible files only. Ratio never grants eligibility."""
+def prioritize(candidates, torrents, mounts, target=0, sizes=None):
+    """Order eligible files: ratio band first, then larger files if size is known.
+
+    The size map never grants eligibility or changes the byte/file limits.
+    Callers without a size map retain the former deterministic ordering.
+    """
     target = ratio_target(target)
-    if target == 0:
-        return sorted(candidates)
+    if sizes is not None:
+        for key in candidates:
+            if key not in sizes or type(sizes[key]) is not int or sizes[key] < 0:
+                raise ValueError('Candidate size unavailable')
     def order(key):
-        ratio = content_ratio(key, torrents, mounts)
-        return (0 if ratio is not None and ratio >= target else 1, key)
+        ratio = content_ratio(key, torrents, mounts) if target else None
+        band = 0 if target == 0 or (ratio is not None and ratio >= target) else 1
+        return (band, -sizes[key] if sizes is not None else 0, key)
     return sorted(candidates, key=order)
 
 

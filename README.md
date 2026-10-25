@@ -10,7 +10,7 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.25.1 · Experimental beta · Unraid 7.x**
+**2026.10.25.2 · Release Candidate 1 (RC1) · Unraid 7.x**
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
@@ -46,6 +46,8 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 
 ## Features
 
+- Larger eligible files are selected first within each ratio-priority group, so small sidecar files do not consume every file slot before media. The 8-file and configured byte caps still apply; protected files remain excluded. This execution order is separate from table sorting.
+
 - Optional share-ratio priority (0 disables it, target up to 100): already eligible files whose torrents meet the target go first. Low or unknown ratios never withhold a file. Shared content uses the lowest known owner ratio; missing owner values remain unknown. Ratio is not a tracker seed-time exemption and never bypasses age, activity or safety guards.
 - Explicit batch-size selection for larger media: 16 / 32 / 64 / 128 GiB, still at most 8 files. Existing installations keep 16 GiB until an authenticated settings save. No schedule or live configuration is changed by installation.
 
@@ -77,9 +79,9 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 - Installation never creates a schedule or starts movement. The optional selective executor has backup/parity/scrub/mount/integrity/cooldown guards. It supports **cache/Filmek → Array** with user-share torrent bindings. Observer monitoring remains available for other configured pools.
 - Selection uses the newest of mtime, verified first observation and torrent completion. Old-looking files may need the full new observation window. A batch is limited to 8 files and a configurable 16 / 32 / 64 / 128 GiB (default 16 GiB); files larger than the selected limit are skipped.
 
-## Experimental beta installation
+## RC1 installation
 
-Read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. Owner acceptance on Unraid 7.3.3 used self-created files outside Emby. A bounded owner run moved 8 production-content files (8.929 GiB) with verified checksums/metadata and unchanged torrent paths/completeness/seed states; actual peer upload, tracker credit and live NAS reboot persistence remain unverified.
+See the [RC1 release notes](docs/RC1.md), then read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. Owner acceptance on Unraid 7.3.3 used self-created files outside Emby. A bounded owner run moved 8 production-content files (8.929 GiB) with verified checksums/metadata and unchanged torrent paths/completeness/seed states; actual peer upload, tracker credit and live NAS reboot persistence remain unverified.
 
 In Unraid, open **Plugins → Install Plugin**, then enter:
 

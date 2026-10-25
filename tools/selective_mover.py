@@ -184,7 +184,8 @@ def collect(update=False,owned=False):
     selection=plan(files,items,mounts,protection,days=days,now=time.time(),observed_at=now,root=ROOT)
     selection['ratio_target']=target
     selection['max_bytes']=limit
-    selection['candidates']=prioritize(selection['candidates'],items,mounts,target)
+    selection['candidates']=prioritize(selection['candidates'],items,mounts,target,
+                                         sizes={key:current[key]['signature'][2] for key in selection['candidates']})
     if update:
         atomic_json(INVENTORY,{'version':1,'files':current})
         atomic_json(FORECAST,waiting_table(files,items,mounts,current,protection,
