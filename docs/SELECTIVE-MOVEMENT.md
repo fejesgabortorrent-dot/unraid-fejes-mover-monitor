@@ -1,4 +1,4 @@
-# Selective native movement — RC1 (current build 2026.10.25.3)
+# Selective native movement — RC1 (current build 2026.10.25.4)
 
 Current owner acceptance: three completed RC1 batches, 24 files / 94,199,156,410 bytes. See [current release evidence](RELEASE-STATUS.md); 24–48-hour observation remains in progress.
 

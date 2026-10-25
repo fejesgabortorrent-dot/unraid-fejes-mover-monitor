@@ -10,7 +10,7 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.25.3 · Release Candidate 1 (RC1) · Unraid 7.x**
+**2026.10.25.4 · Release Candidate 1 (RC1) · Unraid 7.x**
 
 RC1 has completed three verified native owner batches: **24 files / 94.20 GB**.
 The 24–48-hour operating observation is ongoing. See [current evidence and limits](docs/RELEASE-STATUS.md).
@@ -20,6 +20,8 @@ The 24–48-hour operating observation is ongoing. See [current evidence and lim
 Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Installation and mode changes never start movement or install a schedule. Advanced/cache mode includes authenticated, opt-in age-filtered movement for the existing `Filmek` share and reviewed threshold automation. The app is listed in the owner's Community Applications search; listing is not broad hardware certification.
 
 **Magyar:** Az új szelektív mozgató kihagyja a túl fiatal, félkész, aktív, megnyitott vagy megváltozott fájlokat. A korhatár 1 / 7 / 14 / 30 nap; a cache-ben igazolt első megfigyelés is számít. A natív Unraid-mozgatót használja, a célon SHA-256-ot és metaadatokat ellenőriz. Az automatikus bekötés külön, mentéssel történik; telepítéskor nem változik a meglévő ütemezés.
+
+The selective page includes dismissible help bubbles, an in-app user guide and project history. Help works with touch, keyboard and Escape without submitting settings.
 
 Raised / flat cards, consistent Back / Forward / Home navigation, and bidirectional queue sorting are available in Hungarian, English and German. Display preferences and sorting never alter movement rules or schedules.
 
