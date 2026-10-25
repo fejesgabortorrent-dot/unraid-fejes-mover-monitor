@@ -10,7 +10,10 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.25.3 · RC1 appearance update · Unraid 7.x**
+**2026.10.25.3 · Release Candidate 1 (RC1) · Unraid 7.x**
+
+RC1 has completed three verified native owner batches: **24 files / 94.20 GB**.
+The 24–48-hour operating observation is ongoing. See [current evidence and limits](docs/RELEASE-STATUS.md).
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
@@ -81,7 +84,7 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 
 ## RC1 installation
 
-See the [RC1 release notes](docs/RC1.md), then read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. Owner acceptance on Unraid 7.3.3 used self-created files outside Emby. A bounded owner run moved 8 production-content files (8.929 GiB) with verified checksums/metadata and unchanged torrent paths/completeness/seed states; actual peer upload, tracker credit and live NAS reboot persistence remain unverified.
+See the [RC1 release notes](docs/RC1.md), then read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. Owner acceptance on Unraid 7.3.3 used self-created files outside Emby. Three scheduled RC1 owner batches moved 24 files (94,199,156,410 bytes; 94.20 GB), with successful executor verification and unchanged torrent paths/completeness/seed states; actual peer upload, tracker credit and live NAS reboot persistence remain unverified.
 
 In Unraid, open **Plugins → Install Plugin**, then enter:
 
