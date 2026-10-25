@@ -1,4 +1,4 @@
-# Experimental beta — 2026.10.24.6
+# Experimental beta — 2026.10.25.1
 
 Candidate .24.1 adds optional ratio priority and an explicit batch size selector. Ratio affects order only after eligibility; low/missing ratios never withhold candidates. Shared ownership uses the minimum ratio, unknown values remain unknown. The private queue gains a ratio column. Existing configs default to priority disabled and 16 GiB. Saves retain config backups and reject concurrent/stale forms. Neither feature overrides age, torrent activity, maintenance or integrity guards. No production media or live reboot acceptance is claimed for this candidate.
 
@@ -83,3 +83,17 @@ separate. Executor rules, schedules and stored configuration are unchanged.
 
 Selective polling now refreshes the status and cache summary cards as well as
 the detailed report. Queue rows, sort direction and local filters are retained.
+
+
+## Unraid form compatibility and integrity deferral (.25.1)
+
+Selective form controls use fms_action instead of shadowing the native form action
+property used by the Unraid layout. Legacy authenticated action posts remain
+accepted for compatibility. CSRF/mode/configuration checks are unchanged.
+
+An active File Integrity verification is a prelaunch integrity wait when the
+required listeners and wiring can be verified. No candidates can execute while
+that guard waits. Owned execution still aborts if hashing appears mid-run, and
+unknown wiring/listeners remain blocked. Preview can explain this maintenance
+state without classifying it as an unspecified worker failure. Schedules, age,
+file/byte limits, timestamps and existing integrity processes are unchanged.

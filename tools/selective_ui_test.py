@@ -51,6 +51,23 @@ class SelectiveInterface(unittest.TestCase):
             result=self.render(lang=language)
             self.assertFalse(result['calls']);self.assertIn(label,result['html'])
 
+    def test_namespaced_form_action_avoids_host_collision(self):
+        for lang in ('hu','en','de'):
+            result=self.render(lang=lang)
+            self.assertNotIn('name="action"',result['html'])
+            self.assertIn('name="fms_action"',result['html'])
+        post=self.request();post['fms_action']='preview';post.pop('action')
+        result=self.render(post)
+        self.assertEqual(len(result['calls']),1)
+        self.assertIn('selective_mover.py preview',result['calls'][0])
+        self.assertEqual(result['config']['age_days'],7)
+
+    def test_integrity_deferral_has_readable_labels(self):
+        for lang,label in [('hu','File Integrity'),('en','File Integrity'),('de','File-Integrity')]:
+            result=self.render(lang=lang,last={'state':'deferred','blockers':['integrity','cooldown'],'moved_files':0,'moved_bytes':0})
+            self.assertIn(label,result['html'])
+            self.assertFalse(result['calls'])
+
     def test_observer_cannot_launch(self):
         self.assertFalse(self.render(self.request(),mode='observer')['calls'])
 

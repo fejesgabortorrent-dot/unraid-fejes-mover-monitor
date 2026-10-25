@@ -146,11 +146,13 @@ def guards(owned=False):
     stats=subprocess.check_output(['btrfs','device','stats','/mnt/cache'],text=True,timeout=10)
     if not stats.strip() or any(not line.split()[-1].isdigit() or int(line.split()[-1]) for line in stats.splitlines()):
         raise ValueError('Cache device errors or unavailable')
-    args=[]
+    args=[]; integrity_scanning=False
     for entry in Path('/proc').glob('[0-9]*/cmdline'):
         try: values=entry.read_bytes().split(b'\0')
         except FileNotFoundError: continue
-        if any(v.endswith(b'/bunker') for v in values): raise ValueError('Integrity hashing active')
+        if any(v.endswith(b'/bunker') for v in values):
+            if owned: raise ValueError('Integrity hashing active')
+            integrity_scanning=True
         args.append(values)
     watcher=b'/usr/local/emhttp/plugins/dynamix.file.integrity/scripts/watcher'
     for disk in disks:
@@ -161,7 +163,7 @@ def guards(owned=False):
         if not any(a and a[0].endswith(b'inotifywait') and str(pipe).encode() in a and str(disk).encode() in a for a in args):
             raise ValueError('Integrity event source missing')
     wired=report.get('integrity_config')=='wired' and report.get('integrity_active')=='wired'
-    result.update(integrity='pass' if wired else 'unknown',mount='pass',namespace='pass',open_files='pass')
+    result.update(integrity=('wait' if integrity_scanning else 'pass') if wired else 'unknown',mount='pass',namespace='pass',open_files='pass')
     return result
 
 

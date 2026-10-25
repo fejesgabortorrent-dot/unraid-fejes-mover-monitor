@@ -5,7 +5,7 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.10.24.6'
+version='2026.10.25.1'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_preview.py','selective_mover.py','wire_selective.py')]
 
@@ -14,6 +14,10 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.10.25.1 (experimental beta)
+- Avoid reserved form action names that conflict with the Unraid layout handler.
+- Report active File Integrity verification as a protected prelaunch deferral; owned execution still aborts if hashing starts.
+- Explain integrity and cooldown blockers without changing schedules or batch limits.
 ### 2026.10.24.6 (experimental beta)
 - Preserve raised-card styling through dashboard polling replacements.
 - Refresh selective status/cache summary cards alongside the detailed report without resetting filters or sorting.
