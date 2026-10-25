@@ -1,4 +1,6 @@
-# RC1 — Fejes Mover Monitor 2026.10.25.2
+# RC1 — Fejes Mover Monitor
+
+Original prerelease: 2026.10.25.2. Current appearance build: 2026.10.25.3.
 
 First release candidate for Unraid 7.x. This is a prerelease for evaluation,
 not a general compatibility or reboot/power-loss certification.
@@ -37,10 +39,29 @@ checks and the JavaScript refresh/theme/navigation/sort suites.
 
 The package is reproducibly built, with checksum, isolated install/update/remove,
 policy, UI, language, interruption, guard and ordering regressions checked in CI.
-Previous owner runs verified bounded native movement with matching checksums and
-unchanged client paths/completeness/seed states. RC1's new larger-first ordering
-has isolated regression and read-only host-preview evidence; a fresh native
-RC1 movement run is still pending while integrity/cooldown guards are active.
+## Verified RC1 owner movement — 2026-10-25
+
+The installed RC1 appearance build 2026.10.25.3 completed three scheduled native
+cache-to-array batches: **24 files, 94,199,156,410 bytes (94.20 GB)**.
+
+| Batch start (CET) | Files | Verified moved bytes |
+| --- | ---: | ---: |
+| 08:45 | 8 | 34,348,423,383 |
+| 10:15 | 8 | 30,728,214,699 |
+| 11:30 | 8 | 29,122,518,328 |
+
+All three reports were `completed`, with `requires_inspection=false`,
+`active_file_started=false`, and all four torrent-continuity checks true:
+same torrents, unchanged paths, completed content still complete, and completed
+content in seed states. The executor verifies SHA-256 and metadata before
+counting a moved file. These checks do not prove peer upload or tracker credit.
+
+After the first completed batch, the owner-authorized retry interval changed
+from 360 to 60 minutes through the authenticated settings page. The backup,
+exact one-line change, shell syntax and read-back were verified; threshold,
+cron, age, ratio and batch limits remained unchanged. This is an owner setting,
+not a new installation default. The 24–48-hour observation is still in progress;
+RC1 remains a prerelease, not a stable or broad-compatibility certification.
 
 Actual peer upload of a moved file, tracker seed credit, reverse movement,
 physical power-loss recovery, live NAS reboot persistence and broad hardware/share

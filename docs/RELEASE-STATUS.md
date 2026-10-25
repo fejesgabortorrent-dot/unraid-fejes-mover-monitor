@@ -1,4 +1,4 @@
-# Release Candidate 1 — 2026.10.25.2
+# Release Candidate 1 — current build 2026.10.25.3
 
 RC1 is a prerelease for the documented Unraid 7.x owner-tested scope. See
 [RC1 release notes](RC1.md) and [selection/execution rules](SELECTIVE-MOVEMENT.md).
@@ -18,11 +18,29 @@ recovery, interruption blocking, depth/navigation, sorting and refresh failures.
 Ordering regressions cover tiny sidecars preceding large media, ratio precedence,
 missing sizes, deterministic ties and remaining byte-budget handling.
 
-Prior bounded owner movement acceptance is documented in
-[OWNER-MOVEMENT-20261024.md](OWNER-MOVEMENT-20261024.md). A read-only host preview
-also confirmed protected integrity/cooldown deferral. New RC1 ordering is tested
-in isolation; a fresh native RC1 run remains pending until all live guards pass.
-No successful live RC1 transfer is claimed from simulation or preview.
+## Verified RC1 owner movement — 2026-10-25
+
+The installed RC1 appearance build 2026.10.25.3 completed three scheduled native
+cache-to-array batches: **24 files, 94,199,156,410 bytes (94.20 GB)**.
+
+| Batch start (CET) | Files | Verified moved bytes |
+| --- | ---: | ---: |
+| 08:45 | 8 | 34,348,423,383 |
+| 10:15 | 8 | 30,728,214,699 |
+| 11:30 | 8 | 29,122,518,328 |
+
+All three reports were `completed`, with `requires_inspection=false`,
+`active_file_started=false`, and all four torrent-continuity checks true:
+same torrents, unchanged paths, completed content still complete, and completed
+content in seed states. The executor verifies SHA-256 and metadata before
+counting a moved file. These checks do not prove peer upload or tracker credit.
+
+After the first completed batch, the owner-authorized retry interval changed
+from 360 to 60 minutes through the authenticated settings page. The backup,
+exact one-line change, shell syntax and read-back were verified; threshold,
+cron, age, ratio and batch limits remained unchanged. This is an owner setting,
+not a new installation default. The 24–48-hour observation is still in progress;
+RC1 remains a prerelease, not a stable or broad-compatibility certification.
 
 ## Known limits
 
