@@ -1,6 +1,6 @@
 # RC1 — Fejes Mover Monitor
 
-Original prerelease: 2026.10.25.2. Current appearance build: 2026.10.25.3.
+Original prerelease: 2026.10.25.2. Current usability build: 2026.10.25.4.
 
 First release candidate for Unraid 7.x. This is a prerelease for evaluation,
 not a general compatibility or reboot/power-loss certification.

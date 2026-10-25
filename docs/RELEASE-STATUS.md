@@ -1,4 +1,4 @@
-# Release Candidate 1 — current build 2026.10.25.3
+# Release Candidate 1 — current build 2026.10.25.4
 
 RC1 is a prerelease for the documented Unraid 7.x owner-tested scope. See
 [RC1 release notes](RC1.md) and [selection/execution rules](SELECTIVE-MOVEMENT.md).
