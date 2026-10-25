@@ -88,6 +88,13 @@ HTML;
 <style id="fejes-depth-style">
 #fms button.fms-sort-heading{background:transparent!important;color:inherit!important;border:0!important;padding:0!important;margin:0!important;box-shadow:none!important;transform:none!important;text-align:left;font:inherit;font-weight:600;display:flex;align-items:center;gap:6px;width:100%;min-height:44px}#fms .fms-sort-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px}#fms .fms-sort-controls small{opacity:.7;font-size:12px}#fms .fms-sort-controls select{max-width:100%}#fms .fms-sort-controls button{min-width:130px}
 #fejes-mover-dashboard .fmc-nav,#fejes-mover-dashboard .fmc-depth{display:none}#fejes-mover-dashboard .fmc-mode{margin:8px!important;font-size:12px}#fejes-mover-dashboard .fmc-theme{float:none;display:flex;margin:0 0 8px}
+/* Comfortable flat controls, including the compact dashboard appearance picker. */
+.fmc-theme{flex-wrap:wrap;row-gap:6px}.fmc-theme select{min-width:155px!important;max-width:100%;min-height:44px;padding:8px 30px 8px 12px!important;border-radius:10px!important;font:inherit;font-weight:600;box-sizing:border-box;cursor:pointer}
+:is(.fmc-theme,.fmc-depth) select{border:1px solid #8888!important;transition:border-color .15s ease,background-color .15s ease}
+@media(hover:hover){:is(.fmc-theme,.fmc-depth) select:hover{border-color:#ed8b25!important}.fmc-nav :is(a,button:enabled):hover{border-color:#ed8b25!important;background-color:#ed8b2514!important}}
+html[data-fejes-depth="flat"] :is(.fmc-nav a,.fmc-nav button,#fms button:not(.fms-sort-heading),#ms button,#fp button,#fm-monitor button,#fmc-setup button,#fejes-mover-dashboard button){border-radius:10px!important;box-shadow:none;transition:border-color .15s ease,background-color .15s ease}
+html[data-fejes-depth="flat"] .fmc-nav a[aria-current="page"]{box-shadow:inset 0 -2px #ed8b25}
+@media(prefers-reduced-motion:reduce){:is(.fmc-theme,.fmc-depth) select,html[data-fejes-depth="flat"] :is(.fmc-nav a,.fmc-nav button,#fms button,#ms button,#fmc-setup button){transition:none}}
 /* Scoped to Fejes Mover; host navigation and system preferences stay independent. */
 .fmc-nav{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:16px;padding:12px;border:1px solid #8885;border-radius:14px;background:#8881}
 .fmc-nav a,.fmc-nav button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px;border:1px solid #8886;border-radius:9px;color:inherit!important;background:transparent;text-decoration:none!important;font:inherit;font-weight:600;box-sizing:border-box;cursor:pointer}
