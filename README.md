@@ -10,7 +10,7 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.25.2 · Release Candidate 1 (RC1) · Unraid 7.x**
+**2026.10.25.3 · RC1 appearance update · Unraid 7.x**
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
