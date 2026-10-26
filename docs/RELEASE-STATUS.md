@@ -1,4 +1,4 @@
-# Release Candidate 1 — current build 2026.10.25.4
+# Release Candidate 1 — current build 2026.10.26.6
 
 RC1 is a prerelease for the documented Unraid 7.x owner-tested scope. See
 [RC1 release notes](RC1.md) and [selection/execution rules](SELECTIVE-MOVEMENT.md).
@@ -9,6 +9,12 @@ blocking. RC1 fixes small-file domination of the eight-file batch by ordering
 larger eligible files first inside the existing ratio-priority groups. Low or
 unknown ratios never exclude an otherwise eligible file. File/byte caps, age,
 cooldown, maintenance and source/target guards are unchanged.
+
+## Current update and operating limits
+
+Build 2026.10.26.6 includes shared layout/support controls, dashboard report summaries, settings feedback and private failure diagnostics. Targeted footer controls, PHP syntax and generated XML checks passed locally. Earlier full-suite results apply to build 2026.10.26.4; the current build requires CI validation.
+
+An owner-run inspection incident occurred during observation. Inspected data was verified before the inspection latch was resolved; the original backend cause remains unknown. Two subsequent small scheduled batches completed with continuity checks passing. These results do not establish sustained large-file recovery or stable-release readiness. No tracker credit or actual peer upload is inferred. Private paths, logs and screenshots are not published.
 
 ## Verification
 

@@ -5,7 +5,7 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.10.25.4'
+version='2026.10.26.6'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_preview.py','selective_mover.py','wire_selective.py')]
 
@@ -14,6 +14,14 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.10.26.6 (RC1 support strip)
+- Add a shared grey PayPal strip with white border and optional coffee, beer, pizza and custom support links.
+### 2026.10.26.5 (RC1 dashboard and diagnostics update)
+- Use a non-submitting button for Back to top; never open a new tab.
+- Keep navigation accessible while scrolling and align controls across all plugin pages.
+- Add a report summary and accessible hover/touch help to the dashboard.
+- Show unsaved numeric settings and invalid-range feedback.
+- Preserve private failure details; keep movement guards and schedules unchanged.
 ### 2026.10.25.4 (RC1 usability update)
 - Add accessible dismissible help bubbles, a user guide and project history to the selective interface.
 - Reduce explanatory clutter while keeping manual-action and safety warnings visible.

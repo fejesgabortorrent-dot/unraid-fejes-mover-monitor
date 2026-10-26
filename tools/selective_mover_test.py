@@ -170,7 +170,7 @@ class BatchReporting(unittest.TestCase):
     def test_lock_setup_error_preserves_saved_outcome(self):
         import io
         saved=[]
-        with patch.object(mover,'open',side_effect=[io.StringIO(),OSError('lock unavailable')],create=True),patch.object(mover.fcntl,'flock'),patch.object(mover,'atomic_json',side_effect=lambda *args:saved.append(args)):
+        with patch.object(mover,'record_failure'),patch.object(mover,'open',side_effect=[io.StringIO(),OSError('lock unavailable')],create=True),patch.object(mover.fcntl,'flock'),patch.object(mover,'atomic_json',side_effect=lambda *args:saved.append(args)):
             result=mover.run()
         self.assertEqual(result['state'],'error')
         self.assertEqual(saved,[])

@@ -16,6 +16,7 @@ import re
 import stat
 import subprocess
 import time
+import traceback
 
 import selective_preview as inventory_adapter
 from selective_preview import canonical, read_json, atomic_json
@@ -221,6 +222,22 @@ def log(message):
     subprocess.run(['logger','-t','mover','Fejes selective: '+message],check=True,timeout=5)
 
 
+def record_failure(report, active_key=None):
+    """Keep private exception evidence without weakening the inspection latch."""
+    try:
+        fd=os.open(str(LAST.parent/'selective-error.log'),os.O_WRONLY|os.O_CREAT|os.O_APPEND|os.O_NOFOLLOW,0o600)
+        with os.fdopen(fd,'a') as stream:
+            os.fchmod(stream.fileno(),0o600)
+            stream.write('\nRun started='+str(report.get('started'))+' stage='+str(report.get('stage','preflight'))+'\n')
+            if active_key is not None:
+                stream.write('Active file='+json.dumps(active_key,ensure_ascii=True)+'\n')
+            traceback.print_exc(file=stream)
+            stream.flush();os.fsync(stream.fileno())
+    except (OSError,ValueError):
+        # Diagnostic failure must never clear a failed movement or its latch.
+        pass
+
+
 def execute_file(key,expected,days):
     path,eligible=fresh_candidate(key,expected,days)
     if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
@@ -302,6 +319,7 @@ def run():
                 skips['batch_file_limit']+=1;continue
             if report['moved_bytes']+size>limit:
                 skips['batch_size_limit']+=1;continue
+            report['stage']='file_verification_or_move'
             report['active_file_started']=True
             atomic_json(LAST,report)  # Durable intent before any native file operation.
             outcome=execute_file(key,current[key],selection['age_days'])
@@ -325,6 +343,7 @@ def run():
         if report['moved_files']: atomic_json(ATTEMPT,int(time.time()))
         log(f'finished; verified files={report["moved_files"]}, bytes={report["moved_bytes"]}')
     except BlockingIOError:
+        record_failure(report, locals().get('key'))
         # Lock contention before launch is different from EAGAIN during file I/O.
         if report['state']=='checking':
             return {'state':'deferred','reason':'another_operation_active','moved_files':0}
@@ -332,7 +351,8 @@ def run():
         report['error']='File operation unavailable; inspect before another run.'
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])
     except ERRORS:
-        report['state']='error';report['error']='Required state changed or could not be verified. No further files will be started; inspect the private system log.'
+        record_failure(report, locals().get('key'))
+        report['state']='error';report['error']='Required state changed or could not be verified. No further files will be started; inspect selective-error.log in the private plugin configuration directory.'
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])
     finally:
         if own_pid and PID.exists() and PID.read_text()==str(os.getpid()): PID.unlink()
