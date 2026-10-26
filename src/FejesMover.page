@@ -76,7 +76,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 #fm-monitor .fm-note{font-size:12px}
 </style>
 <div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
-<?=$fmc['banner']?>
+<?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover Monitor</h2><p class="fm-sub">FejesNAS · Live status · Monitoring only</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Settings</a><button type="button" id="fm-toggle">Auto-refresh: ON (5 sec)</button> <span>Data timestamp: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ ARRAY</span></div><p class="fm-note">Cache / array illustration; actual direction may vary by share · <?=$fmRun?'Mover is active.':'Currently idle.'?></p><div class="fm-grid">
@@ -168,7 +168,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 #fm-monitor .fm-note{font-size:12px}
 </style>
 <div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
-<?=$fmc['banner']?>
+<?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover-Monitor</h2><p class="fm-sub">FejesNAS · Live-Status · Nur Überwachung</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Einstellungen</a><button type="button" id="fm-toggle">Automatische Aktualisierung: AN (5 Sek.)</button> <span>Datenstand: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ ARRAY</span></div><p class="fm-note">Cache-/Array-Darstellung; die tatsächliche Richtung kann je Freigabe abweichen · <?=$fmRun?'Mover ist aktiv.':'Derzeit im Leerlauf.'?></p><div class="fm-grid">
@@ -260,7 +260,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 #fm-monitor .fm-note{font-size:12px}
 </style>
 <div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
-<?=$fmc['banner']?>
+<?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover figyelő</h2><p class="fm-sub">FejesNAS · Élő állapot · Csak megfigyelés</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Beállítások</a><button type="button" id="fm-toggle">Automatikus frissítés: BE (5 mp)</button> <span>Adatok ideje: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ LEMEZTÖMB</span></div><p class="fm-note">Cache / lemeztömb szemléltetés; a tényleges irány megosztásonként eltérhet · <?=$fmRun?'A mover aktív.':'Jelenleg várakozik.'?></p><div class="fm-grid">
