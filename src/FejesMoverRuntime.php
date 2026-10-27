@@ -55,25 +55,40 @@ return (static function ($configWrite) {
     $banner .= ' · <a href="/Tools/FejesMoverSetup">'.$esc($t('Mód és pool beállítása','Configure mode and pool','Modus und Pool einstellen')).'</a></div>';
     $theme = <<<'HTML'
 <style id="fejes-theme-style">
+.fm-lang-control,.fm-icon-control{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:44px!important;height:44px!important;min-width:44px;box-sizing:border-box;position:relative;margin:0!important;padding:0!important;border:1px solid #8792a066!important;border-radius:11px!important;background:var(--fejes-panel,#303641)!important;color:var(--fejes-fg,#edf0f5)!important;text-decoration:none!important;vertical-align:middle;cursor:pointer;box-shadow:inset 0 1px 0 #ffffff0a}
+.fm-lang-control>span{display:flex!important;align-items:center;justify-content:center;width:26px!important;margin:0!important;pointer-events:none}.fm-lang-control>select{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;opacity:0!important;cursor:pointer}.fm-icon-control svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.fm-lang-control:focus-within,.fm-icon-control:focus-visible{outline:2px solid #ed8b25;outline-offset:3px}@media(hover:hover){.fm-lang-control:hover,.fm-icon-control:hover{border-color:#ed8b25!important;background:#ed8b2520!important}}
+@property --fm-orbit-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
+@keyframes fm-control-orbit{to{--fm-orbit-angle:360deg}}
+:is(.fm-lang-control,.fm-icon-control)::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--fm-orbit-angle),transparent 0deg,transparent 210deg,#ed8b25 280deg,#ffe2b0 310deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;opacity:0;transition:opacity .15s}
+@media(hover:hover){:is(.fm-lang-control,.fm-icon-control):hover::before{opacity:1;animation:fm-control-orbit 1.8s linear infinite}}
+:is(.fm-lang-control,.fm-icon-control):focus-within::before{opacity:1;animation:fm-control-orbit 1.8s linear infinite}
+@media(prefers-reduced-motion:reduce){:is(.fm-lang-control,.fm-icon-control)::before{animation:none!important;transition:none!important}}
+#fejes-mover-dashboard .tile-header{display:flex!important;align-items:center!important;justify-content:space-between;gap:12px;flex-wrap:wrap}#fejes-mover-dashboard .tile-header-left{display:flex;align-items:center;min-width:0}#fejes-mover-dashboard .tile-header-right{display:inline-flex!important;align-items:center!important;gap:8px!important;margin-left:auto;float:none!important;white-space:nowrap}#fejes-mover-dashboard .tile-header-main{margin:0!important}html[data-fejes-theme] #fejes-mover-dashboard .tile-header-right a.fm-icon-control{color:var(--fejes-fg,#edf0f5)!important}
 .fmc-theme{float:right;display:inline-flex;gap:8px;align-items:center;margin:0 0 8px 16px}.fmc-theme select{width:auto!important;padding:5px 8px!important;border:1px solid #8888!important;border-radius:5px!important}
+html[data-fejes-theme="auto"]{--fejes-bg:var(--background-color,#1d1b1b);--fejes-panel:var(--mild-background-color,#262626);--fejes-fg:var(--text-color,#f2f2f2);--fejes-line:var(--border-color,#404040);--fejes-link:var(--link-text-color,#486dba);--fejes-scheme:inherit}
+html[data-fejes-theme="white"]{--fejes-bg:#f2f2f2;--fejes-panel:#f7f9f9;--fejes-fg:#1d1b1b;--fejes-line:#d3d3d3;--fejes-link:#486dba;--fejes-scheme:light}
+html[data-fejes-theme="black"]{--fejes-bg:#1d1b1b;--fejes-panel:#262626;--fejes-fg:#f2f2f2;--fejes-line:#404040;--fejes-link:#486dba;--fejes-scheme:dark}
+html[data-fejes-theme="gray"]{--fejes-bg:#1d1b1b;--fejes-panel:#121510;--fejes-fg:#606e7f;--fejes-line:#606e7f;--fejes-link:#486dba;--fejes-scheme:dark}
+html[data-fejes-theme="azure"]{--fejes-bg:#e8e8e8;--fejes-panel:#edeaef;--fejes-fg:#606e7f;--fejes-line:#606e7f;--fejes-link:#486dba;--fejes-scheme:light}
 html[data-fejes-theme="light"]{--fejes-bg:#f5f6f8;--fejes-panel:#fff;--fejes-fg:#202632;--fejes-line:#c7cdd5;--fejes-link:#985000;--fejes-scheme:light}
 html[data-fejes-theme="dark"]{--fejes-bg:#171b22;--fejes-panel:#222833;--fejes-fg:#edf0f5;--fejes-line:#4a5362;--fejes-link:#ffb567;--fejes-scheme:dark}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode){background:var(--fejes-bg)!important;color:var(--fejes-fg)!important;color-scheme:var(--fejes-scheme);border-radius:8px}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard){padding:18px!important}
-html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(h1,h2,h3,p,span,strong,small,label,legend,summary,td,th,pre){color:var(--fejes-fg)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(h1,h2,h3,p,span,strong,small,label,legend,summary,td,th,pre):not(#fmd-status){color:var(--fejes-fg)!important}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(section,fieldset,.fm-card,.ms-card,.fms-panel,.fms-cards>div){background:var(--fejes-panel)!important;border-color:var(--fejes-line)!important}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(input,select,button,thead th,tbody td){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) a{color:var(--fejes-link)!important}
 html[data-fejes-theme] #fms .fms-primary{background:#a95206!important;color:#fff!important;border-color:#a95206!important}
 html[data-fejes-theme] #fms .fms-danger{border-color:#d65b51!important}
+html[data-fejes-theme] #fmd-percent{background:var(--fejes-panel)!important;color:var(--fejes-fg)!important}
 html[data-fejes-theme] #fm-monitor .fm-donut span{background:var(--fejes-panel)!important}
 @media(max-width:600px){.fmc-theme{float:none;display:flex;margin:0 0 10px}}
 </style>
-<label class="fmc-theme">THEME_LABEL <select data-fejes-theme-select aria-label="THEME_LABEL"><option value="auto">AUTO_LABEL</option><option value="light">LIGHT_LABEL</option><option value="dark">DARK_LABEL</option></select></label>
+<label class="fmc-theme">THEME_LABEL <select data-fejes-theme-select aria-label="THEME_LABEL"><option value="auto">AUTO_LABEL</option><option value="white">WHITE_PALETTE_LABEL</option><option value="black">BLACK_PALETTE_LABEL</option><option value="gray">GRAY_PALETTE_LABEL</option><option value="azure">AZURE_PALETTE_LABEL</option></select></label>
 <script>(()=>{
 if(window.fejesMoverTheme)return;window.fejesMoverTheme=true;
-const key='fejesMoverTheme',valid=v=>['auto','light','dark'].includes(v)?v:'auto';
-function apply(value){value=valid(value);if(value==='auto')document.documentElement.removeAttribute('data-fejes-theme');else document.documentElement.setAttribute('data-fejes-theme',value);document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>el.value=value);}
+const key='fejesMoverTheme',valid=v=>{v=({light:'white',dark:'black'})[v]||v;return ['auto','white','black','gray','azure'].includes(v)?v:'auto';};
+function apply(value){value=valid(value);document.documentElement.setAttribute('data-fejes-theme',value);document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>el.value=value);}
 function saved(){try{return valid(localStorage.getItem(key));}catch{return 'auto';}}
 let choice=saved();apply(choice);document.addEventListener('change',event=>{if(!event.target.matches('[data-fejes-theme-select]'))return;const value=valid(event.target.value);try{localStorage.setItem(key,value);}catch{}choice=value;apply(choice);});
 window.addEventListener('storage',event=>{if(event.key===key){choice=saved();apply(choice);}});
@@ -81,9 +96,9 @@ window.addEventListener('storage',event=>{if(event.key===key){choice=saved();app
 new MutationObserver(()=>{const value=choice;document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>{if(el.value!==value)el.value=value;});}).observe(document.body,{childList:true,subtree:true});
 })();</script>
 HTML;
-    $theme=str_replace(['THEME_LABEL','AUTO_LABEL','LIGHT_LABEL','DARK_LABEL'],array_map($esc,[
+    $theme=str_replace(['THEME_LABEL','AUTO_LABEL','LIGHT_LABEL','DARK_LABEL','WHITE_PALETTE_LABEL','BLACK_PALETTE_LABEL','GRAY_PALETTE_LABEL','AZURE_PALETTE_LABEL'],array_map($esc,[
         $t('Megjelenés','Appearance','Darstellung'),$t('Rendszerkövető','Follow Unraid','Unraid folgen'),
-        $t('Világos','Light','Hell'),$t('Sötét','Dark','Dunkel')]),$theme);
+        $t('Világos','Light','Hell'),$t('Sötét','Dark','Dunkel'),$t('Unraid · Fehér','Unraid · White','Unraid · Weiß'),$t('Unraid · Fekete','Unraid · Black','Unraid · Schwarz'),$t('Unraid · Szürke','Unraid · Gray','Unraid · Grau'),$t('Unraid · Azúr','Unraid · Azure','Unraid · Azur')]),$theme);
     $design = <<<'HTML'
 <style id="fejes-depth-style">
 #fms button.fms-sort-heading{background:transparent!important;color:inherit!important;border:0!important;padding:0!important;margin:0!important;box-shadow:none!important;transform:none!important;text-align:left;font:inherit;font-weight:600;display:flex;align-items:center;gap:6px;width:100%;min-height:44px}#fms .fms-sort-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px}#fms .fms-sort-controls small{opacity:.7;font-size:12px}#fms .fms-sort-controls select{max-width:100%}#fms .fms-sort-controls button{min-width:130px}
@@ -187,6 +202,7 @@ HTML;
             if(!empty($last['inspection_resolution'])&&($last['state']??'')==='error'&&empty($last['requires_inspection']))$status=$t('Helyreállítás ellenőrizve · új körre vár','Recovery inspected · awaiting a new run','Wiederherstellung geprüft · wartet auf neuen Lauf');
             if(is_numeric($last['started']??null))$detail=$t('Jelentés ideje: ','Report time: ','Berichtszeit: ').date('Y-m-d H:i',(int)$last['started']);
             if(($last['state']??'')==='completed'&&is_numeric($last['moved_files']??null)&&is_numeric($last['moved_bytes']??null))$detail.=' · '.$last['moved_files'].' '.$t('fájl','files','Dateien').' · '.number_format($last['moved_bytes']/1073741824,2).' GiB';
+            if(($last['state']??'')==='error'&&($last['error_code']??'')==='torrent_snapshot_unavailable')$detail.=' · '.$t('A torrentállapot nem kérdezhető le; a biztonság nem igazolható.','Torrent state could not be queried; safety could not be verified.','Torrentstatus konnte nicht abgefragt werden; Sicherheit nicht verifiziert.');
             if(is_array($last['blockers']??null)&&$last['blockers'])$detail.=' · '.implode(', ',array_map(static fn($key)=>$reasons[$key]??$t('További védelmi feltétel','Additional guard','Weitere Schutzbedingung'),$last['blockers']));
         }
         $tip=$t('A legutóbbi jelentés pillanatkép. A futó háttérfolyamat önmagában nem bizonyít adatátvitelt. A Részletek oldalon látható a várólista és a védelmek.','The last report is a snapshot. A running worker alone does not prove data transfer. Open Details for the queue and guards.','Der letzte Bericht ist eine Momentaufnahme. Ein laufender Prozess allein beweist keinen Datentransfer. Details zeigen Warteliste und Schutzbedingungen.');

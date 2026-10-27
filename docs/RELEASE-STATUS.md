@@ -1,6 +1,6 @@
-# Release Candidate 1 — current build 2026.10.26.6
+# Release Candidate 1 — current build 2026.10.27.4
 
-RC1 is a prerelease for the documented Unraid 7.x owner-tested scope. See
+RC1 is a prerelease for the documented Unraid 7.x documented scope. See
 [RC1 release notes](RC1.md) and [selection/execution rules](SELECTIVE-MOVEMENT.md).
 
 The package provides monitoring, optional age-filtered native movement, per-content
@@ -12,9 +12,9 @@ cooldown, maintenance and source/target guards are unchanged.
 
 ## Current update and operating limits
 
-Build 2026.10.26.6 includes shared layout/support controls, dashboard report summaries, settings feedback and private failure diagnostics. Targeted footer controls, PHP syntax and generated XML checks passed locally. Earlier full-suite results apply to build 2026.10.26.4; the current build requires CI validation.
+Build 2026.10.27.4 retains the shared appearance in Follow Unraid mode, aligns flag-only language/settings/detail controls, improves light-theme contrast and reports unavailable torrent queries without exposing command arguments. Native process failure details remain in a private diagnostic log.
 
-An owner-run inspection incident occurred during observation. Inspected data was verified before the inspection latch was resolved; the original backend cause remains unknown. Two subsequent small scheduled batches completed with continuity checks passing. These results do not establish sustained large-file recovery or stable-release readiness. No tracker credit or actual peer upload is inferred. Private paths, logs and screenshots are not published.
+The current candidate passed 131 isolated tests, package reproducibility, checksums, PHP syntax, installation lifecycle and targeted JavaScript checks. GitHub CI validates the submitted revision separately. These checks do not establish live reboot persistence or broad hardware compatibility. RC1 remains a prerelease; keep backups and do not infer tracker credit or actual peer upload from continuity checks.
 
 ## Verification
 
@@ -23,30 +23,6 @@ selection and executor behavior, three-language authenticated UI, configuration
 recovery, interruption blocking, depth/navigation, sorting and refresh failures.
 Ordering regressions cover tiny sidecars preceding large media, ratio precedence,
 missing sizes, deterministic ties and remaining byte-budget handling.
-
-## Verified RC1 owner movement — 2026-10-25
-
-The installed RC1 appearance build 2026.10.25.3 completed three scheduled native
-cache-to-array batches: **24 files, 94,199,156,410 bytes (94.20 GB)**.
-
-| Batch start (CET) | Files | Verified moved bytes |
-| --- | ---: | ---: |
-| 08:45 | 8 | 34,348,423,383 |
-| 10:15 | 8 | 30,728,214,699 |
-| 11:30 | 8 | 29,122,518,328 |
-
-All three reports were `completed`, with `requires_inspection=false`,
-`active_file_started=false`, and all four torrent-continuity checks true:
-same torrents, unchanged paths, completed content still complete, and completed
-content in seed states. The executor verifies SHA-256 and metadata before
-counting a moved file. These checks do not prove peer upload or tracker credit.
-
-After the first completed batch, the owner-authorized retry interval changed
-from 360 to 60 minutes through the authenticated settings page. The backup,
-exact one-line change, shell syntax and read-back were verified; threshold,
-cron, age, ratio and batch limits remained unchanged. This is an owner setting,
-not a new installation default. The 24–48-hour observation is still in progress;
-RC1 remains a prerelease, not a stable or broad-compatibility certification.
 
 ## Known limits
 

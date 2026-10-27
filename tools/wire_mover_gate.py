@@ -14,6 +14,7 @@ import sys
 from torrent_preflight import assess, read_snapshot
 from wire_integrity_cron import atomic_write
 
+MOVER_PID = Path('/var/run/mover.pid')
 LAUNCHER = Path('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script')
 BACKUPS = Path('/boot/config/plugins/fejes.mover.monitor/backups')
 LOCK = '/var/run/fejes-mover-launch.lock'
@@ -114,7 +115,7 @@ def main(argv=None):
         if source == changed:
             print('Launcher already has the requested integration. No Mover started.')
             return 0
-        if Path('/var/run/mover.pid').exists():
+        if MOVER_PID.exists():
             raise ValueError('Mover PID file is present')
         BACKUPS.mkdir(parents=True, exist_ok=True)
         backup = BACKUPS / ('mover-gate-before-' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.txt')
