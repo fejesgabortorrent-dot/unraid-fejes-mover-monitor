@@ -31,3 +31,22 @@ class DashboardSummary(unittest.TestCase):
    (lab/'config/settings.json').write_text('{"version":1,"mode":"observer","pool":"cache"}')
    rendered=demo.render('FejesMover.Dashboard.page','idle','en',None)
    self.assertNotIn('Completed, files verified',rendered)
+
+ def test_torrent_failure_is_explained_without_private_error_text(self):
+  with tempfile.TemporaryDirectory() as folder:
+   lab=Path(folder);demo=Demo(lab)
+   (lab/'config/settings.json').write_text('{"version":1,"mode":"advanced","pool":"cache"}')
+   (lab/'config/selective-last.json').write_text(json.dumps({'state':'error','error_code':'torrent_snapshot_unavailable','error':'PRIVATE_COMMAND_SENTINEL','requires_inspection':False}))
+   for lang,expected in [('hu','A torrentállapot nem kérdezhető le'),('en','Torrent state could not be queried'),('de','Torrentstatus konnte nicht abgefragt werden')]:
+    rendered=demo.render('FejesMover.Dashboard.page','idle',lang,None)
+    self.assertIn(expected,rendered)
+    self.assertNotIn('PRIVATE_COMMAND_SENTINEL',rendered)
+
+ def test_named_unraid_palettes_have_readable_translated_labels(self):
+  with tempfile.TemporaryDirectory() as folder:
+   demo=Demo(Path(folder))
+   for lang,label in [('hu','Unraid · Fekete'),('en','Unraid · Black'),('de','Unraid · Schwarz')]:
+    rendered=demo.render('FejesMover.Dashboard.page','idle',lang,None)
+    self.assertIn(label,rendered)
+    for value in ('white','black','gray','azure'):
+     self.assertIn('value="'+value+'"',rendered)

@@ -101,10 +101,16 @@ class MoverWiringTest(unittest.TestCase):
             launcher = root/'script'
             original = FIXTURE.read_text()
             launcher.write_text(original)
-            with patch.object(wire,'LAUNCHER',launcher), patch.object(wire,'BACKUPS',root/'backups'), patch.object(wire,'LOCK',str(root/'lock')), patch.object(wire,'SETTINGS_LOCK',str(root/'settings-lock')), patch.object(wire,'check_environment') as check, contextlib.redirect_stdout(io.StringIO()):
+            with patch.object(wire,'MOVER_PID',root/'mover.pid'), patch.object(wire,'LAUNCHER',launcher), patch.object(wire,'BACKUPS',root/'backups'), patch.object(wire,'LOCK',str(root/'lock')), patch.object(wire,'SETTINGS_LOCK',str(root/'settings-lock')), patch.object(wire,'check_environment') as check, contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(wire.main([]), 0)
                 self.assertEqual(launcher.read_text(), original)
                 self.assertFalse((root/'backups').exists())
+                (root/'mover.pid').write_text('123')
+                with self.assertRaisesRegex(ValueError,'Mover PID file is present'):
+                    wire.main(['--apply'])
+                self.assertEqual(launcher.read_text(),original)
+                self.assertFalse((root/'backups').exists())
+                (root/'mover.pid').unlink()
                 self.assertEqual(wire.main(['--apply']), 0)
                 self.assertEqual(launcher.read_text(), wire.rewrite_launcher(original))
                 check.reset_mock()

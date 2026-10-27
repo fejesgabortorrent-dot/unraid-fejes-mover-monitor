@@ -15,6 +15,7 @@ from pathlib import Path
 import re
 import stat
 import subprocess
+import sys
 import time
 import traceback
 
@@ -222,6 +223,17 @@ def log(message):
     subprocess.run(['logger','-t','mover','Fejes selective: '+message],check=True,timeout=5)
 
 
+def failure_code(error):
+    """Expose a bounded failure category, never command arguments or private paths."""
+    if isinstance(error, subprocess.CalledProcessError):
+        command=error.cmd
+        if (isinstance(command,(list,tuple)) and len(command)>=5 and
+                command[:4]==['docker','exec','binhex-qbittorrentvpn','curl'] and
+                command[-1]=='http://127.0.0.1:8080/api/v2/torrents/info'):
+            return 'torrent_snapshot_unavailable'
+    return 'required_state_unverified'
+
+
 def record_failure(report, active_key=None):
     """Keep private exception evidence without weakening the inspection latch."""
     try:
@@ -231,11 +243,25 @@ def record_failure(report, active_key=None):
             stream.write('\nRun started='+str(report.get('started'))+' stage='+str(report.get('stage','preflight'))+'\n')
             if active_key is not None:
                 stream.write('Active file='+json.dumps(active_key,ensure_ascii=True)+'\n')
+            error=sys.exc_info()[1]
+            code=getattr(error,'returncode',None)
+            if isinstance(code,int):stream.write('Process exit='+str(code)+'\n')
+            stderr=getattr(error,'stderr',None)
+            if isinstance(stderr,bytes):stderr=stderr.decode('utf-8','replace')
+            if isinstance(stderr,str) and stderr:stream.write('Process stderr='+json.dumps(stderr[-4096:],ensure_ascii=True)+'\n')
             traceback.print_exc(file=stream)
             stream.flush();os.fsync(stream.fileno())
     except (OSError,ValueError):
         # Diagnostic failure must never clear a failed movement or its latch.
         pass
+
+
+class NativeMoveError(RuntimeError):
+    """Keep native exit evidence private; callers still fail closed."""
+    def __init__(self, returncode, stderr):
+        super().__init__('Native movement failed; inspect private diagnostic log')
+        self.returncode=returncode
+        self.stderr=stderr
 
 
 def execute_file(key,expected,days):
@@ -254,7 +280,7 @@ def execute_file(key,expected,days):
     if opened.returncode!=1: raise ValueError('Open-file state unavailable')
     # Exact single-file stdin; no find, shell expansion, user-share copy or rm.
     result=subprocess.run([ENGINE],input=str(path)+'\n',text=True,capture_output=True)
-    if result.returncode!=0: raise RuntimeError('Native movement failed; inspect private system log')
+    if result.returncode!=0: raise NativeMoveError(result.returncode,result.stderr)
     if path.exists():
         if signature(path.stat())!=signature(before): raise RuntimeError('Retained source changed')
         return {'state':'skipped','reason':'native_retained_source'}
@@ -296,6 +322,7 @@ def run():
         if report['requires_inspection']:
             raise ValueError('Previous movement requires inspection')
         if PID.exists(): raise ValueError('Mover PID already present')
+        report['stage']='preflight_collection'
         selection,_,current,items,_,_=collect(True)
         report.update(age_days=selection['age_days'],candidate_count=len(selection['candidates']),blockers=selection['blockers'],
                       skipped=dict(Counter(x['reason'] for x in selection['skipped'])))
@@ -350,7 +377,8 @@ def run():
         report['state']='error'
         report['error']='File operation unavailable; inspect before another run.'
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])
-    except ERRORS:
+    except ERRORS as error:
+        report['error_code']=failure_code(error)
         record_failure(report, locals().get('key'))
         report['state']='error';report['error']='Required state changed or could not be verified. No further files will be started; inspect selective-error.log in the private plugin configuration directory.'
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])

@@ -10,10 +10,9 @@
 
 Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
 
-**2026.10.26.6 · Release Candidate 1 (RC1) · Unraid 7.x**
+**2026.10.27.4 · Release Candidate 1 (RC1) · Unraid 7.x**
 
-RC1 has completed three verified native owner batches: **24 files / 94.20 GB**.
-The 24–48-hour operating observation is ongoing. See [current evidence and limits](docs/RELEASE-STATUS.md).
+Historical owner-test evidence does not certify stable-release readiness. See [current evidence and limits](docs/RELEASE-STATUS.md).
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
@@ -58,7 +57,7 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 - Optional share-ratio priority (0 disables it, target up to 100): already eligible files whose torrents meet the target go first. Low or unknown ratios never withhold a file. Shared content uses the lowest known owner ratio; missing owner values remain unknown. Ratio is not a tracker seed-time exemption and never bypasses age, activity or safety guards.
 - Explicit batch-size selection for larger media: 16 / 32 / 64 / 128 GiB, still at most 8 files. Existing installations keep 16 GiB until an authenticated settings save. No schedule or live configuration is changed by installation.
 
-- Appearance selector in the mode banner: Follow Unraid (default), Light or Dark. Explicit palettes affect plugin surfaces only; the Unraid shell stays unchanged. The browser remembers the selection locally; blocked browser storage falls back to Follow Unraid.
+- Appearance selector in the mode banner: Follow Unraid (default), White, Black, Gray or Azure. Explicit palettes affect plugin surfaces only; the Unraid shell stays unchanged. The browser remembers the selection locally; blocked browser storage falls back to Follow Unraid.
 
 - Selective page organized around summary cards and the file queue, with local filename/path search, status and video-only filters, expandable full paths, folded settings and a separate confirmed manual-action section. Filters only change the display, never the execution scope.
 
@@ -88,7 +87,7 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 
 ## RC1 installation
 
-See the [RC1 release notes](docs/RC1.md), then read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. Owner acceptance on Unraid 7.3.3 used self-created files outside Emby. Three scheduled RC1 owner batches moved 24 files (94,199,156,410 bytes; 94.20 GB), with successful executor verification and unchanged torrent paths/completeness/seed states; actual peer upload, tracker credit and live NAS reboot persistence remain unverified.
+See the [RC1 release notes](docs/RC1.md), then read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. RC1 remains a prerelease. Transfer verification does not establish peer upload, tracker credit or reboot persistence.
 
 In Unraid, open **Plugins → Install Plugin**, then enter:
 
