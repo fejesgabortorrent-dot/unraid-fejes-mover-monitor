@@ -79,6 +79,11 @@ part of this candidate.
   Chrome browser. Fixtures used actual rendered pages and disposable settings.
 - Python compilation and PHP syntax checks passed; the generated manifest and
   source payloads were rebuilt locally.
-- The complete Linux suite, interrupted-process checks and isolated Linux package
-  install remain pending. The Windows full installer check could not complete in
-  its Git Bash environment; this is not recorded as a passing package check.
+- [GitHub Actions run 40891690001](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/actions/runs/40891690001)
+  passed on implementation commit `65d2f8a`: the complete Linux suite including
+  interrupted-process checks, isolated package install/update/rejection/remove,
+  reproducibility, interface/mode safety and all JavaScript checks. The separate
+  Linux Chromium navigation job also passed. Publication was skipped.
+- The Windows full installer check could not complete in Git Bash; Linux CI
+  supplies the successful package check. Neither environment is a live Unraid
+  movement or seed-upload acceptance test.
