@@ -19,7 +19,7 @@ def api_error():
 
 
 class PreflightBoundary(unittest.TestCase):
-    def batch(self, error, native=False, prior=None, first_moved=False):
+    def batch(self, error, native=False, prior=None, first_moved=False, prior_error=None):
         with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
             root=Path(folder);key='/mnt/user/Filmek/fixture'
             keys=[key+'/1',key+'/2'] if first_moved else [key]
@@ -28,7 +28,7 @@ class PreflightBoundary(unittest.TestCase):
                 stack.enter_context(patch.object(mover,name,value))
             stack.enter_context(patch.object(mover,'open',side_effect=lambda *a,**k:io.StringIO(),create=True))
             stack.enter_context(patch.object(mover.fcntl,'flock'))
-            stack.enter_context(patch.object(mover,'read_json',return_value=prior or {}))
+            stack.enter_context(patch.object(mover,'read_json',return_value=prior or {},side_effect=prior_error))
             stack.enter_context(patch.object(mover,'atomic_json',side_effect=lambda p,r:saved.append(json.loads(json.dumps(r)))))
             stack.enter_context(patch.object(mover,'log'))
             stack.enter_context(patch.object(mover,'collect',return_value=(
@@ -75,6 +75,11 @@ class PreflightBoundary(unittest.TestCase):
             result,_,calls=self.batch(api_error(),prior=prior)
             self.assertTrue(result['requires_inspection']);self.assertEqual(calls,[])
 
+    def test_unreadable_prior_report_cannot_turn_into_an_unlocked_error(self):
+        for error in (ValueError('corrupt JSON'),OSError('read unavailable')):
+            result,_,calls=self.batch(api_error(),prior_error=error)
+            self.assertTrue(result['requires_inspection']);self.assertEqual(calls,[])
+
     def test_only_explicit_zero_operation_v2_preflight_is_restartable(self):
         prior=dict(version=2,state='running',stage='file_preflight',
                    active_file_started=False,moved_files=0,moved_bytes=0)
@@ -107,6 +112,16 @@ class PreflightBoundary(unittest.TestCase):
             def failed_save():events.append('save_failed');raise OSError('fsync failed')
             with self.assertRaises(OSError):mover.execute_file('fixture',{},7,failed_save)
             self.assertNotIn('native',events)
+            for failed_call in (1,2):
+                events.clear();fresh_calls=[]
+                def fresh(*args):
+                    fresh_calls.append(1)
+                    if len(fresh_calls)==failed_call:raise api_error()
+                    return path,True
+                with patch.object(mover,'fresh_candidate',side_effect=fresh):
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        mover.execute_file('fixture',{},7,lambda:events.append('durable'))
+                self.assertNotIn('durable',events);self.assertNotIn('native',events)
 
 
 if __name__=='__main__':unittest.main()
