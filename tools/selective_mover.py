@@ -41,6 +41,25 @@ ERRORS = (OSError, ValueError, TypeError, KeyError, AttributeError, RuntimeError
           subprocess.SubprocessError)
 
 
+class IntegrityHashingActive(ValueError):
+    """Known maintenance blocker; never bypass an active integrity scan."""
+
+
+class InspectionRequired(ValueError):
+    """An existing inspection latch is not an API outage or a new move."""
+
+
+def needs_inspection(prior):
+    # Only v2 explicitly distinguishes read-only preflight from native intent.
+    # Legacy running/ambiguous reports and every existing latch remain sticky.
+    safe_preflight = (prior.get('version') == 2 and
+                      prior.get('stage') in {'preflight_collection', 'file_preflight'} and
+                      prior.get('active_file_started') is False and
+                      prior.get('moved_files') == 0 and prior.get('moved_bytes') == 0)
+    return bool(prior.get('requires_inspection') or prior.get('active_file_started') or
+                (prior.get('state') == 'running' and not safe_preflight))
+
+
 def signature(info):
     return [info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns]
 
@@ -113,9 +132,8 @@ def torrent_snapshot():
 
 def guards(owned=False):
     prior=read_json(LAST,{})
-    if (prior.get('requires_inspection') is True or
-        (not owned and (prior.get('state')=='running' or prior.get('active_file_started') is True))):
-        raise ValueError('Previous movement requires inspection')
+    if prior.get('requires_inspection') or (not owned and needs_inspection(prior)):
+        raise InspectionRequired('Previous movement requires inspection')
     runtime=read_json(BASE/'settings.json',{})
     if runtime.get('version')!=1 or runtime.get('mode')!='advanced' or runtime.get('pool')!='cache':
         raise ValueError('Advanced cache mode required')
@@ -153,7 +171,7 @@ def guards(owned=False):
         try: values=entry.read_bytes().split(b'\0')
         except FileNotFoundError: continue
         if any(v.endswith(b'/bunker') for v in values):
-            if owned: raise ValueError('Integrity hashing active')
+            if owned: raise IntegrityHashingActive('Integrity hashing active')
             integrity_scanning=True
         args.append(values)
     watcher=b'/usr/local/emhttp/plugins/dynamix.file.integrity/scripts/watcher'
@@ -225,7 +243,9 @@ def log(message):
 
 def failure_code(error):
     """Expose a bounded failure category, never command arguments or private paths."""
-    if isinstance(error, subprocess.CalledProcessError):
+    if isinstance(error, IntegrityHashingActive): return 'integrity_hashing_active'
+    if isinstance(error, InspectionRequired): return 'inspection_required'
+    if isinstance(error, (subprocess.CalledProcessError, subprocess.TimeoutExpired)):
         command=error.cmd
         if (isinstance(command,(list,tuple)) and len(command)>=5 and
                 command[:4]==['docker','exec','binhex-qbittorrentvpn','curl'] and
@@ -264,7 +284,7 @@ class NativeMoveError(RuntimeError):
         self.stderr=stderr
 
 
-def execute_file(key,expected,days):
+def execute_file(key,expected,days,before_native=None):
     path,eligible=fresh_candidate(key,expected,days)
     if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
     if destinations(path): return {'state':'skipped','reason':'existing_array_copy'}
@@ -278,6 +298,8 @@ def execute_file(key,expected,days):
     opened=subprocess.run(['fuser','-s',str(path)],capture_output=True)
     if opened.returncode==0: return {'state':'skipped','reason':'open_file'}
     if opened.returncode!=1: raise ValueError('Open-file state unavailable')
+    if before_native is None: raise RuntimeError('Durable native intent callback required')
+    before_native()  # Must succeed durably before the native process can start.
     # Exact single-file stdin; no find, shell expansion, user-share copy or rm.
     result=subprocess.run([ENGINE],input=str(path)+'\n',text=True,capture_output=True)
     if result.returncode!=0: raise NativeMoveError(result.returncode,result.stderr)
@@ -303,9 +325,9 @@ def execute_file(key,expected,days):
 
 
 def run():
-    report={'version':1,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
+    report={'version':2,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
-            'requires_inspection':False}
+            'requires_inspection':False,'active_file_started':False}
     locks=[]; own_pid=False; coordinated=False
     try:
         # Same ordering for every executor; no cron/settings rewrites.
@@ -318,9 +340,9 @@ def run():
         # Read only after the previous owner has released all coordination locks.
         # A pre-lock snapshot could otherwise erase its newly recorded failure.
         prior=read_json(LAST,{})
-        report['requires_inspection']=bool(prior.get('requires_inspection') or prior.get('state')=='running' or prior.get('active_file_started'))
+        report['requires_inspection']=needs_inspection(prior)
         if report['requires_inspection']:
-            raise ValueError('Previous movement requires inspection')
+            raise InspectionRequired('Previous movement requires inspection')
         if PID.exists(): raise ValueError('Mover PID already present')
         report['stage']='preflight_collection'
         selection,_,current,items,_,_=collect(True)
@@ -346,10 +368,13 @@ def run():
                 skips['batch_file_limit']+=1;continue
             if report['moved_bytes']+size>limit:
                 skips['batch_size_limit']+=1;continue
-            report['stage']='file_verification_or_move'
-            report['active_file_started']=True
-            atomic_json(LAST,report)  # Durable intent before any native file operation.
-            outcome=execute_file(key,current[key],selection['age_days'])
+            report['stage']='file_preflight'
+            atomic_json(LAST,report)
+            def before_native():
+                report['stage']='native_move_or_verification'
+                report['active_file_started']=True
+                atomic_json(LAST,report)
+            outcome=execute_file(key,current[key],selection['age_days'],before_native)
             report['active_file_started']=False
             if outcome['state']=='moved':
                 report['moved_files']+=1;report['moved_bytes']+=outcome['bytes']
@@ -372,7 +397,7 @@ def run():
     except BlockingIOError:
         record_failure(report, locals().get('key'))
         # Lock contention before launch is different from EAGAIN during file I/O.
-        if report['state']=='checking':
+        if not coordinated:
             return {'state':'deferred','reason':'another_operation_active','moved_files':0}
         report['state']='error'
         report['error']='File operation unavailable; inspect before another run.'
@@ -382,6 +407,11 @@ def run():
         record_failure(report, locals().get('key'))
         report['state']='error';report['error']='Required state changed or could not be verified. No further files will be started; inspect selective-error.log in the private plugin configuration directory.'
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])
+        if (not report['requires_inspection'] and report['error_code'] in
+                {'torrent_snapshot_unavailable','integrity_hashing_active'}):
+            report['state']='deferred'
+            report['reason']=report['error_code']
+            report['error']='Required safety evidence unavailable; retry only after all guards pass.'
     finally:
         if own_pid and PID.exists() and PID.read_text()==str(os.getpid()): PID.unlink()
         report['finished']=time.time()
@@ -410,8 +440,9 @@ def main():
                 output=preview(args.action=='observe')
         print(json.dumps(output,allow_nan=False))
         return 20 if output.get('state')=='error' else 0
-    except ERRORS:
-        print(json.dumps({'execution_allowed':False,'decision':'unknown','error':'Required state could not be verified'}))
+    except ERRORS as error:
+        print(json.dumps({'execution_allowed':False,'decision':'unknown','error':'Required state could not be verified',
+                          'error_code':failure_code(error)}))
         return 20
 
 

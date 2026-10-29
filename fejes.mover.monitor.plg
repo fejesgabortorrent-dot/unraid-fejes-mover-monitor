@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.27.4" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
+<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.29.1" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
 <CHANGES>
+### 2026.10.29.1 (development safety candidate)
+- Persist native intent only after read-only file preflight succeeds.
+- Defer verified pre-native API/integrity blockers without weakening existing inspection latches.
+- Isolate automated Python tests from production writes and commands; wrap mobile navigation.
 ### 2026.10.27.4 (RC1 reliability and controls)
 - Keep the shared appearance when following the Unraid theme.
 - Align flag-only language, settings and detail controls with keyboard labels.
@@ -114,7 +118,7 @@
 - Optional legacy threshold settings, retained only on systems with the existing script.
 - Installer validates PHP before activation and preserves local backup files.
 </CHANGES>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
 ---
 <?php
 $fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
@@ -211,7 +215,7 @@ HTML;
 
 <?php } ?>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Monitor"
 Icon="fa-exchange"
 Tag="cogs"
@@ -505,7 +509,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
 Title="FejesMover védelem"
 Icon="fa-shield"
 Tag="cogs"
@@ -868,7 +872,7 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
 // Shared, fail-closed runtime configuration. No settings or automation writes here.
 return (static function ($configWrite) {
     $language = $_COOKIE['fejes_mover_lang'] ?? 'hu';
@@ -1022,6 +1026,14 @@ html[data-fejes-theme="dark"] #fms table.fms-queue th{background:#283140!importa
 @media(max-width:700px){.fmc-nav{top:40px;margin:10px 6px;padding:8px;gap:6px}.fmc-nav :is(a,button){min-width:92px;padding:0 10px}.fmc-nav .fmc-nav-pages{gap:6px;margin-left:0}:is(#fms,#fm-monitor,#ms,#fp,#fmc-setup){padding-left:10px!important;padding-right:10px!important}}
 
 .content:has(> .fmc-nav){overflow:visible!important}
+/* Mobile navigation stays in normal flow: every destination is visible without
+   horizontal scrolling and long translations can wrap at narrow widths. */
+@media(max-width:700px){
+ .fmc-nav{position:static;flex-wrap:wrap;overflow:visible;min-width:0}
+ .fmc-nav>button,.fmc-nav>a{flex:1 1 26%;min-width:0;white-space:normal;overflow-wrap:anywhere}
+ .fmc-nav .fmc-nav-pages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));flex:1 1 100%;min-width:0}
+ .fmc-nav .fmc-nav-pages a{min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:center}
+}
 .fmc-page-tail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:24px 0;padding:12px 0;border-top:1px solid #8884}.fmc-support-strip{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;padding:16px;box-sizing:border-box;background:#42464b;color:#fff;border:1px solid #fff;border-radius:10px}.fmc-support-strip small{flex-basis:100%;text-align:center}.fmc-support-strip strong{font-size:18px}.fmc-support-strip a{background:#555b62!important;color:#fff!important;border-color:#fff!important}.fmc-page-tail :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:140px;padding:0 16px;border:1px solid #8886;border-radius:10px;text-decoration:none;color:inherit;font-weight:600;background:#8881;box-sizing:border-box}
 
 .fmc-mode{display:flow-root!important;box-sizing:border-box}.fmc-mode .fmc-theme{float:none!important;display:flex!important;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 10px!important}.fmc-mode .fmc-theme select{margin:0!important;min-height:44px;max-width:100%;box-sizing:border-box}.fmc-mode .fmc-theme label{margin:0!important}
@@ -1088,7 +1100,7 @@ HTML;
         't'=>$t,'esc'=>$esc,'banner'=>$banner,'summary'=>$summary];
 })(!empty($fmcConfigWrite));
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverSelective.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/FejesMoverSelective.page"><INLINE><![CDATA[Menu="Utilities"
 
 Title="Mover · Selective"
 
@@ -1108,6 +1120,24 @@ $fmPageTitle=['hu'=>"Mover · Selective",'en'=>"Mover · Selective",'de'=>"Mover
 echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $t=$fmc['t'];$e=$fmc['esc'];echo $fmc['banner'];
+$failureLabels=[
+ 'Invalid age'=>$t('Érvénytelen korhatár. Válassz 1, 7, 14 vagy 30 napot.','Invalid age. Select 1, 7, 14 or 30 days.','Ungültiges Alter. 1, 7, 14 oder 30 Tage wählen.'),
+ 'Invalid batch size'=>$t('Érvénytelen körméret. Válassz 16, 32, 64 vagy 128 GiB-ot.','Invalid batch size. Select 16, 32, 64 or 128 GiB.','Ungültiges Lauflimit. 16, 32, 64 oder 128 GiB wählen.'),
+ 'Invalid ratio target'=>$t('Érvénytelen aránycél. Adj meg 0 és 100 közötti számot, legfeljebb két tizedessel.','Invalid ratio target. Enter a number from 0 to 100 with at most two decimals.','Ungültiges Verhältnisziel. Zahl von 0 bis 100 mit höchstens zwei Dezimalstellen eingeben.'),
+ 'Advanced cache mode required'=>$t('Ehhez a művelethez haladó mód és elérhető cache pool szükséges.','This action requires advanced mode and an available cache pool.','Diese Aktion benötigt erweiterten Modus und verfügbaren Cache-Pool.'),
+ 'Configuration unavailable'=>$t('A mentett beállítások nem olvashatók biztonságosan. Ellenőrizd a konfigurációt.','Saved settings cannot be read safely. Check the configuration.','Gespeicherte Einstellungen nicht sicher lesbar. Konfiguration prüfen.'),
+ 'Invalid configuration'=>$t('A mentett konfiguráció formátuma vagy korhatára érvénytelen.','The saved configuration format or age setting is invalid.','Format oder Alterswert der gespeicherten Konfiguration ungültig.'),
+ 'Backup failed'=>$t('A beállítások biztonsági mentése nem sikerült; a mentés megszakadt.','Settings backup failed; saving was stopped.','Sicherung der Einstellungen fehlgeschlagen; Speichern abgebrochen.'),
+ 'Save failed'=>$t('A beállítások mentése nem sikerült. Ellenőrizd a boot-meghajtó írhatóságát és szabad helyét.','Settings could not be saved. Check boot device write access and free space.','Einstellungen nicht gespeichert. Schreibzugriff und freien Platz des Boot-Laufwerks prüfen.'),
+ 'Readback failed'=>$t('A mentett beállítások visszaellenőrzése nem sikerült. Az új értékek nem igazoltak.','Saved settings could not be verified. New values are unconfirmed.','Gespeicherte Einstellungen nicht verifiziert. Neue Werte unbestätigt.'),
+ 'inspection_required'=>$t('Korábbi művelet ellenőrzése szükséges; a biztonsági zárolás aktív. Új mozgatás nem engedélyezett.','A previous operation requires inspection; the safety lock is active. New movement is blocked.','Ein früherer Vorgang muss geprüft werden; die Sicherheitssperre ist aktiv. Neues Verschieben ist gesperrt.'),
+ 'torrent_snapshot_unavailable'=>$t('A qBittorrent torrentállapota nem kérdezhető le. A seedvédelem nem igazolható; a feldolgozás megállt.','qBittorrent state could not be queried. Seed protection cannot be verified; processing stopped.','Der qBittorrent-Status ist nicht abrufbar. Seed-Schutz nicht verifiziert; Verarbeitung gestoppt.'),
+ 'integrity_hashing_active'=>$t('Integritásellenőrzés fut. A mozgatás halasztva; a védelem változatlanul aktív.','Integrity verification is running. Movement is deferred; protection remains active.','Integritätsprüfung läuft. Verschieben aufgeschoben; Schutz bleibt aktiv.'),
+ 'required_state_unverified'=>$t('Egy szükséges biztonsági állapot nem igazolható. A pontos ok a privát hibanaplóban ellenőrizhető.','A required safety condition could not be verified. Check the private error log for the exact cause.','Eine nötige Schutzbedingung ist nicht verifiziert. Genaue Ursache im privaten Fehlerprotokoll prüfen.'),
+ 'Invalid session'=>$t('A munkamenet lejárt vagy érvénytelen. Töltsd újra az oldalt, és jelentkezz be újra, ha szükséges.','The session expired or is invalid. Reload the page and sign in again if needed.','Sitzung abgelaufen oder ungültig. Seite neu laden und bei Bedarf erneut anmelden.'),
+ 'Configuration changed'=>$t('A beállításokat közben módosították. Töltsd újra az oldalt a friss értékekhez.','Settings changed in the meantime. Reload the page for current values.','Einstellungen wurden inzwischen geändert. Seite für aktuelle Werte neu laden.'),
+ 'Busy'=>$t('Másik művelet használja a beállításokat. Próbáld újra annak befejezése után.','Another operation is using the settings. Retry after it finishes.','Ein anderer Vorgang verwendet die Einstellungen. Nach dessen Ende erneut versuchen.'),
+ 'Worker unavailable'=>$t('Az állapotlekérdezés nem fejeződött be, vagy a háttérfolyamat nem adott érvényes választ. A kiváltó ok ebből a válaszból nem állapítható meg.','The status query did not finish or the worker returned no valid response. This response does not identify the underlying cause.','Statusabfrage nicht beendet oder keine gültige Prozessantwort. Die Ursache ist aus dieser Antwort nicht erkennbar.')];
 $path='/boot/config/plugins/fejes.mover.monitor/selective.json';
 $raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;$ratioTarget=0;$batchGiB=16;
 try {
@@ -1137,19 +1167,20 @@ try {
    if(!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
    $cmd='python3 /boot/config/plugins/fejes.mover.monitor/tools/selective_mover.py '.($action==='run'?'start':$action);
    exec('timeout 60 '.$cmd.' 2>/dev/null',$lines,$code);
-   if($code!==0)throw new RuntimeException('Worker unavailable');
    $report=json_decode(implode("\n",$lines),true,512,JSON_THROW_ON_ERROR);
    if(!is_array($report))throw new RuntimeException('Invalid report');
+   if($code!==0||!empty($report['error']))throw new RuntimeException(is_string($report['error_code']??null)&&isset($failureLabels[$report['error_code']])?$report['error_code']:'Worker unavailable');
    if($action==='run')$message=$t('Indítási kérés elküldve. A háttérfolyamat minden védelmet újraellenőriz; ez még nem jelent fájlmozgatást.','Start requested. The worker rechecks every guard; this does not yet mean files were moved.','Start angefordert. Der Prozess prüft alle Schutzbedingungen erneut; dies bestätigt noch keine Verschiebung.');
   }else throw new RuntimeException('Invalid action');
  }
-}catch(Throwable $exception){$error=$t('A kérés nem teljesült. Ellenőrizd az állapotot; új mozgatást nem igazoltunk.','Request failed. Check status; no new movement has been confirmed.','Anfrage fehlgeschlagen. Status prüfen; keine neue Verschiebung bestätigt.');}
+}catch(Throwable $exception){$error=$failureLabels[$exception->getMessage()]??$t('A kérés nem teljesült; a válaszból a pontos ok nem állapítható meg. Ellenőrizd a beállításokat és az utolsó futás részleteit.','The request failed; its exact cause could not be determined from the response. Check settings and last run details.','Anfrage fehlgeschlagen; genaue Ursache aus der Antwort nicht erkennbar. Einstellungen und Details des letzten Laufs prüfen.');}
 $blockerLabels=['capacity'=>$t('A szabadhely-feltétel nem enged indítást: a küszöb elért vagy nem ellenőrizhető','Free-space guard blocks starting: threshold met or capacity unverified','Freiplatzschutz verhindert den Start: Grenze erreicht oder Kapazität ungeprüft'),'integrity'=>$t('File Integrity ellenőrzés vagy integritásvédelem miatt várakozik','Waiting for File Integrity verification or integrity protection','Warten auf File-Integrity-Prüfung oder Integritätsschutz'),'cooldown'=>$t('A két mozgatás közötti várakozási idő még tart','Cooldown between movement batches is still active','Wartezeit zwischen Verschiebeläufen ist noch aktiv')];
 $blockerText=static fn($values)=>implode(', ',array_map(static fn($key)=>$blockerLabels[$key]??$key,$values));
 $lastPath='/boot/config/plugins/fejes.mover.monitor/selective-last.json';
 $lastRaw=is_link($lastPath)?false:@file_get_contents($lastPath);
 $last=is_string($lastRaw)?json_decode($lastRaw,true):['state'=>'not_run'];
 if(!is_array($last))$last=['state'=>'unknown'];
+$lastFailureCode=is_string($last['error_code']??null)?$last['error_code']:'';
 $forecast=$report['forecast']??null;
 if(!is_array($forecast)){
  $forecastPath='/boot/config/plugins/fejes.mover.monitor/selective-forecast.json';
@@ -1176,6 +1207,7 @@ $states=[
  'nothing_eligible'=>$t('Nincs még mozgatható fájl','No eligible file yet','Noch keine geeignete Datei'),
  'deferred'=>$t('Védelmi feltétel miatt halasztva','Deferred by a safety guard','Durch Schutzbedingung verschoben'),
  'error'=>$t('Megállt: ellenőrzés szükséges','Stopped: inspection required','Gestoppt: Prüfung erforderlich')];
+if(empty($last['requires_inspection']))$states['error']=$t('Leállt: biztonsági feltétel nem igazolható','Stopped: safety condition unverified','Gestoppt: Schutzbedingung ungeprüft');
 ?>
 <main id="fms" style="max-width:1280px;margin:24px auto;padding:0 20px">
 <h2><?=$e($t('Koralapú szelektív mozgatás','Age-filtered selective movement','Altersabhängiges selektives Verschieben'))?></h2>
@@ -1282,7 +1314,8 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <p><?=$e($t('Ellenőrzötten áthelyezve','Verified movement','Geprüft verschoben'))?>: <?=$e($last['moved_files']??0)?> <?=$e($t('fájl','files','Dateien'))?> · <?=$e(number_format(($last['moved_bytes']??0)/1073741824,3))?> GiB</p>
 <?php foreach(($last['skipped']??[]) as $key=>$count):?><p><?=$e($skipLabels[$key]??$t('Bizonytalan vagy nem támogatott','Unverifiable or unsupported','Ungeprüft oder nicht unterstützt'))?>: <?=$e($count)?></p><?php endforeach?>
 <?php if(!empty($last['blockers'])):?><pre><?=$e($blockerText($last['blockers']))?></pre><?php endif?>
-<?php if(!empty($last['error'])):?><p role="alert"><?=$e($t('A további fájlok feldolgozása leállt. A privát rendszernapló ellenőrzése szükséges.','Further processing stopped. Inspect the private system log.','Weitere Verarbeitung gestoppt. Privates Systemprotokoll prüfen.'))?></p><?php endif?>
+<?php if(!empty($last['error'])):?><p role="status"><?=$e($failureLabels[$lastFailureCode]??$failureLabels['required_state_unverified'])?></p><?php endif?>
+<?php if(!empty($last['requires_inspection'])):?><p role="alert"><?=$e($failureLabels['inspection_required'])?></p><?php endif?>
 </section><p><a href="/Tools/FejesMover"><?=$e($t('Élő folyamatok és napló megnyitása','Open live processes and log','Live-Prozesse und Protokoll öffnen'))?></a></p></details>
 </main>
 <script>(()=>{
@@ -1306,7 +1339,7 @@ const freshLabel=<?=json_encode($t('Kijelzés frissítve. A felmérés időpontj
 let busy=false;setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),timer=setTimeout(()=>c.abort(),8000);try{const response=await fetch(location.pathname,{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!response.ok)throw Error();const doc=new DOMParser().parseFromString(await response.text(),'text/html');const part=doc.getElementById('fms-last'),current=document.getElementById('fms-last'),nextRun=doc.getElementById('fms-run'),oldRun=document.getElementById('fms-run');if(!part||!current||!nextRun||!oldRun)throw Error('Missing selective status');current.replaceWith(part);for(const selector of ['[data-fms-status-card]','[data-fms-space-card]']){const next=doc.querySelector(selector),old=document.querySelector(selector);if(next&&old)old.replaceWith(next);}oldRun.disabled=nextRun.disabled;const status=document.getElementById('fms-refresh-state');if(status&&status.textContent!==freshLabel)status.textContent=freshLabel;tick();}catch{const status=document.getElementById('fms-refresh-state');if(status&&status.textContent!==staleLabel)status.textContent=staleLabel;const run=document.getElementById('fms-run');if(run)run.disabled=true;}finally{clearTimeout(timer);busy=false;}},5000);
 })();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Settings"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1603,7 +1636,7 @@ const labels=<?=json_encode([$fmc['t']('Elmentett értékek változatlanok.','Sa
 function update(){const invalid=fields.some(e=>!e.checkValidity());status.textContent=invalid?labels[2]:fields.some((e,i)=>e.value!==saved[i])?labels[1]+fields.map((e,i)=>saved[i]+' → '+e.value+' '+(e.name==='KUSZOB_GIB'?'GiB':'min')).join(' · '):labels[0];status.style.color=invalid?'#ed916e':'';}form.addEventListener('input',update);form.addEventListener('change',update);update();})();
 </script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover · Mód és pool"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1624,6 +1657,7 @@ if($fmLang==='en'){ ?>
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+echo $fmc['banner'];
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
@@ -1683,6 +1717,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+echo $fmc['banner'];
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
@@ -1742,6 +1777,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+echo $fmc['banner'];
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
@@ -1798,7 +1834,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Read-only, conservative qBittorrent gate for an external Mover launcher."""
 import argparse
 import json
@@ -1914,7 +1950,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Run an existing generated Bunker schedule with live torrent exclusions."""
 import argparse
 import pathlib
@@ -2016,7 +2052,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Route the existing File Integrity cron job through its reviewed preflight."""
 import argparse
 import datetime
@@ -2124,7 +2160,7 @@ if __name__ == "__main__":
               "errno=" + str(getattr(exc, "errno", None)))
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Shared read-only diagnostics and an opt-in guarded legacy Mover launcher."""
 import argparse
 import fcntl
@@ -2351,7 +2387,7 @@ def main(argv=None):
 if __name__ == '__main__':
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Add an opt-in torrent gate to the reviewed legacy threshold script."""
 import argparse
 import datetime
@@ -2489,7 +2525,7 @@ if __name__ == '__main__':
         print('Mover wiring did not complete:', type(exc).__name__)
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/selection_policy.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/selection_policy.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Pure selection policy; never authorizes or executes a live move.
 
 Inputs must be collected by a trusted host adapter. Files and torrent content
@@ -2718,7 +2754,7 @@ if __name__ == '__main__':
     import sys
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/selective_preview.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/selective_preview.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Live inventory and read-only selection preview. No movement entry point."""
 import argparse
 import fcntl
@@ -2909,7 +2945,7 @@ def main():
 if __name__ == '__main__':
     raise SystemExit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/selective_mover.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/selective_mover.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Age-filtered native Unraid movement. No global mover invocation.
 
 Production scope is fixed to cache/Filmek -> the array with unchanged user-share
@@ -2950,6 +2986,25 @@ MAX_FILES = 8
 MAX_BYTES = 16*1024**3
 ERRORS = (OSError, ValueError, TypeError, KeyError, AttributeError, RuntimeError,
           subprocess.SubprocessError)
+
+
+class IntegrityHashingActive(ValueError):
+    """Known maintenance blocker; never bypass an active integrity scan."""
+
+
+class InspectionRequired(ValueError):
+    """An existing inspection latch is not an API outage or a new move."""
+
+
+def needs_inspection(prior):
+    # Only v2 explicitly distinguishes read-only preflight from native intent.
+    # Legacy running/ambiguous reports and every existing latch remain sticky.
+    safe_preflight = (prior.get('version') == 2 and
+                      prior.get('stage') in {'preflight_collection', 'file_preflight'} and
+                      prior.get('active_file_started') is False and
+                      prior.get('moved_files') == 0 and prior.get('moved_bytes') == 0)
+    return bool(prior.get('requires_inspection') or prior.get('active_file_started') or
+                (prior.get('state') == 'running' and not safe_preflight))
 
 
 def signature(info):
@@ -3024,9 +3079,8 @@ def torrent_snapshot():
 
 def guards(owned=False):
     prior=read_json(LAST,{})
-    if (prior.get('requires_inspection') is True or
-        (not owned and (prior.get('state')=='running' or prior.get('active_file_started') is True))):
-        raise ValueError('Previous movement requires inspection')
+    if prior.get('requires_inspection') or (not owned and needs_inspection(prior)):
+        raise InspectionRequired('Previous movement requires inspection')
     runtime=read_json(BASE/'settings.json',{})
     if runtime.get('version')!=1 or runtime.get('mode')!='advanced' or runtime.get('pool')!='cache':
         raise ValueError('Advanced cache mode required')
@@ -3064,7 +3118,7 @@ def guards(owned=False):
         try: values=entry.read_bytes().split(b'\0')
         except FileNotFoundError: continue
         if any(v.endswith(b'/bunker') for v in values):
-            if owned: raise ValueError('Integrity hashing active')
+            if owned: raise IntegrityHashingActive('Integrity hashing active')
             integrity_scanning=True
         args.append(values)
     watcher=b'/usr/local/emhttp/plugins/dynamix.file.integrity/scripts/watcher'
@@ -3136,7 +3190,9 @@ def log(message):
 
 def failure_code(error):
     """Expose a bounded failure category, never command arguments or private paths."""
-    if isinstance(error, subprocess.CalledProcessError):
+    if isinstance(error, IntegrityHashingActive): return 'integrity_hashing_active'
+    if isinstance(error, InspectionRequired): return 'inspection_required'
+    if isinstance(error, (subprocess.CalledProcessError, subprocess.TimeoutExpired)):
         command=error.cmd
         if (isinstance(command,(list,tuple)) and len(command)>=5 and
                 command[:4]==['docker','exec','binhex-qbittorrentvpn','curl'] and
@@ -3175,7 +3231,7 @@ class NativeMoveError(RuntimeError):
         self.stderr=stderr
 
 
-def execute_file(key,expected,days):
+def execute_file(key,expected,days,before_native=None):
     path,eligible=fresh_candidate(key,expected,days)
     if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
     if destinations(path): return {'state':'skipped','reason':'existing_array_copy'}
@@ -3189,6 +3245,8 @@ def execute_file(key,expected,days):
     opened=subprocess.run(['fuser','-s',str(path)],capture_output=True)
     if opened.returncode==0: return {'state':'skipped','reason':'open_file'}
     if opened.returncode!=1: raise ValueError('Open-file state unavailable')
+    if before_native is None: raise RuntimeError('Durable native intent callback required')
+    before_native()  # Must succeed durably before the native process can start.
     # Exact single-file stdin; no find, shell expansion, user-share copy or rm.
     result=subprocess.run([ENGINE],input=str(path)+'\n',text=True,capture_output=True)
     if result.returncode!=0: raise NativeMoveError(result.returncode,result.stderr)
@@ -3214,9 +3272,9 @@ def execute_file(key,expected,days):
 
 
 def run():
-    report={'version':1,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
+    report={'version':2,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
-            'requires_inspection':False}
+            'requires_inspection':False,'active_file_started':False}
     locks=[]; own_pid=False; coordinated=False
     try:
         # Same ordering for every executor; no cron/settings rewrites.
@@ -3229,9 +3287,9 @@ def run():
         # Read only after the previous owner has released all coordination locks.
         # A pre-lock snapshot could otherwise erase its newly recorded failure.
         prior=read_json(LAST,{})
-        report['requires_inspection']=bool(prior.get('requires_inspection') or prior.get('state')=='running' or prior.get('active_file_started'))
+        report['requires_inspection']=needs_inspection(prior)
         if report['requires_inspection']:
-            raise ValueError('Previous movement requires inspection')
+            raise InspectionRequired('Previous movement requires inspection')
         if PID.exists(): raise ValueError('Mover PID already present')
         report['stage']='preflight_collection'
         selection,_,current,items,_,_=collect(True)
@@ -3257,10 +3315,13 @@ def run():
                 skips['batch_file_limit']+=1;continue
             if report['moved_bytes']+size>limit:
                 skips['batch_size_limit']+=1;continue
-            report['stage']='file_verification_or_move'
-            report['active_file_started']=True
-            atomic_json(LAST,report)  # Durable intent before any native file operation.
-            outcome=execute_file(key,current[key],selection['age_days'])
+            report['stage']='file_preflight'
+            atomic_json(LAST,report)
+            def before_native():
+                report['stage']='native_move_or_verification'
+                report['active_file_started']=True
+                atomic_json(LAST,report)
+            outcome=execute_file(key,current[key],selection['age_days'],before_native)
             report['active_file_started']=False
             if outcome['state']=='moved':
                 report['moved_files']+=1;report['moved_bytes']+=outcome['bytes']
@@ -3283,7 +3344,7 @@ def run():
     except BlockingIOError:
         record_failure(report, locals().get('key'))
         # Lock contention before launch is different from EAGAIN during file I/O.
-        if report['state']=='checking':
+        if not coordinated:
             return {'state':'deferred','reason':'another_operation_active','moved_files':0}
         report['state']='error'
         report['error']='File operation unavailable; inspect before another run.'
@@ -3293,6 +3354,11 @@ def run():
         record_failure(report, locals().get('key'))
         report['state']='error';report['error']='Required state changed or could not be verified. No further files will be started; inspect selective-error.log in the private plugin configuration directory.'
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])
+        if (not report['requires_inspection'] and report['error_code'] in
+                {'torrent_snapshot_unavailable','integrity_hashing_active'}):
+            report['state']='deferred'
+            report['reason']=report['error_code']
+            report['error']='Required safety evidence unavailable; retry only after all guards pass.'
     finally:
         if own_pid and PID.exists() and PID.read_text()==str(os.getpid()): PID.unlink()
         report['finished']=time.time()
@@ -3321,14 +3387,15 @@ def main():
                 output=preview(args.action=='observe')
         print(json.dumps(output,allow_nan=False))
         return 20 if output.get('state')=='error' else 0
-    except ERRORS:
-        print(json.dumps({'execution_allowed':False,'decision':'unknown','error':'Required state could not be verified'}))
+    except ERRORS as error:
+        print(json.dumps({'execution_allowed':False,'decision':'unknown','error':'Required state could not be verified',
+                          'error_code':failure_code(error)}))
         return 20
 
 
 if __name__=='__main__': raise SystemExit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/wire_selective.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.29.1/wire_selective.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Reviewed opt-in dispatch; default is check-only, never starts movement."""
 import argparse
 import datetime
@@ -3387,7 +3454,7 @@ if __name__=='__main__':
 ]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.10.27.4
+src=/tmp/fejes-mover-monitor-2026.10.29.1
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }

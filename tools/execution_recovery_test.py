@@ -16,7 +16,9 @@ def child(folder,phase):
     root=Path(folder);source=root/'source.bin';target=root/'target.bin'
     real_open=open
     key='/mnt/user/Filmek/fixture.bin'
-    def execute(*args):
+    def execute(key,expected,days,before_native):
+        if phase=='preflight':os._exit(77)
+        before_native()
         if phase=='before':os._exit(77)
         shutil.copy2(source,target);source.unlink()
         os._exit(77)  # Exit before returning the move/verification outcome.
@@ -37,6 +39,18 @@ def child(folder,phase):
 
 @unittest.skipIf(os.name=='nt','Linux fsync/flock subprocess recovery test')
 class AbruptExitRecovery(unittest.TestCase):
+    def test_exit_during_readonly_preflight_preserves_zero_native_evidence(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);payload=b'fixture';(root/'source.bin').write_bytes(payload)
+            result=subprocess.run([sys.executable,str(Path(__file__).resolve()),'child',folder,'preflight'],capture_output=True,text=True,timeout=15)
+            self.assertEqual(result.returncode,77,result.stderr)
+            durable=json.loads((root/'last.json').read_text())
+            import selective_mover as mover
+            self.assertFalse(mover.needs_inspection(durable))
+            self.assertEqual(durable['stage'],'file_preflight')
+            self.assertEqual((root/'source.bin').read_bytes(),payload)
+            self.assertFalse((root/'target.bin').exists())
+
     def test_exit_before_and_after_lab_file_operation_requires_inspection(self):
         for phase in ('before','after'):
             with self.subTest(phase=phase),tempfile.TemporaryDirectory() as folder:
