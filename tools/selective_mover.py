@@ -52,10 +52,15 @@ class InspectionRequired(ValueError):
 def needs_inspection(prior):
     # Only v2 explicitly distinguishes read-only preflight from native intent.
     # Legacy running/ambiguous reports and every existing latch remain sticky.
-    safe_preflight = (prior.get('version') == 2 and
+    if not isinstance(prior,dict):return True
+    if not prior:return False  # No previous report on a fresh installation.
+    if prior.get('state') not in {'checking','running','completed','no_files_moved',
+                                  'nothing_eligible','deferred','error'}:return True
+    safe_preflight = (type(prior.get('version')) is int and prior['version'] == 2 and
                       prior.get('stage') in {'preflight_collection', 'file_preflight'} and
                       prior.get('active_file_started') is False and
-                      prior.get('moved_files') == 0 and prior.get('moved_bytes') == 0)
+                      type(prior.get('moved_files')) is int and prior['moved_files'] == 0 and
+                      type(prior.get('moved_bytes')) is int and prior['moved_bytes'] == 0)
     return bool(prior.get('requires_inspection') or prior.get('active_file_started') or
                 (prior.get('state') == 'running' and not safe_preflight))
 
@@ -339,6 +344,8 @@ def run():
         coordinated=True
         # Read only after the previous owner has released all coordination locks.
         # A pre-lock snapshot could otherwise erase its newly recorded failure.
+        # A corrupt/unreadable prior report cannot be replaced with an unlocked error.
+        report['requires_inspection']=True
         prior=read_json(LAST,{})
         report['requires_inspection']=needs_inspection(prior)
         if report['requires_inspection']:

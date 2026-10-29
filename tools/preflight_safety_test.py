@@ -7,6 +7,8 @@ from types import SimpleNamespace
 import subprocess
 import tempfile
 import unittest
+from test_support import install
+install()
 from unittest.mock import patch
 import selective_mover as mover
 
@@ -79,8 +81,11 @@ class PreflightBoundary(unittest.TestCase):
         self.assertFalse(mover.needs_inspection(prior))
         for change in (dict(version=1),dict(stage='native_move_or_verification'),
                        dict(active_file_started=True),dict(moved_files=1),
-                       dict(moved_bytes=100),dict(requires_inspection=True)):
+                       dict(moved_bytes=100),dict(requires_inspection=True),
+                       dict(moved_files=False),dict(moved_bytes=False)):
             self.assertTrue(mover.needs_inspection(dict(prior,**change)))
+        for malformed in ([],{'state':'unknown'},{'stage':'file_preflight'}):
+            self.assertTrue(mover.needs_inspection(malformed))
 
     def test_real_executor_boundary_follows_both_fresh_checks_and_fuser(self):
         events=[];path=SimpleNamespace(stat=lambda:'stat')

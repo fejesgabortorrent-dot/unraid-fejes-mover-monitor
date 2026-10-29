@@ -4,6 +4,7 @@ Loaded automatically in child Python interpreters by isolated_test.py.
 This is a regression tripwire, not an OS security boundary for arbitrary code.
 """
 import os
+import shlex
 import sys
 
 
@@ -31,10 +32,16 @@ def audit(event,args):
             raise TestIsolationViolation('Test attempted a production filesystem mutation')
     elif event in {'subprocess.Popen','os.system'}:
         command=args[1] if event=='subprocess.Popen' else args[0]
-        words=command if isinstance(command,(list,tuple)) else [command]
-        if any(os.path.basename(os.fsdecode(w)) in {'docker','logger','ssh','scp','virsh','mover','move','fuser'}
+        words=command if isinstance(command,(list,tuple)) else shlex.split(os.fsdecode(command),posix=os.name!='nt')
+        if any(os.fsdecode(w).strip('"').replace('\\','/').rsplit('/',1)[-1] in {'docker','logger','ssh','scp','virsh','mover','move','fuser'}
                for w in words if isinstance(w,(str,bytes,os.PathLike))):
             raise TestIsolationViolation('Test attempted a live service/native command')
 
 
-if os.environ.get('FEJES_ISOLATED_TEST')=='1':sys.addaudithook(audit)
+def install():
+    if not getattr(sys,'_fejes_test_isolation',False):
+        sys.addaudithook(audit)
+        sys._fejes_test_isolation=True
+
+
+if os.environ.get('FEJES_ISOLATED_TEST')=='1':install()

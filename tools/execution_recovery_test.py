@@ -8,6 +8,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from test_support import install
+install()
 
 def child(folder,phase):
     from unittest.mock import patch

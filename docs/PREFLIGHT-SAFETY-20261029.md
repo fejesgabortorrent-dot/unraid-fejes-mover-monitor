@@ -40,8 +40,10 @@ unknown. Private exception strings, paths and command arguments are not rendered
 Run Python checks through `python3 tools/isolated_test.py ...`. It sets disposable
 temporary directories and installs an inherited Python audit hook that fails
 loudly on production-path writes/mutations or live Docker/logger/native commands.
-The exception derives from BaseException so diagnostic best-effort handlers cannot
-silently hide a test leak. This is a regression tripwire, not an OS sandbox for
+Executor/diagnostic tests also install the hook when invoked directly, and pass
+it to their Python children. The exception derives from BaseException so
+diagnostic best-effort handlers cannot silently hide a test leak. This is a
+regression tripwire, not an OS sandbox for
 arbitrary shell/PHP code. Tests are intended for a development host/CI, never the
 production NAS. PHP fixtures explicitly rewrite production locations into their
 temporary directories. No test-error log is copied into a release package.
@@ -64,3 +66,19 @@ establish whether native execution began and whether every source/destination
 from the affected operation is consistent. Zero counters alone are insufficient.
 No unlock, production movement, file deletion, deployment, merge or release is
 part of this candidate.
+
+## Local validation
+
+- 19 localized selective interface tests passed, including specific worker errors,
+  unknown causes, escaping, CSRF and fixed-command dispatch.
+- 29 ratio-priority, waiting-table and torrent-preflight tests passed.
+- The Windows isolation write/command regression test passed; the separate
+  Linux diagnostic-handler test was skipped locally.
+- All seven existing JavaScript behavior checks passed.
+- 60 browser page/viewport navigation combinations passed with the installed
+  Chrome browser. Fixtures used actual rendered pages and disposable settings.
+- Python compilation and PHP syntax checks passed; the generated manifest and
+  source payloads were rebuilt locally.
+- The complete Linux suite, interrupted-process checks and isolated Linux package
+  install remain pending. The Windows full installer check could not complete in
+  its Git Bash environment; this is not recorded as a passing package check.
