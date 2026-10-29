@@ -6,6 +6,8 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from test_support import install
+install()
 from unittest.mock import patch
 
 sys.path.insert(0,str(Path(__file__).parent))
@@ -145,11 +147,17 @@ class BatchReporting(unittest.TestCase):
             stack.enter_context(patch.object(mover,'log'))
             stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'max_bytes':limit,'candidates':candidates,'blockers':[],'skipped':[]},[],inventory,[],[],{})))
             stack.enter_context(patch.object(mover,'torrent_snapshot',return_value=([],[])))
-            execute=stack.enter_context(patch.object(mover,'execute_file',side_effect=lambda key,*a:{'state':'skipped','reason':'native_retained_source'} if retained else {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'fixture'}))
-            if io_error:execute.side_effect=BlockingIOError('fixture file I/O unavailable')
+            def execute_fixture(key,expected,days,before_native):
+                before_native('0'*64)
+                if io_error:raise BlockingIOError('fixture file I/O unavailable')
+                return {'state':'skipped','reason':'native_retained_source'} if retained else {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'0'*64,'destination':'/fixture-array/'+key.rsplit('/',1)[-1]}
+            execute=stack.enter_context(patch.object(mover,'execute_file',side_effect=execute_fixture))
             result=mover.run()
-            self.assertEqual(writes[-1],result)
+            if inspection_on_lock:self.assertEqual(writes,[])
+            else:self.assertEqual(writes[-1],result)
             if execute.call_count:self.assertTrue(any(w.get('active_file_started') is True for w in writes))
+            self.assertEqual(len(result['verified_files']),result['moved_files'])
+            self.assertEqual(sum(row['bytes'] for row in result['verified_files']),result['moved_bytes'])
             self.assertFalse((root/'mover.pid').exists())
             return result,execute.call_count,attempt.exists()
 
