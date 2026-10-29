@@ -37,8 +37,9 @@ class PreflightBoundary(unittest.TestCase):
             def execute(key,expected,days,before_native):
                 calls.append(key)
                 if first_moved and len(calls)==1:
-                    before_native();return dict(state='moved',bytes=100,sha256='fixture')
-                if native:before_native()
+                    before_native('0'*64);return dict(state='moved',bytes=100,sha256='0'*64,destination='/fixture-array/1')
+                if native:before_native('0'*64)
+                if isinstance(error,dict):return error
                 raise error
             stack.enter_context(patch.object(mover,'execute_file',side_effect=execute))
             result=mover.run()
@@ -70,6 +71,16 @@ class PreflightBoundary(unittest.TestCase):
         result,_,calls=self.batch(api_error(),first_moved=True)
         self.assertEqual(result['moved_files'],1);self.assertTrue(result['requires_inspection'])
         self.assertEqual(len(calls),2)
+        self.assertEqual(result['verified_files'][0]['sha256'],'0'*64)
+        self.assertEqual(result['verified_files'][0]['destination'],'/fixture-array/1')
+
+    def test_invalid_native_result_keeps_durable_content_evidence_and_latch(self):
+        for outcome in (dict(state='moved'),dict(state='skipped'),dict(state='unexpected',reason='invalid')):
+            result,saved,_=self.batch(outcome,native=True)
+            self.assertEqual(result['state'],'error');self.assertTrue(result['requires_inspection'])
+            self.assertTrue(result['active_file_started'])
+            self.assertEqual(result['active_sha256'],'0'*64)
+            self.assertEqual(saved[-1]['active_sha256'],'0'*64)
 
     def test_existing_latch_and_legacy_running_never_clear(self):
         for prior in ({'requires_inspection':True},{'version':1,'state':'running'},
@@ -110,10 +121,10 @@ class PreflightBoundary(unittest.TestCase):
                 events.append('native');raise mover.NativeMoveError(1,'fixture')
             stack.enter_context(patch.object(mover.subprocess,'run',side_effect=command))
             with self.assertRaises(mover.NativeMoveError):
-                mover.execute_file('fixture',{},7,lambda:events.append('durable'))
-            self.assertEqual(events,['fresh','fresh','fuser','durable','native'])
+                mover.execute_file('fixture',{},7,lambda checksum:events.append('durable:'+checksum))
+            self.assertEqual(events,['fresh','fresh','fuser','durable:hash','native'])
             events.clear()
-            def failed_save():events.append('save_failed');raise OSError('fsync failed')
+            def failed_save(checksum):events.append('save_failed');raise OSError('fsync failed')
             with self.assertRaises(OSError):mover.execute_file('fixture',{},7,failed_save)
             self.assertNotIn('native',events)
             for failed_call in (1,2):
@@ -124,7 +135,7 @@ class PreflightBoundary(unittest.TestCase):
                     return path,True
                 with patch.object(mover,'fresh_candidate',side_effect=fresh):
                     with self.assertRaises(subprocess.CalledProcessError):
-                        mover.execute_file('fixture',{},7,lambda:events.append('durable'))
+                        mover.execute_file('fixture',{},7,lambda checksum:events.append('durable'))
                 self.assertNotIn('durable',events);self.assertNotIn('native',events)
 
     def test_retained_source_cannot_hide_partial_destination_or_symlink(self):
@@ -143,7 +154,7 @@ class PreflightBoundary(unittest.TestCase):
                     with self.assertRaises(RuntimeError):mover.execute_file('fixture',{},7,intent)
                 else:
                     self.assertEqual(mover.execute_file('fixture',{},7,intent)['reason'],'native_retained_source')
-                intent.assert_called_once_with()
+                intent.assert_called_once_with('fixture-hash')
 
 
 if __name__=='__main__':unittest.main()

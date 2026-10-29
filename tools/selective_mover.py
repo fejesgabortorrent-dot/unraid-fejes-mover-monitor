@@ -304,7 +304,7 @@ def execute_file(key,expected,days,before_native=None):
     if opened.returncode==0: return {'state':'skipped','reason':'open_file'}
     if opened.returncode!=1: raise ValueError('Open-file state unavailable')
     if before_native is None: raise RuntimeError('Durable native intent callback required')
-    before_native()  # Must succeed durably before the native process can start.
+    before_native(checksum)  # Persist the content baseline before native execution.
     # Exact single-file stdin; no find, shell expansion, user-share copy or rm.
     result=subprocess.run([ENGINE],input=str(path)+'\n',text=True,capture_output=True)
     if result.returncode!=0: raise NativeMoveError(result.returncode,result.stderr)
@@ -328,13 +328,13 @@ def execute_file(key,expected,days,before_native=None):
         raise RuntimeError('Metadata mismatch; destination retained')
     if any(os.getxattr(target,key)!=value for key,value in attrs.items()):
         raise RuntimeError('Extended metadata mismatch; destination retained')
-    return {'state':'moved','bytes':after.st_size,'sha256':checksum}
+    return {'state':'moved','bytes':after.st_size,'sha256':checksum,'destination':str(target)}
 
 
 def run():
     report={'version':2,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
-            'requires_inspection':False,'active_file_started':False}
+            'requires_inspection':False,'active_file_started':False,'verified_files':[]}
     locks=[]; own_pid=False; coordinated=False; preserve_prior=True
     try:
         # Same ordering for every executor; no cron/settings rewrites.
@@ -382,17 +382,21 @@ def run():
             report['active_file']=key
             report['active_signature']=current[key]['signature']
             atomic_json(LAST,report)
-            def before_native():
+            def before_native(source_sha256):
                 report['stage']='native_move_or_verification'
                 report['active_file_started']=True
+                report['active_sha256']=source_sha256
                 atomic_json(LAST,report)
             outcome=execute_file(key,current[key],selection['age_days'],before_native)
-            report['active_file_started']=False
-            report.pop('active_file',None);report.pop('active_signature',None)
             if outcome['state']=='moved':
+                report['verified_files'].append({'source':key,'source_signature':current[key]['signature'],
+                    'destination':outcome['destination'],'bytes':outcome['bytes'],'sha256':outcome['sha256']})
                 report['moved_files']+=1;report['moved_bytes']+=outcome['bytes']
                 log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
-            else: skips[outcome['reason']]+=1
+            elif outcome['state']=='skipped':skips[outcome['reason']]+=1
+            else:raise RuntimeError('Unrecognized native outcome')
+            report['active_file_started']=False
+            for field in ('active_file','active_signature','active_sha256'):report.pop(field,None)
             report['skipped']=dict(skips);atomic_json(LAST,report)
         # Trailing limit skips never reach the per-file write above.
         report['skipped']=dict(skips)

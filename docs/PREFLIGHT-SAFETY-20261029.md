@@ -77,6 +77,9 @@ Recovery tests compare the saved bytes before/after a rejected restart.
 
 Immediately before native intent, the private report records the active file and
 expected source signature so a future abrupt exit retains per-file evidence.
+Native intent also persists the source SHA-256 before invocation. Verified moves
+remain listed with source signature, destination, byte count and SHA-256 in the
+private batch report. A malformed native result cannot clear active intent.
 These fields are not rendered in public status messages. A source retained by
 the native tool is only an ordinary skip if it is still a verified regular file
 and no array copy exists. A symlink or a simultaneous, unverified destination

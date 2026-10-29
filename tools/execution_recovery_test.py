@@ -20,7 +20,7 @@ def child(folder,phase):
     key='/mnt/user/Filmek/fixture.bin'
     def execute(key,expected,days,before_native):
         if phase=='preflight':os._exit(77)
-        before_native()
+        before_native(hashlib.sha256(source.read_bytes()).hexdigest())
         if phase=='before':os._exit(77)
         shutil.copy2(source,target);source.unlink()
         os._exit(77)  # Exit before returning the move/verification outcome.
@@ -64,6 +64,7 @@ class AbruptExitRecovery(unittest.TestCase):
                 self.assertEqual(durable['state'],'running');self.assertTrue(durable['active_file_started'])
                 self.assertEqual(durable['active_file'],'/mnt/user/Filmek/fixture.bin')
                 self.assertEqual(durable['active_signature'],[1,2,4096,0,0])
+                self.assertEqual(durable['active_sha256'],hashlib.sha256(payload).hexdigest())
                 saved=(root/'last.json').read_bytes()
                 existing=root/('source.bin' if phase=='before' else 'target.bin')
                 self.assertEqual(hashlib.sha256(existing.read_bytes()).digest(),hashlib.sha256(payload).digest())
