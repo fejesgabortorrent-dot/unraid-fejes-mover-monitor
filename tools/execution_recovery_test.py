@@ -62,6 +62,9 @@ class AbruptExitRecovery(unittest.TestCase):
                 self.assertEqual(result.returncode,77,result.stderr)
                 durable=json.loads((root/'last.json').read_text())
                 self.assertEqual(durable['state'],'running');self.assertTrue(durable['active_file_started'])
+                self.assertEqual(durable['active_file'],'/mnt/user/Filmek/fixture.bin')
+                self.assertEqual(durable['active_signature'],[1,2,4096,0,0])
+                saved=(root/'last.json').read_bytes()
                 existing=root/('source.bin' if phase=='before' else 'target.bin')
                 self.assertEqual(hashlib.sha256(existing.read_bytes()).digest(),hashlib.sha256(payload).digest())
                 restarted=subprocess.run(command+['restart'],capture_output=True,text=True,timeout=15,check=True)
@@ -70,6 +73,8 @@ class AbruptExitRecovery(unittest.TestCase):
                 self.assertEqual(report['moved_files'],0)
                 self.assertEqual(hashlib.sha256(existing.read_bytes()).digest(),hashlib.sha256(payload).digest())
                 self.assertFalse((root/'attempt').exists())
+                self.assertEqual((root/'last.json').read_bytes(),saved)
+                self.assertFalse((root/'selective-error.log').exists())
 
 if __name__=='__main__':
     if len(sys.argv)>1 and sys.argv[1]=='child':child(sys.argv[2],sys.argv[3])

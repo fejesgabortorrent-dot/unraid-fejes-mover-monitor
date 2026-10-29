@@ -3255,8 +3255,10 @@ def execute_file(key,expected,days,before_native=None):
     # Exact single-file stdin; no find, shell expansion, user-share copy or rm.
     result=subprocess.run([ENGINE],input=str(path)+'\n',text=True,capture_output=True)
     if result.returncode!=0: raise NativeMoveError(result.returncode,result.stderr)
+    if path.is_symlink(): raise RuntimeError('Retained source became a symlink')
     if path.exists():
-        if signature(path.stat())!=signature(before): raise RuntimeError('Retained source changed')
+        if signature(valid_file(path))!=signature(before): raise RuntimeError('Retained source changed')
+        if destinations(path): raise RuntimeError('Retained source has an unverified array copy')
         return {'state':'skipped','reason':'native_retained_source'}
     targets=destinations(path)
     if len(targets)!=1: raise RuntimeError('Movement target could not be verified')
@@ -3280,7 +3282,7 @@ def run():
     report={'version':2,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
             'requires_inspection':False,'active_file_started':False}
-    locks=[]; own_pid=False; coordinated=False
+    locks=[]; own_pid=False; coordinated=False; preserve_prior=True
     try:
         # Same ordering for every executor; no cron/settings rewrites.
         for name in ('fejes-mover-launch.lock','fejes-integrity-cron.lock','fejes-selective-inventory.lock'):
@@ -3297,6 +3299,7 @@ def run():
         report['requires_inspection']=needs_inspection(prior)
         if report['requires_inspection']:
             raise InspectionRequired('Previous movement requires inspection')
+        preserve_prior=False
         if PID.exists(): raise ValueError('Mover PID already present')
         report['stage']='preflight_collection'
         selection,_,current,items,_,_=collect(True)
@@ -3323,6 +3326,8 @@ def run():
             if report['moved_bytes']+size>limit:
                 skips['batch_size_limit']+=1;continue
             report['stage']='file_preflight'
+            report['active_file']=key
+            report['active_signature']=current[key]['signature']
             atomic_json(LAST,report)
             def before_native():
                 report['stage']='native_move_or_verification'
@@ -3330,6 +3335,7 @@ def run():
                 atomic_json(LAST,report)
             outcome=execute_file(key,current[key],selection['age_days'],before_native)
             report['active_file_started']=False
+            report.pop('active_file',None);report.pop('active_signature',None)
             if outcome['state']=='moved':
                 report['moved_files']+=1;report['moved_bytes']+=outcome['bytes']
                 log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
@@ -3358,7 +3364,7 @@ def run():
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])
     except ERRORS as error:
         report['error_code']=failure_code(error)
-        record_failure(report, locals().get('key'))
+        if not isinstance(error,InspectionRequired):record_failure(report, locals().get('key'))
         report['state']='error';report['error']='Required state changed or could not be verified. No further files will be started; inspect selective-error.log in the private plugin configuration directory.'
         report['requires_inspection']=bool(report['requires_inspection'] or report.get('active_file_started') or report['moved_files'])
         if (not report['requires_inspection'] and report['error_code'] in
@@ -3369,7 +3375,7 @@ def run():
     finally:
         if own_pid and PID.exists() and PID.read_text()==str(os.getpid()): PID.unlink()
         report['finished']=time.time()
-        if coordinated and report['state']!='checking': atomic_json(LAST,report)
+        if coordinated and not preserve_prior and report['state']!='checking': atomic_json(LAST,report)
         for lock in reversed(locks): lock.close()
     return report
 

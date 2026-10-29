@@ -67,6 +67,21 @@ from the affected operation is consistent. Zero counters alone are insufficient.
 No unlock, production movement, file deletion, deployment, merge or release is
 part of this candidate.
 
+## Follow-up evidence preservation
+
+A rejected launch previously replaced the report that caused the inspection
+latch, and appended another equivalent traceback. The executor now returns the
+blocked result without replacing that original report or duplicating its failure
+log. An unreadable/corrupt prior report is also retained rather than overwritten.
+Recovery tests compare the saved bytes before/after a rejected restart.
+
+Immediately before native intent, the private report records the active file and
+expected source signature so a future abrupt exit retains per-file evidence.
+These fields are not rendered in public status messages. A source retained by
+the native tool is only an ordinary skip if it is still a verified regular file
+and no array copy exists. A symlink or a simultaneous, unverified destination
+requires inspection; neither copy is removed.
+
 ## Local validation
 
 - 19 localized selective interface tests passed, including specific worker errors,

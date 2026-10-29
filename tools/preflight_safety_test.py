@@ -43,6 +43,8 @@ class PreflightBoundary(unittest.TestCase):
             stack.enter_context(patch.object(mover,'execute_file',side_effect=execute))
             result=mover.run()
             self.assertFalse((root/'pid').exists())
+            if prior and mover.needs_inspection(prior):
+                self.assertFalse((root/'selective-error.log').exists())
             return result,saved,calls
 
     def test_api_and_integrity_before_native_defer_without_latch(self):
@@ -72,13 +74,15 @@ class PreflightBoundary(unittest.TestCase):
     def test_existing_latch_and_legacy_running_never_clear(self):
         for prior in ({'requires_inspection':True},{'version':1,'state':'running'},
                       {'active_file_started':True}):
-            result,_,calls=self.batch(api_error(),prior=prior)
+            result,saved,calls=self.batch(api_error(),prior=prior)
             self.assertTrue(result['requires_inspection']);self.assertEqual(calls,[])
+            self.assertEqual(saved,[])
 
     def test_unreadable_prior_report_cannot_turn_into_an_unlocked_error(self):
         for error in (ValueError('corrupt JSON'),OSError('read unavailable')):
-            result,_,calls=self.batch(api_error(),prior_error=error)
+            result,saved,calls=self.batch(api_error(),prior_error=error)
             self.assertTrue(result['requires_inspection']);self.assertEqual(calls,[])
+            self.assertEqual(saved,[])
 
     def test_only_explicit_zero_operation_v2_preflight_is_restartable(self):
         prior=dict(version=2,state='running',stage='file_preflight',
@@ -122,6 +126,24 @@ class PreflightBoundary(unittest.TestCase):
                     with self.assertRaises(subprocess.CalledProcessError):
                         mover.execute_file('fixture',{},7,lambda:events.append('durable'))
                 self.assertNotIn('durable',events);self.assertNotIn('native',events)
+
+    def test_retained_source_cannot_hide_partial_destination_or_symlink(self):
+        for has_target,symlink in ((False,False),(True,False),(False,True)):
+            with self.subTest(target=has_target,symlink=symlink),ExitStack() as stack:
+                info=SimpleNamespace(st_dev=1,st_ino=2,st_size=3,st_mtime_ns=4,st_ctime_ns=5)
+                path=SimpleNamespace(stat=lambda:info,exists=lambda:True,is_symlink=lambda:symlink)
+                stack.enter_context(patch.object(mover,'fresh_candidate',return_value=(path,True)))
+                stack.enter_context(patch.object(mover,'valid_file',return_value=info))
+                stack.enter_context(patch.object(mover,'destinations',side_effect=[[],[],[Path('/fixture-target')] if has_target else []]))
+                stack.enter_context(patch.object(mover.os,'listxattr',return_value=[]))
+                stack.enter_context(patch.object(mover,'sha256',return_value='fixture-hash'))
+                stack.enter_context(patch.object(mover.subprocess,'run',side_effect=[SimpleNamespace(returncode=1),SimpleNamespace(returncode=0)]))
+                intent=stack.enter_context(patch.object(mover,'log'))
+                if has_target or symlink:
+                    with self.assertRaises(RuntimeError):mover.execute_file('fixture',{},7,intent)
+                else:
+                    self.assertEqual(mover.execute_file('fixture',{},7,intent)['reason'],'native_retained_source')
+                intent.assert_called_once_with()
 
 
 if __name__=='__main__':unittest.main()

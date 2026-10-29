@@ -153,7 +153,8 @@ class BatchReporting(unittest.TestCase):
                 return {'state':'skipped','reason':'native_retained_source'} if retained else {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'fixture'}
             execute=stack.enter_context(patch.object(mover,'execute_file',side_effect=execute_fixture))
             result=mover.run()
-            self.assertEqual(writes[-1],result)
+            if inspection_on_lock:self.assertEqual(writes,[])
+            else:self.assertEqual(writes[-1],result)
             if execute.call_count:self.assertTrue(any(w.get('active_file_started') is True for w in writes))
             self.assertFalse((root/'mover.pid').exists())
             return result,execute.call_count,attempt.exists()
