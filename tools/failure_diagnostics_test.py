@@ -4,6 +4,8 @@ from pathlib import Path
 import stat
 import tempfile
 import unittest
+from test_support import install
+install()
 from unittest.mock import patch
 import selective_mover as mover
 

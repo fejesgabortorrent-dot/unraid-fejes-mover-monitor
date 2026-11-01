@@ -152,6 +152,14 @@ html[data-fejes-theme="dark"] #fms table.fms-queue th{background:#283140!importa
 @media(max-width:700px){.fmc-nav{top:40px;margin:10px 6px;padding:8px;gap:6px}.fmc-nav :is(a,button){min-width:92px;padding:0 10px}.fmc-nav .fmc-nav-pages{gap:6px;margin-left:0}:is(#fms,#fm-monitor,#ms,#fp,#fmc-setup){padding-left:10px!important;padding-right:10px!important}}
 
 .content:has(> .fmc-nav){overflow:visible!important}
+/* Mobile navigation stays in normal flow: every destination is visible without
+   horizontal scrolling and long translations can wrap at narrow widths. */
+@media(max-width:700px){
+ .fmc-nav{position:static;flex-wrap:wrap;overflow:visible;min-width:0}
+ .fmc-nav>button,.fmc-nav>a{flex:1 1 26%;min-width:0;white-space:normal;overflow-wrap:anywhere}
+ .fmc-nav .fmc-nav-pages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));flex:1 1 100%;min-width:0}
+ .fmc-nav .fmc-nav-pages a{min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:center}
+}
 .fmc-page-tail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:24px 0;padding:12px 0;border-top:1px solid #8884}.fmc-support-strip{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;padding:16px;box-sizing:border-box;background:#42464b;color:#fff;border:1px solid #fff;border-radius:10px}.fmc-support-strip small{flex-basis:100%;text-align:center}.fmc-support-strip strong{font-size:18px}.fmc-support-strip a{background:#555b62!important;color:#fff!important;border-color:#fff!important}.fmc-page-tail :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:140px;padding:0 16px;border:1px solid #8886;border-radius:10px;text-decoration:none;color:inherit;font-weight:600;background:#8881;box-sizing:border-box}
 
 .fmc-mode{display:flow-root!important;box-sizing:border-box}.fmc-mode .fmc-theme{float:none!important;display:flex!important;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 10px!important}.fmc-mode .fmc-theme select{margin:0!important;min-height:44px;max-width:100%;box-sizing:border-box}.fmc-mode .fmc-theme label{margin:0!important}

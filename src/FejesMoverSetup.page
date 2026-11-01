@@ -19,6 +19,7 @@ if($fmLang==='en'){ ?>
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+echo $fmc['banner'];
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
@@ -78,6 +79,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+echo $fmc['banner'];
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{
@@ -137,6 +139,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 echo $fmLanguageSelector;
 $fmcConfigWrite=true;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+echo $fmc['banner'];
 $fmcT=$fmc['t'];$fmcEsc=$fmc['esc'];$fmcMessage='';$fmcError='';
 if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  try{

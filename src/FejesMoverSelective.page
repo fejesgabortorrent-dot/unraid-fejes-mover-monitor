@@ -18,6 +18,24 @@ $fmPageTitle=['hu'=>"Mover · Selective",'en'=>"Mover · Selective",'de'=>"Mover
 echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $t=$fmc['t'];$e=$fmc['esc'];echo $fmc['banner'];
+$failureLabels=[
+ 'Invalid age'=>$t('Érvénytelen korhatár. Válassz 1, 7, 14 vagy 30 napot.','Invalid age. Select 1, 7, 14 or 30 days.','Ungültiges Alter. 1, 7, 14 oder 30 Tage wählen.'),
+ 'Invalid batch size'=>$t('Érvénytelen körméret. Válassz 16, 32, 64 vagy 128 GiB-ot.','Invalid batch size. Select 16, 32, 64 or 128 GiB.','Ungültiges Lauflimit. 16, 32, 64 oder 128 GiB wählen.'),
+ 'Invalid ratio target'=>$t('Érvénytelen aránycél. Adj meg 0 és 100 közötti számot, legfeljebb két tizedessel.','Invalid ratio target. Enter a number from 0 to 100 with at most two decimals.','Ungültiges Verhältnisziel. Zahl von 0 bis 100 mit höchstens zwei Dezimalstellen eingeben.'),
+ 'Advanced cache mode required'=>$t('Ehhez a művelethez haladó mód és elérhető cache pool szükséges.','This action requires advanced mode and an available cache pool.','Diese Aktion benötigt erweiterten Modus und verfügbaren Cache-Pool.'),
+ 'Configuration unavailable'=>$t('A mentett beállítások nem olvashatók biztonságosan. Ellenőrizd a konfigurációt.','Saved settings cannot be read safely. Check the configuration.','Gespeicherte Einstellungen nicht sicher lesbar. Konfiguration prüfen.'),
+ 'Invalid configuration'=>$t('A mentett konfiguráció formátuma vagy korhatára érvénytelen.','The saved configuration format or age setting is invalid.','Format oder Alterswert der gespeicherten Konfiguration ungültig.'),
+ 'Backup failed'=>$t('A beállítások biztonsági mentése nem sikerült; a mentés megszakadt.','Settings backup failed; saving was stopped.','Sicherung der Einstellungen fehlgeschlagen; Speichern abgebrochen.'),
+ 'Save failed'=>$t('A beállítások mentése nem sikerült. Ellenőrizd a boot-meghajtó írhatóságát és szabad helyét.','Settings could not be saved. Check boot device write access and free space.','Einstellungen nicht gespeichert. Schreibzugriff und freien Platz des Boot-Laufwerks prüfen.'),
+ 'Readback failed'=>$t('A mentett beállítások visszaellenőrzése nem sikerült. Az új értékek nem igazoltak.','Saved settings could not be verified. New values are unconfirmed.','Gespeicherte Einstellungen nicht verifiziert. Neue Werte unbestätigt.'),
+ 'inspection_required'=>$t('Korábbi művelet ellenőrzése szükséges; a biztonsági zárolás aktív. Új mozgatás nem engedélyezett.','A previous operation requires inspection; the safety lock is active. New movement is blocked.','Ein früherer Vorgang muss geprüft werden; die Sicherheitssperre ist aktiv. Neues Verschieben ist gesperrt.'),
+ 'torrent_snapshot_unavailable'=>$t('A qBittorrent torrentállapota nem kérdezhető le. A seedvédelem nem igazolható; a feldolgozás megállt.','qBittorrent state could not be queried. Seed protection cannot be verified; processing stopped.','Der qBittorrent-Status ist nicht abrufbar. Seed-Schutz nicht verifiziert; Verarbeitung gestoppt.'),
+ 'integrity_hashing_active'=>$t('Integritásellenőrzés fut. A mozgatás halasztva; a védelem változatlanul aktív.','Integrity verification is running. Movement is deferred; protection remains active.','Integritätsprüfung läuft. Verschieben aufgeschoben; Schutz bleibt aktiv.'),
+ 'required_state_unverified'=>$t('Egy szükséges biztonsági állapot nem igazolható. A pontos ok a privát hibanaplóban ellenőrizhető.','A required safety condition could not be verified. Check the private error log for the exact cause.','Eine nötige Schutzbedingung ist nicht verifiziert. Genaue Ursache im privaten Fehlerprotokoll prüfen.'),
+ 'Invalid session'=>$t('A munkamenet lejárt vagy érvénytelen. Töltsd újra az oldalt, és jelentkezz be újra, ha szükséges.','The session expired or is invalid. Reload the page and sign in again if needed.','Sitzung abgelaufen oder ungültig. Seite neu laden und bei Bedarf erneut anmelden.'),
+ 'Configuration changed'=>$t('A beállításokat közben módosították. Töltsd újra az oldalt a friss értékekhez.','Settings changed in the meantime. Reload the page for current values.','Einstellungen wurden inzwischen geändert. Seite für aktuelle Werte neu laden.'),
+ 'Busy'=>$t('Másik művelet használja a beállításokat. Próbáld újra annak befejezése után.','Another operation is using the settings. Retry after it finishes.','Ein anderer Vorgang verwendet die Einstellungen. Nach dessen Ende erneut versuchen.'),
+ 'Worker unavailable'=>$t('Az állapotlekérdezés nem fejeződött be, vagy a háttérfolyamat nem adott érvényes választ. A kiváltó ok ebből a válaszból nem állapítható meg.','The status query did not finish or the worker returned no valid response. This response does not identify the underlying cause.','Statusabfrage nicht beendet oder keine gültige Prozessantwort. Die Ursache ist aus dieser Antwort nicht erkennbar.')];
 $path='/boot/config/plugins/fejes.mover.monitor/selective.json';
 $raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;$ratioTarget=0;$batchGiB=16;
 try {
@@ -47,19 +65,20 @@ try {
    if(!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
    $cmd='python3 /boot/config/plugins/fejes.mover.monitor/tools/selective_mover.py '.($action==='run'?'start':$action);
    exec('timeout 60 '.$cmd.' 2>/dev/null',$lines,$code);
-   if($code!==0)throw new RuntimeException('Worker unavailable');
    $report=json_decode(implode("\n",$lines),true,512,JSON_THROW_ON_ERROR);
    if(!is_array($report))throw new RuntimeException('Invalid report');
+   if($code!==0||!empty($report['error']))throw new RuntimeException(is_string($report['error_code']??null)&&isset($failureLabels[$report['error_code']])?$report['error_code']:'Worker unavailable');
    if($action==='run')$message=$t('Indítási kérés elküldve. A háttérfolyamat minden védelmet újraellenőriz; ez még nem jelent fájlmozgatást.','Start requested. The worker rechecks every guard; this does not yet mean files were moved.','Start angefordert. Der Prozess prüft alle Schutzbedingungen erneut; dies bestätigt noch keine Verschiebung.');
   }else throw new RuntimeException('Invalid action');
  }
-}catch(Throwable $exception){$error=$t('A kérés nem teljesült. Ellenőrizd az állapotot; új mozgatást nem igazoltunk.','Request failed. Check status; no new movement has been confirmed.','Anfrage fehlgeschlagen. Status prüfen; keine neue Verschiebung bestätigt.');}
+}catch(Throwable $exception){$error=$failureLabels[$exception->getMessage()]??$t('A kérés nem teljesült; a válaszból a pontos ok nem állapítható meg. Ellenőrizd a beállításokat és az utolsó futás részleteit.','The request failed; its exact cause could not be determined from the response. Check settings and last run details.','Anfrage fehlgeschlagen; genaue Ursache aus der Antwort nicht erkennbar. Einstellungen und Details des letzten Laufs prüfen.');}
 $blockerLabels=['capacity'=>$t('A szabadhely-feltétel nem enged indítást: a küszöb elért vagy nem ellenőrizhető','Free-space guard blocks starting: threshold met or capacity unverified','Freiplatzschutz verhindert den Start: Grenze erreicht oder Kapazität ungeprüft'),'integrity'=>$t('File Integrity ellenőrzés vagy integritásvédelem miatt várakozik','Waiting for File Integrity verification or integrity protection','Warten auf File-Integrity-Prüfung oder Integritätsschutz'),'cooldown'=>$t('A két mozgatás közötti várakozási idő még tart','Cooldown between movement batches is still active','Wartezeit zwischen Verschiebeläufen ist noch aktiv')];
 $blockerText=static fn($values)=>implode(', ',array_map(static fn($key)=>$blockerLabels[$key]??$key,$values));
 $lastPath='/boot/config/plugins/fejes.mover.monitor/selective-last.json';
 $lastRaw=is_link($lastPath)?false:@file_get_contents($lastPath);
 $last=is_string($lastRaw)?json_decode($lastRaw,true):['state'=>'not_run'];
 if(!is_array($last))$last=['state'=>'unknown'];
+$lastFailureCode=is_string($last['error_code']??null)?$last['error_code']:'';
 $forecast=$report['forecast']??null;
 if(!is_array($forecast)){
  $forecastPath='/boot/config/plugins/fejes.mover.monitor/selective-forecast.json';
@@ -86,6 +105,7 @@ $states=[
  'nothing_eligible'=>$t('Nincs még mozgatható fájl','No eligible file yet','Noch keine geeignete Datei'),
  'deferred'=>$t('Védelmi feltétel miatt halasztva','Deferred by a safety guard','Durch Schutzbedingung verschoben'),
  'error'=>$t('Megállt: ellenőrzés szükséges','Stopped: inspection required','Gestoppt: Prüfung erforderlich')];
+if(empty($last['requires_inspection']))$states['error']=$t('Leállt: biztonsági feltétel nem igazolható','Stopped: safety condition unverified','Gestoppt: Schutzbedingung ungeprüft');
 ?>
 <main id="fms" style="max-width:1280px;margin:24px auto;padding:0 20px">
 <h2><?=$e($t('Koralapú szelektív mozgatás','Age-filtered selective movement','Altersabhängiges selektives Verschieben'))?></h2>
@@ -192,7 +212,8 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <p><?=$e($t('Ellenőrzötten áthelyezve','Verified movement','Geprüft verschoben'))?>: <?=$e($last['moved_files']??0)?> <?=$e($t('fájl','files','Dateien'))?> · <?=$e(number_format(($last['moved_bytes']??0)/1073741824,3))?> GiB</p>
 <?php foreach(($last['skipped']??[]) as $key=>$count):?><p><?=$e($skipLabels[$key]??$t('Bizonytalan vagy nem támogatott','Unverifiable or unsupported','Ungeprüft oder nicht unterstützt'))?>: <?=$e($count)?></p><?php endforeach?>
 <?php if(!empty($last['blockers'])):?><pre><?=$e($blockerText($last['blockers']))?></pre><?php endif?>
-<?php if(!empty($last['error'])):?><p role="alert"><?=$e($t('A további fájlok feldolgozása leállt. A privát rendszernapló ellenőrzése szükséges.','Further processing stopped. Inspect the private system log.','Weitere Verarbeitung gestoppt. Privates Systemprotokoll prüfen.'))?></p><?php endif?>
+<?php if(!empty($last['error'])):?><p role="status"><?=$e($failureLabels[$lastFailureCode]??$failureLabels['required_state_unverified'])?></p><?php endif?>
+<?php if(!empty($last['requires_inspection'])):?><p role="alert"><?=$e($failureLabels['inspection_required'])?></p><?php endif?>
 </section><p><a href="/Tools/FejesMover"><?=$e($t('Élő folyamatok és napló megnyitása','Open live processes and log','Live-Prozesse und Protokoll öffnen'))?></a></p></details>
 </main>
 <script>(()=>{

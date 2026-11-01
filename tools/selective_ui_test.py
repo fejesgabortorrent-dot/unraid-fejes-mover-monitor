@@ -10,7 +10,7 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 
 class SelectiveInterface(unittest.TestCase):
-    def render(self,post=None,mode='advanced',lang='hu',last=None,forecast=None):
+    def render(self,post=None,mode='advanced',lang='hu',last=None,forecast=None,worker_code=0,worker_report=None):
         with tempfile.TemporaryDirectory(prefix='fejes-selective-ui-') as folder:
             lab=Path(folder)
             config='{"version":1,"age_days":7}'
@@ -31,11 +31,11 @@ class SelectiveInterface(unittest.TestCase):
             if request.get('source_hash')=='CURRENT': request['source_hash']=hashlib.sha256(config.encode()).hexdigest()
             encoded=base64.b64encode(json.dumps(request).encode()).decode()
             runner='''<?php namespace Fixture;
-            function exec($command,&$lines=null,&$code=null){$GLOBALS['calls'][]=$command;$code=0;$lines=['{"state":"requested","execution_allowed":false,"candidate_count":0,"file_count":4}'];}
+            function exec($command,&$lines=null,&$code=null){$GLOBALS['calls'][]=$command;$code=__CODE__;$lines=[__REPORT__];}
             $GLOBALS['calls']=[]; $_COOKIE['fejes_mover_lang']=__LANG__;
             $_SERVER['REQUEST_METHOD']=__METHOD__;$_POST=json_decode(base64_decode(__PAYLOAD__),true);
             ob_start();include __PAGE__;$html=ob_get_clean();echo json_encode(['html'=>$html,'calls'=>$GLOBALS['calls']]);'''
-            for key,value in [('__LANG__',lang),('__METHOD__','POST' if post is not None else 'GET'),('__PAYLOAD__',encoded),('__PAGE__',str(page))]:
+            for key,value in [('__CODE__',worker_code),('__REPORT__',json.dumps(worker_report if worker_report is not None else dict(state='requested',execution_allowed=False,candidate_count=0,file_count=4))),('__LANG__',lang),('__METHOD__','POST' if post is not None else 'GET'),('__PAYLOAD__',encoded),('__PAGE__',str(page))]:
                 runner=runner.replace(key,json.dumps(value))
             result=subprocess.run(['php'],input=runner,text=True,capture_output=True,check=True)
             self.assertEqual(result.stderr,'')
@@ -44,12 +44,39 @@ class SelectiveInterface(unittest.TestCase):
             return output
 
     def request(self,**extra):
-        return dict(fejes_csrf='test-token',source_hash='CURRENT',action='run',**extra)
+        return dict(dict(fejes_csrf='test-token',source_hash='CURRENT',action='run'),**extra)
 
     def test_get_never_executes_helper_in_all_languages(self):
         for language,label in [('hu','Koralapú szelektív'),('en','Age-filtered selective'),('de','Altersabhängiges selektives')]:
             result=self.render(lang=language)
             self.assertFalse(result['calls']);self.assertIn(label,result['html'])
+
+    def test_worker_failure_shows_bounded_specific_cause_in_all_languages(self):
+        labels={
+            'inspection_required':('a biztonsági zárolás aktív','the safety lock is active','die Sicherheitssperre ist aktiv'),
+            'torrent_snapshot_unavailable':('A qBittorrent torrentállapota','qBittorrent state could not','Der qBittorrent-Status'),
+            'integrity_hashing_active':('Integritásellenőrzés fut','Integrity verification is running','Integritätsprüfung läuft')}
+        for code,translations in labels.items():
+            for lang,label in zip(('hu','en','de'),translations):
+                result=self.render(self.request(action='preview'),lang=lang,worker_code=20,
+                    worker_report=dict(error='private command /private/path',error_code=code))
+                self.assertIn(label,result['html'])
+                self.assertNotIn('/private/path',result['html'])
+                self.assertEqual(len(result['calls']),1)
+                self.assertIn('selective_mover.py preview',result['calls'][0])
+
+    def test_unknown_worker_cause_is_not_guessed_from_old_report(self):
+        result=self.render(self.request(action='preview'),lang='en',worker_code=20,
+            worker_report=dict(error='private exception',error_code='<script>private</script>'),
+            last=dict(state='error',error_code='torrent_snapshot_unavailable',requires_inspection=True))
+        self.assertIn('does not identify the underlying cause',result['html'])
+        self.assertNotIn('<script>private</script>',result['html'])
+        self.assertNotIn('private exception',result['html'])
+
+    def test_preflight_error_without_latch_does_not_claim_inspection_lock(self):
+        result=self.render(lang='en',last=dict(state='error',requires_inspection=False,error='bounded',error_code='required_state_unverified'))
+        self.assertIn('Stopped: safety condition unverified',result['html'])
+        self.assertNotIn('Stopped: inspection required',result['html'])
 
     def test_namespaced_form_action_avoids_host_collision(self):
         for lang in ('hu','en','de'):
