@@ -1,4 +1,4 @@
-# Release Candidate 1 — current build 2026.10.27.4
+# Release Candidate 1 — candidate build 2026.10.31.1
 
 RC1 is a prerelease for the documented Unraid 7.x documented scope. See
 [RC1 release notes](RC1.md) and [selection/execution rules](SELECTIVE-MOVEMENT.md).
@@ -10,7 +10,17 @@ larger eligible files first inside the existing ratio-priority groups. Low or
 unknown ratios never exclude an otherwise eligible file. File/byte caps, age,
 cooldown, maintenance and source/target guards are unchanged.
 
-## Current update and operating limits
+## Current unpublished candidate
+
+Build 2026.10.31.1 preserves the reviewed top-level EMBY directory exclusion during updates. Regression coverage verifies exact-directory boundaries and prevents a promised move date for excluded files. Package lifecycle and 136 isolated Python tests passed on Linux. This build is not installed or published. Observer mode remains the safe installation default; movement configuration is still limited to the documented reviewed cache/Filmek setup. General source/share/target setup is not implemented.
+
+## Prior integrity-wait candidate
+
+Build 2026.10.28.4 handles an integrity scan discovered by a fresh per-file guard before the first native move as a deferred operation. A partial batch, an interrupted run and an existing inspection requirement remain blocked. This change does not clear an existing production inspection latch. Support-strip text follows the selected palette; page controls gain pointer-transparent orbit feedback on hover and keyboard focus, with a static reduced-motion fallback.
+
+The candidate passed 135 isolated Python tests and all seven JavaScript suites on Unraid 7.3.4, including package reproducibility and installation lifecycle. This combined candidate has not been installed or published. Appearance-only build 2026.10.28.3 is installed, with all Python runtime helpers and the inspection state retained from 2026.10.27.4; GitHub publication remains at the previously verified build. Unraid 8 is deliberately rejected by the current installer.
+
+## Prior update and operating limits
 
 Build 2026.10.27.4 retains the shared appearance in Follow Unraid mode, aligns flag-only language/settings/detail controls, improves light-theme contrast and reports unavailable torrent queries without exposing command arguments. Native process failure details remain in a private diagnostic log.
 

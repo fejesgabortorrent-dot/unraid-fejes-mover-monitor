@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
+.venv/
 
 # Private staging derived from the installed owner baseline
 /live/

@@ -59,36 +59,48 @@ return (static function ($configWrite) {
 .fm-lang-control>span{display:flex!important;align-items:center;justify-content:center;width:26px!important;margin:0!important;pointer-events:none}.fm-lang-control>select{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;opacity:0!important;cursor:pointer}.fm-icon-control svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.fm-lang-control:focus-within,.fm-icon-control:focus-visible{outline:2px solid #ed8b25;outline-offset:3px}@media(hover:hover){.fm-lang-control:hover,.fm-icon-control:hover{border-color:#ed8b25!important;background:#ed8b2520!important}}
 @property --fm-orbit-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes fm-control-orbit{to{--fm-orbit-angle:360deg}}
-:is(.fm-lang-control,.fm-icon-control)::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--fm-orbit-angle),transparent 0deg,transparent 210deg,#ed8b25 280deg,#ffe2b0 310deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;opacity:0;transition:opacity .15s}
+:is(.fm-lang-control,.fm-icon-control)::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--fm-orbit-angle),transparent 0deg,transparent 210deg,var(--fejes-accent) 280deg,var(--fejes-fg) 310deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;opacity:0;transition:opacity .15s}
 @media(hover:hover){:is(.fm-lang-control,.fm-icon-control):hover::before{opacity:1;animation:fm-control-orbit 1.8s linear infinite}}
 :is(.fm-lang-control,.fm-icon-control):focus-within::before{opacity:1;animation:fm-control-orbit 1.8s linear infinite}
 @media(prefers-reduced-motion:reduce){:is(.fm-lang-control,.fm-icon-control)::before{animation:none!important;transition:none!important}}
 #fejes-mover-dashboard .tile-header{display:flex!important;align-items:center!important;justify-content:space-between;gap:12px;flex-wrap:wrap}#fejes-mover-dashboard .tile-header-left{display:flex;align-items:center;min-width:0}#fejes-mover-dashboard .tile-header-right{display:inline-flex!important;align-items:center!important;gap:8px!important;margin-left:auto;float:none!important;white-space:nowrap}#fejes-mover-dashboard .tile-header-main{margin:0!important}html[data-fejes-theme] #fejes-mover-dashboard .tile-header-right a.fm-icon-control{color:var(--fejes-fg,#edf0f5)!important}
 .fmc-theme{float:right;display:inline-flex;gap:8px;align-items:center;margin:0 0 8px 16px}.fmc-theme select{width:auto!important;padding:5px 8px!important;border:1px solid #8888!important;border-radius:5px!important}
-html[data-fejes-theme="auto"]{--fejes-bg:var(--background-color,#1d1b1b);--fejes-panel:var(--mild-background-color,#262626);--fejes-fg:var(--text-color,#f2f2f2);--fejes-line:var(--border-color,#404040);--fejes-link:var(--link-text-color,#486dba);--fejes-scheme:inherit}
-html[data-fejes-theme="white"]{--fejes-bg:#f2f2f2;--fejes-panel:#f7f9f9;--fejes-fg:#1d1b1b;--fejes-line:#d3d3d3;--fejes-link:#486dba;--fejes-scheme:light}
-html[data-fejes-theme="black"]{--fejes-bg:#1d1b1b;--fejes-panel:#262626;--fejes-fg:#f2f2f2;--fejes-line:#404040;--fejes-link:#486dba;--fejes-scheme:dark}
-html[data-fejes-theme="gray"]{--fejes-bg:#1d1b1b;--fejes-panel:#121510;--fejes-fg:#606e7f;--fejes-line:#606e7f;--fejes-link:#486dba;--fejes-scheme:dark}
-html[data-fejes-theme="azure"]{--fejes-bg:#e8e8e8;--fejes-panel:#edeaef;--fejes-fg:#606e7f;--fejes-line:#606e7f;--fejes-link:#486dba;--fejes-scheme:light}
-html[data-fejes-theme="light"]{--fejes-bg:#f5f6f8;--fejes-panel:#fff;--fejes-fg:#202632;--fejes-line:#c7cdd5;--fejes-link:#985000;--fejes-scheme:light}
-html[data-fejes-theme="dark"]{--fejes-bg:#171b22;--fejes-panel:#222833;--fejes-fg:#edf0f5;--fejes-line:#4a5362;--fejes-link:#ffb567;--fejes-scheme:dark}
+/* Shared semantic palette: every plugin surface and control uses these tokens. */
+html[data-fejes-theme]{--fejes-control:var(--fejes-panel);--fejes-hover:color-mix(in srgb,var(--fejes-control) 88%,var(--fejes-fg) 12%);--fejes-muted:color-mix(in srgb,var(--fejes-fg) 80%,var(--fejes-panel) 20%);--fejes-disabled:var(--fejes-muted);--fejes-accent:#ed8b25;--fejes-success:#54bda0;--fejes-warning:#e6a75b;--fejes-danger:#de8686}
+html[data-fejes-theme="auto"]{--fejes-bg:var(--background-color,#191b1f);--fejes-panel:var(--mild-background-color,#25282e);--fejes-fg:var(--fejes-auto-fg,var(--text-color,#f2f2f2));--fejes-line:color-mix(in srgb,var(--fejes-fg) 48%,var(--fejes-panel) 52%);--fejes-link:var(--fejes-auto-link,#9bcaff);--fejes-accent:var(--fejes-auto-accent,#ffb45e);--fejes-success:var(--fejes-auto-success,#54bda0);--fejes-warning:var(--fejes-auto-warning,#e6a75b);--fejes-danger:var(--fejes-auto-danger,#de8686);--fejes-scheme:inherit}
+html[data-fejes-theme="white"]{--fejes-bg:#f2f4f6;--fejes-panel:#ffffff;--fejes-control:#edf0f4;--fejes-fg:#202a36;--fejes-muted:#485769;--fejes-line:#7a8797;--fejes-link:#174f8a;--fejes-accent:#a04c00;--fejes-success:#17654e;--fejes-warning:#8c4b10;--fejes-danger:#a12d35;--fejes-scheme:light}
+html[data-fejes-theme="black"]{--fejes-bg:#191b1f;--fejes-panel:#25282e;--fejes-control:#30343c;--fejes-fg:#edf0f4;--fejes-muted:#bac3cf;--fejes-line:#788596;--fejes-link:#9bcaff;--fejes-accent:#ffb45e;--fejes-scheme:dark}
+html[data-fejes-theme="gray"]{--fejes-bg:#25292f;--fejes-panel:#303640;--fejes-control:#3a424e;--fejes-fg:#f0f3f7;--fejes-muted:#c4cdd9;--fejes-line:#8b98a9;--fejes-link:#add3ff;--fejes-accent:#ffbd76;--fejes-scheme:dark}
+html[data-fejes-theme="azure"]{--fejes-bg:#e8eef5;--fejes-panel:#f8fafc;--fejes-control:#e2eaf3;--fejes-fg:#24374a;--fejes-muted:#435b73;--fejes-line:#697e97;--fejes-link:#1c4f82;--fejes-accent:#9b4900;--fejes-success:#17654e;--fejes-warning:#8c4b10;--fejes-danger:#a12d35;--fejes-scheme:light}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode){background:var(--fejes-bg)!important;color:var(--fejes-fg)!important;color-scheme:var(--fejes-scheme);border-radius:8px}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard){padding:18px!important}
-html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(h1,h2,h3,p,span,strong,small,label,legend,summary,td,th,pre):not(#fmd-status){color:var(--fejes-fg)!important}
-html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(section,fieldset,.fm-card,.ms-card,.fms-panel,.fms-cards>div){background:var(--fejes-panel)!important;border-color:var(--fejes-line)!important}
-html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(input,select,button,thead th,tbody td){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :where(h1,h2,h3,p,span,strong,small,label,legend,summary,td,th,pre):where(:not(#fmd-status)){color:inherit!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(section,fieldset,.fm-card,.ms-card,.box,.hero,.fms-panel,.fms-cards>div,.fm-flow){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(input,select,button,thead th,tbody td){background:var(--fejes-control)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) a{color:var(--fejes-link)!important}
-html[data-fejes-theme] #fms .fms-primary{background:#a95206!important;color:#fff!important;border-color:#a95206!important}
-html[data-fejes-theme] #fms .fms-danger{border-color:#d65b51!important}
-html[data-fejes-theme] #fmd-percent{background:var(--fejes-panel)!important;color:var(--fejes-fg)!important}
-html[data-fejes-theme] #fm-monitor .fm-donut span{background:var(--fejes-panel)!important}
+html[data-fejes-theme] :is(#fmd-percent,#fm-monitor .fm-donut span){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(.fm-note,.fm-sub,.fm-label,.fms-count,.kicker,small){color:var(--fejes-muted)!important;opacity:1!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) p{opacity:1!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(.notice,.fmc-notice,.badge){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(.error,[role="alert"],.fms-danger){color:var(--fejes-danger)!important;border-color:var(--fejes-danger)!important}
+html[data-fejes-theme] #fm-monitor .fm-moving{color:var(--fejes-warning)!important}
 @media(max-width:600px){.fmc-theme{float:none;display:flex;margin:0 0 10px}}
 </style>
 <label class="fmc-theme">THEME_LABEL <select data-fejes-theme-select aria-label="THEME_LABEL"><option value="auto">AUTO_LABEL</option><option value="white">WHITE_PALETTE_LABEL</option><option value="black">BLACK_PALETTE_LABEL</option><option value="gray">GRAY_PALETTE_LABEL</option><option value="azure">AZURE_PALETTE_LABEL</option></select></label>
 <script>(()=>{
 if(window.fejesMoverTheme)return;window.fejesMoverTheme=true;
 const key='fejesMoverTheme',valid=v=>{v=({light:'white',dark:'black'})[v]||v;return ['auto','white','black','gray','azure'].includes(v)?v:'auto';};
-function apply(value){value=valid(value);document.documentElement.setAttribute('data-fejes-theme',value);document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>el.value=value);}
+function readableHost(){
+const root=document.documentElement;if(!root.style?.setProperty)return;
+const css=getComputedStyle(root),read=(key,fallback)=>css.getPropertyValue?.(key).trim()||fallback;
+const rgb=value=>{const hex=value.match(/^#([0-9a-f]{6})$/i);if(hex)return [0,2,4].map(i=>parseInt(hex[1].slice(i,i+2),16)/255);const parts=value.match(/^rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)/);return parts?parts.slice(1,4).map(x=>Number(x)/255):null;};
+const lum=c=>c.map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0),contrast=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
+const bg=rgb(read('--background-color','#191b1f')),panel=rgb(read('--mild-background-color','#25282e'));if(!bg||!panel)return;
+const score=c=>Math.min(contrast(c,bg),contrast(c,panel));let color=read('--text-color','#f2f2f2'),text=rgb(color);
+if(!text||score(text)<7){const light=rgb('#f0f3f7'),dark=rgb('#202a36');color=score(light)>=score(dark)?'#f0f3f7':'#202a36';text=rgb(color);}
+const darkSurface=lum(text)>.5;root.style.setProperty('--fejes-auto-fg',color);root.style.setProperty('--fejes-auto-link',darkSurface?'#9bcaff':'#174f8a');root.style.setProperty('--fejes-auto-accent',darkSurface?'#ffb45e':'#a04c00');root.style.setProperty('--fejes-auto-success',darkSurface?'#54bda0':'#17654e');root.style.setProperty('--fejes-auto-warning',darkSurface?'#e6a75b':'#8c4b10');root.style.setProperty('--fejes-auto-danger',darkSurface?'#de8686':'#a12d35');
+}
+function apply(value){value=valid(value);document.documentElement.setAttribute('data-fejes-theme',value);if(value==='auto')readableHost();document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>el.value=value);}
 function saved(){try{return valid(localStorage.getItem(key));}catch{return 'auto';}}
 let choice=saved();apply(choice);document.addEventListener('change',event=>{if(!event.target.matches('[data-fejes-theme-select]'))return;const value=valid(event.target.value);try{localStorage.setItem(key,value);}catch{}choice=value;apply(choice);});
 window.addEventListener('storage',event=>{if(event.key===key){choice=saved();apply(choice);}});
@@ -138,7 +150,7 @@ html[data-fejes-theme="dark"] #fms table.fms-queue th{background:#283140!importa
 @media(max-width:380px){#fms .fms-cards{grid-template-columns:1fr!important}}
 @media(prefers-reduced-motion:reduce){:is(#fm-monitor,#fms,#ms,#fmc-setup,#fejes-mover-dashboard,.fmc-nav) *{animation:none!important;transition:none!important;transform:none!important}}
 
-.fm-summary{position:relative;border:1px solid #8885;border-left:3px solid #ef8b24;border-radius:10px;padding:12px;margin:14px 0;line-height:1.5;overflow-wrap:anywhere}.fm-summary p{white-space:normal!important;margin:5px 0;font-size:12px}.fm-hover-help{display:inline-block;position:relative;margin-right:8px}.fm-hover-help summary{cursor:help;list-style:none;padding:3px 8px;border:1px solid #8886;border-radius:50%}.fm-hover-help>div{white-space:normal!important;overflow-wrap:anywhere;display:none;position:absolute;bottom:100%;left:0;width:min(270px,70vw);box-sizing:border-box;padding:12px;border:1px solid #888;border-radius:10px;background:var(--fejes-panel,#242a34);color:var(--fejes-fg,#eef1f6);box-shadow:0 8px 24px #0006;z-index:20;font-size:13px}.fm-hover-help[open]>div,.fm-hover-help:hover>div,.fm-hover-help:focus-within>div{display:block}
+.fm-summary{position:relative;border:1px solid #8885;border-left:3px solid #ef8b24;border-radius:10px;padding:12px;margin:14px 0;line-height:1.5;overflow-wrap:anywhere}.fm-summary p{white-space:normal!important;margin:5px 0;font-size:12px}.fm-summary-title{display:flex;align-items:center;gap:8px;font-size:14px}.fm-summary-icon{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#ef8b2420;color:#efb13d}.fm-summary--waiting{border-left-color:#efb13d;background:linear-gradient(100deg,#efb13d12,transparent 70%);animation:fm-waiting-pulse 2.8s ease-in-out infinite}.fm-summary--waiting .fm-summary-icon{box-shadow:0 0 0 0 #efb13d66;animation:fm-waiting-ring 2.8s ease-out infinite}.fm-summary-explain{font-size:13px!important}.fm-hover-help{display:inline-block;position:relative;margin-right:8px}.fm-hover-help summary{cursor:help;list-style:none;padding:3px 8px;border:1px solid #8886;border-radius:50%}.fm-hover-help>div{white-space:normal!important;overflow-wrap:anywhere;display:none;position:absolute;bottom:100%;left:0;width:min(270px,70vw);box-sizing:border-box;padding:12px;border:1px solid #888;border-radius:10px;background:var(--fejes-panel,#242a34);color:var(--fejes-fg,#eef1f6);box-shadow:0 8px 24px #0006;z-index:20;font-size:13px}.fm-hover-help[open]>div,.fm-hover-help:hover>div,.fm-hover-help:focus-within>div{display:block}@keyframes fm-waiting-pulse{0%,100%{box-shadow:0 0 0 0 #efb13d00}50%{box-shadow:0 0 0 4px #efb13d18}}@keyframes fm-waiting-ring{0%{box-shadow:0 0 0 0 #efb13d66}70%,100%{box-shadow:0 0 0 9px #efb13d00}}
 
 /* Consistent layout and stable control positions on every full plugin page. */
 :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup){box-sizing:border-box!important;max-width:1280px!important;margin:24px auto!important;padding-left:20px!important;padding-right:20px!important}
@@ -152,8 +164,30 @@ html[data-fejes-theme="dark"] #fms table.fms-queue th{background:#283140!importa
 @media(max-width:700px){.fmc-nav{top:40px;margin:10px 6px;padding:8px;gap:6px}.fmc-nav :is(a,button){min-width:92px;padding:0 10px}.fmc-nav .fmc-nav-pages{gap:6px;margin-left:0}:is(#fms,#fm-monitor,#ms,#fp,#fmc-setup){padding-left:10px!important;padding-right:10px!important}}
 
 .content:has(> .fmc-nav){overflow:visible!important}
-.fmc-page-tail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:24px 0;padding:12px 0;border-top:1px solid #8884}.fmc-support-strip{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;padding:16px;box-sizing:border-box;background:#42464b;color:#fff;border:1px solid #fff;border-radius:10px}.fmc-support-strip small{flex-basis:100%;text-align:center}.fmc-support-strip strong{font-size:18px}.fmc-support-strip a{background:#555b62!important;color:#fff!important;border-color:#fff!important}.fmc-page-tail :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:140px;padding:0 16px;border:1px solid #8886;border-radius:10px;text-decoration:none;color:inherit;font-weight:600;background:#8881;box-sizing:border-box}
+.fmc-page-tail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:24px 0;padding:12px 0;border-top:1px solid #8884}.fmc-support-strip{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;width:100%;max-width:760px;margin:0 auto;padding:10px 12px;box-sizing:border-box;background:#42464b;color:#fff;border:1px solid #fff;border-radius:10px;font-size:12px}.fmc-support-strip small{flex-basis:100%;text-align:center;font-size:11px}.fmc-support-strip strong{font-size:12px;font-weight:600}.fmc-page-tail .fmc-support-strip a{min-width:0;min-height:34px;padding:0 10px;background:transparent!important;color:inherit!important;border-color:currentColor!important;font-size:12px}.fmc-page-tail :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:140px;padding:0 16px;border:1px solid #8886;border-radius:10px;text-decoration:none;color:inherit;font-weight:600;background:#8881;box-sizing:border-box}
 
+/* Support is part of the same neutral surface/control hierarchy. */
+html[data-fejes-theme] :is(.fmc-theme,.fmc-depth,.fmc-nav,.fm-lang-control,.fm-icon-control){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(.fmc-theme,.fmc-depth) select{background:var(--fejes-control)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(.fm-lang-control:focus-within,.fm-icon-control:focus-visible){outline-color:var(--fejes-accent)!important}
+@media(hover:hover){html[data-fejes-theme] :is(.fm-lang-control,.fm-icon-control):hover{background:var(--fejes-hover)!important;border-color:var(--fejes-accent)!important}}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) .fmc-support-strip{background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) .fmc-support-strip :is(strong,small){color:var(--fejes-fg)!important;opacity:1!important}
+/* Full-page control text never inherits the host link color. */
+html[data-fejes-theme] :is(.fmc-nav,.fmc-page-tail) :is(a,button),html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(button,.link){background:var(--fejes-control)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important;opacity:1}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) .fmc-page-tail :is(a,button){background:var(--fejes-control)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(button:disabled,input:disabled,select:disabled){background:var(--fejes-panel)!important;color:var(--fejes-disabled)!important;opacity:1!important;border-style:dashed!important;cursor:not-allowed}
+html[data-fejes-theme] :is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button,input,select,summary):focus-visible{outline:2px solid var(--fejes-accent)!important;outline-offset:3px}
+@media(hover:hover){html[data-fejes-theme] :is(.fmc-nav,.fmc-page-tail) :is(a,button:enabled):hover,html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) button:enabled:hover{background:var(--fejes-hover)!important;border-color:var(--fejes-accent)!important;color:var(--fejes-fg)!important}}
+html[data-fejes-theme] #fms button.fms-danger{border-color:var(--fejes-danger)!important}
+/* One pointer-transparent orbit for full-page controls; no layout shift. */
+@property --fmc-orbit-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes fmc-control-orbit{to{--fmc-orbit-angle:360deg}}
+:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button:not(:disabled),summary){position:relative;isolation:isolate}
+:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button:not(:disabled),summary)::after{content:'';position:absolute;inset:-2px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--fmc-orbit-angle),transparent 0deg,transparent 230deg,var(--fejes-accent) 290deg,var(--fejes-fg) 320deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:0;transition:opacity .15s ease}
+@media(hover:hover){:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button:not(:disabled),summary):hover::after{opacity:1;animation:fmc-control-orbit 1.8s linear infinite}}
+:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button:not(:disabled),summary):focus-visible::after{opacity:1;animation:fmc-control-orbit 1.8s linear infinite}
+@media(prefers-reduced-motion:reduce){:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button,summary)::after{animation:none!important;transition:none!important}}
 .fmc-mode{display:flow-root!important;box-sizing:border-box}.fmc-mode .fmc-theme{float:none!important;display:flex!important;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 10px!important}.fmc-mode .fmc-theme select{margin:0!important;min-height:44px;max-width:100%;box-sizing:border-box}.fmc-mode .fmc-theme label{margin:0!important}
 </style>
 <label class="fmc-depth">DEPTH_LABEL <select data-fejes-depth-select aria-label="DEPTH_LABEL"><option value="raised">RAISED_LABEL</option><option value="flat">FLAT_LABEL</option></select></label>
@@ -189,7 +223,7 @@ HTML;
     $banner = substr_replace($banner, substr($design, 0, $designStyleEnd), strrpos($banner, '</div>'), 0);
     $banner .= substr($design, $designStyleEnd);
     // Aggregate report only. No scans, torrent queries or writes during UI refresh.
-    $summary='';
+    $summary='';$reportFault=false;
     if($mode==='advanced'&&$pool==='cache'){
         $lastPath='/boot/config/plugins/fejes.mover.monitor/selective-last.json';
         $last=is_link($lastPath)?null:json_decode(@file_get_contents($lastPath)?:'null',true);
@@ -197,16 +231,26 @@ HTML;
         $reasons=['capacity'=>$t('Szabadhely-küszöb','Free-space threshold','Freiplatzgrenze'),'cooldown'=>$t('Két kör közötti várakozás','Batch cooldown','Wartezeit zwischen Läufen'),'integrity'=>$t('Integritásvédelem','Integrity protection','Integritätsschutz'),'backup'=>$t('Biztonsági mentés','Backup','Sicherung'),'parity'=>$t('Paritásellenőrzés','Parity check','Paritätsprüfung')];
         $status=$t('Nincs olvasható jelentés','No readable report','Kein lesbarer Bericht');$detail='';
         if(is_array($last)){
+            $reportFault=($last['requires_inspection']??false)===true || (($last['state']??'')==='error'&&empty($last['inspection_resolution']));
             $status=$labels[$last['state']??'']??$t('Nem ellenőrizhető állapot','Unverified state','Ungeprüfter Zustand');
             if(($last['requires_inspection']??false)===true)$status=$t('Beavatkozás szükséges · mozgatás tiltva','Inspection required · movement blocked','Prüfung erforderlich · Verschieben gesperrt');
             if(!empty($last['inspection_resolution'])&&($last['state']??'')==='error'&&empty($last['requires_inspection']))$status=$t('Helyreállítás ellenőrizve · új körre vár','Recovery inspected · awaiting a new run','Wiederherstellung geprüft · wartet auf neuen Lauf');
             if(is_numeric($last['started']??null))$detail=$t('Jelentés ideje: ','Report time: ','Berichtszeit: ').date('Y-m-d H:i',(int)$last['started']);
             if(($last['state']??'')==='completed'&&is_numeric($last['moved_files']??null)&&is_numeric($last['moved_bytes']??null))$detail.=' · '.$last['moved_files'].' '.$t('fájl','files','Dateien').' · '.number_format($last['moved_bytes']/1073741824,2).' GiB';
+            if(($last['state']??'')==='completed'&&empty($last['requires_inspection'])&&is_numeric($last['moved_bytes']??null)&&($last['moved_bytes']??0)>0&&is_numeric($last['started']??null)&&is_numeric($last['finished']??null)&&$last['finished']>$last['started']){
+                $average=($last['moved_bytes']/1048576)/($last['finished']-$last['started']);
+                $detail.=' · '.$t('Legutóbbi igazolt futás átlaga: ','Last verified run average: ','Durchschnitt des letzten geprüften Laufs: ').number_format($average,1,'.','').' MiB/s';
+            }
             if(($last['state']??'')==='error'&&($last['error_code']??'')==='torrent_snapshot_unavailable')$detail.=' · '.$t('A torrentállapot nem kérdezhető le; a biztonság nem igazolható.','Torrent state could not be queried; safety could not be verified.','Torrentstatus konnte nicht abgefragt werden; Sicherheit nicht verifiziert.');
             if(is_array($last['blockers']??null)&&$last['blockers'])$detail.=' · '.implode(', ',array_map(static fn($key)=>$reasons[$key]??$t('További védelmi feltétel','Additional guard','Weitere Schutzbedingung'),$last['blockers']));
         }
-        $tip=$t('A legutóbbi jelentés pillanatkép. A futó háttérfolyamat önmagában nem bizonyít adatátvitelt. A Részletek oldalon látható a várólista és a védelmek.','The last report is a snapshot. A running worker alone does not prove data transfer. Open Details for the queue and guards.','Der letzte Bericht ist eine Momentaufnahme. Ein laufender Prozess allein beweist keinen Datentransfer. Details zeigen Warteliste und Schutzbedingungen.');
-        $summary='<section class="fm-summary" aria-label="'.$esc($t('Mozgatási jelentés','Movement report','Verschiebebericht')).'"><strong>'.$esc($status).'</strong><p>'.$esc($detail).'</p><details class="fm-hover-help"><summary aria-label="'.$esc($t('Állapotsúgó','Status help','Statushilfe')).'">ⓘ</summary><div>'.$esc($tip).'</div></details> <a href="/Tools/FejesMoverSelective">'.$esc($t('Részletek és várólista →','Details and queue →','Details und Warteliste →')).'</a></section>';
+        $isDeferred=($last['state']??'')==='deferred';
+        $summaryClass=$isDeferred?' fm-summary--waiting':'';
+        $headline=$isDeferred?$t('Biztonsági várakozás','Safety hold','Sicherheitspause'):$status;
+        $tip=$t('A legutóbbi jelentés pillanatkép. A futó háttérfolyamat önmagában nem bizonyít adatátvitelt. A Részletek oldalon látható a várólista és a védelmek.','The last report is a snapshot. A running worker alone does not prove data transfer. Open Details for the queue and guards.','Der letzte Bericht ist eine Momentaufnahme. Ein laufender Prozess allein beweist keinen Datentransfer. Details zeigen Warteschlange und Schutzbedingungen.');
+        $explain=$isDeferred?$t('A Mover most nem indít mozgatást, mert egy védelmi feltétel még aktív. A következő ellenőrzés automatikusan újraértékeli az állapotot.','Mover is not starting a move because a safety guard is still active. The next check will re-evaluate it automatically.','Mover startet nicht, weil eine Schutzbedingung noch aktiv ist. Die nächste Prüfung bewertet den Zustand automatisch neu.'):
+            '';
+        $summary='<section class="fm-summary'.$summaryClass.'" aria-label="'.$esc($t('Mozgatási jelentés','Movement report','Verschiebebericht')).'"><div class="fm-summary-title"><span class="fm-summary-icon" aria-hidden="true">'.($isDeferred?'⏸':'●').'</span><strong>'.$esc($headline).'</strong></div>'.($explain!==''?'<p class="fm-summary-explain">'.$esc($explain).'</p>':'').'<p>'.$esc($detail).'</p><details class="fm-hover-help"><summary aria-label="'.$esc($t('Állapotsúgó','Status help','Statushilfe')).'">ⓘ</summary><div>'.$esc($tip).'</div></details> <a href="/Tools/FejesMoverSelective">'.$esc($t('Részletek és várólista →','Details and queue →','Details und Warteliste →')).'</a></section>';
     }
 
     $token = @parse_ini_file('/var/local/emhttp/var.ini');
@@ -215,5 +259,5 @@ HTML;
         'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
         'hash'=>hash('sha256',$raw === false ? '' : $raw),'lock'=>$lock,
         'token'=>is_array($token) ? ($token['csrf_token'] ?? '') : '',
-        't'=>$t,'esc'=>$esc,'banner'=>$banner,'summary'=>$summary];
+        't'=>$t,'esc'=>$esc,'banner'=>$banner,'summary'=>$summary,'reportFault'=>$reportFault];
 })(!empty($fmcConfigWrite));

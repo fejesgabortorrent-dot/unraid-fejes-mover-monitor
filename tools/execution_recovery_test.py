@@ -22,12 +22,17 @@ def child(folder,phase):
         os._exit(77)  # Exit before returning the move/verification outcome.
     def collect(*args):
         if phase=='restart':mover.guards()
-        return ({'age_days':1,'max_bytes':16*1024**3,'candidates':[key],'blockers':[],'skipped':[]},[],{key:{'signature':[1,2,4096,0,0]}},[],[],{})
+        return ({'age_days':1,'max_bytes':16*1024**3,'candidates':[key],'blockers':[],'skipped':[]},
+                [{'path':key,'first_seen':1}],
+                {key:{'signature':[1,2,4096,0,0]}},[],[],{})
     with ExitStack() as stack:
         for name,value in [('LAST',root/'last.json'),('PID',root/'mover.pid'),('ATTEMPT',root/'attempt')]:stack.enter_context(patch.object(mover,name,value))
         stack.enter_context(patch.object(mover,'open',side_effect=lambda name,mode:real_open(root/Path(name).name,mode),create=True))
         stack.enter_context(patch.object(mover,'collect',side_effect=collect))
+        stack.enter_context(patch.object(mover,'fresh_candidate',return_value=(source,True)))
+        stack.enter_context(patch.object(mover,'destinations',return_value=[]))
         stack.enter_context(patch.object(mover,'execute_file',side_effect=execute))
+        stack.enter_context(patch.object(mover,'torrent_snapshot',return_value=([],[])))
         stack.enter_context(patch.object(mover,'log'))
         if phase=='restart':
             # Simulate an operator-confirmed dead PID; do not touch a real PID file.

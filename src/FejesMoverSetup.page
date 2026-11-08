@@ -49,12 +49,14 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
  }catch(Throwable $e){$fmcError=$e->getMessage();}
 }
+echo $fmc['banner'];
 ?>
 <style>
 #fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 </style>
 <main id="fmc-setup"><h1>Operating mode and monitored pool</h1>
 <p>Unraid 7.x · Default installation: Observer mode. Changing mode never starts a transfer.</p>
+<aside class="fmc-notice" role="note"><strong>Installation environment</strong><p>Monitoring supports Unraid 7.x. Selective movement currently supports only a reviewed local setup: pool cache, Filmek share, existing Filmek_Mover_Threshold User Scripts automation, binhex-qbittorrentvpn qBittorrent container and torrent paths under /mnt/user. Other pools, shares and clients do not yet have a setup wizard; use Observer mode there. Unraid 8 compatibility is unverified.</p></aside>
 <?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
 <?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
 <form method="post" action="/Tools/FejesMoverSetup">
@@ -69,7 +71,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · not mounted'?></option>
 <?php endforeach?></select><p>The list comes from Unraid pool configuration. Unmounted pool capacity remains unavailable.</p></fieldset>
 <fieldset><legend>Advanced mode acknowledgment</legend><label><input type="checkbox" name="advanced_ack" value="yes"> I understand that Advanced mode can modify the existing automation script.</label><p>Mode and pool selection only save plugin configuration. Automation changes require a separate save with a backup.</p></fieldset>
-<button type="submit">Save mode and pool</button> <a href="/Tools/FejesMover">Back to Mover Monitor</a>
+<button type="submit">Save mode and pool</button> <a href="/Tools/FejesMoverProfile">Edit selective profile</a> <a href="/Tools/FejesMover">Back to Mover Monitor</a>
 </form></main>
 
 <?php } elseif($fmLang==='de'){ ?>
@@ -108,12 +110,14 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
  }catch(Throwable $e){$fmcError=$e->getMessage();}
 }
+echo $fmc['banner'];
 ?>
 <style>
 #fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 </style>
 <main id="fmc-setup"><h1>Betriebsmodus und überwachter Pool</h1>
 <p>Unraid 7.x · Standard: Beobachtermodus. Ein Moduswechsel startet keine Übertragung.</p>
+<aside class="fmc-notice" role="note"><strong>Installationsumgebung</strong><p>Die Überwachung unterstützt Unraid 7.x. Selektives Verschieben ist derzeit nur für eine geprüfte lokale Umgebung vorgesehen: Pool cache, Freigabe Filmek, vorhandenes User-Scripts-Skript Filmek_Mover_Threshold, qBittorrent-Container binhex-qbittorrentvpn und Torrent-Pfade unter /mnt/user. Für andere Pools, Freigaben oder Clients gibt es noch keinen Einrichtungsassistenten; dort Beobachtermodus verwenden. Unraid 8 ist nicht verifiziert.</p></aside>
 <?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
 <?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
 <form method="post" action="/Tools/FejesMoverSetup">
@@ -128,7 +132,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · nicht eingehängt'?></option>
 <?php endforeach?></select><p>Die Liste stammt aus der Unraid-Poolkonfiguration. Die Kapazität nicht eingehängter Pools bleibt unbekannt.</p></fieldset>
 <fieldset><legend>Bestätigung des erweiterten Modus</legend><label><input type="checkbox" name="advanced_ack" value="yes"> Ich verstehe, dass der erweiterte Modus das vorhandene Automatisierungsskript ändern kann.</label><p>Modus- und Poolauswahl speichern nur die Plugin-Konfiguration. Änderungen an der Automatisierung erfordern separates Speichern mit Sicherung.</p></fieldset>
-<button type="submit">Modus und Pool speichern</button> <a href="/Tools/FejesMover">Zurück zum Mover-Monitor</a>
+<button type="submit">Modus und Pool speichern</button> <a href="/Tools/FejesMoverProfile">Selektives Profil bearbeiten</a> <a href="/Tools/FejesMover">Zurück zum Mover-Monitor</a>
 </form></main>
 
 <?php } else{ ?>
@@ -167,12 +171,14 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
  }catch(Throwable $e){$fmcError=$e->getMessage();}
 }
+echo $fmc['banner'];
 ?>
 <style>
 #fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 </style>
 <main id="fmc-setup"><h1>Működési mód és figyelt pool</h1>
 <p>Unraid 7.x · A telepítés alapértelmezése: Megfigyelő mód. A módváltás nem indít mozgatást.</p>
+<aside class="fmc-notice" role="note"><strong>Telepítési környezet</strong><p>A figyelő Unraid 7.x rendszeren használható. A szelektív mozgatás jelenleg csak ellenőrzött helyi környezetben támogatott: cache nevű pool, Filmek megosztás, meglévő Filmek_Mover_Threshold User Scripts automatika, binhex-qbittorrentvpn qBittorrent konténer és /mnt/user alatti torrentútvonalak. Más poolhoz, megosztáshoz vagy klienshez még nincs beállítóvarázsló; ilyen környezetben maradj Megfigyelő módban. Unraid 8 kompatibilitás nincs igazolva.</p></aside>
 <?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
 <?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
 <form method="post" action="/Tools/FejesMoverSetup">
@@ -187,7 +193,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · nem csatolt'?></option>
 <?php endforeach?></select><p>A lista az Unraid poolbeállításaiból származik. A nem csatolt pool kapacitása ismeretlen marad.</p></fieldset>
 <fieldset><legend>Haladó mód jóváhagyása</legend><label><input type="checkbox" name="advanced_ack" value="yes"> Értem, hogy a Haladó mód a meglévő automatika scriptjét is módosíthatja.</label><p>A mód- és poolválasztás kizárólag a bővítmény saját beállítását menti. Az automatika csak külön mentéskor változik, biztonsági másolattal.</p></fieldset>
-<button type="submit">Mód és pool mentése</button> <a href="/Tools/FejesMover">Vissza a Mover figyelőhöz</a>
+<button type="submit">Mód és pool mentése</button> <a href="/Tools/FejesMoverProfile">Szelektív profil szerkesztése</a> <a href="/Tools/FejesMover">Vissza a Mover figyelőhöz</a>
 </form></main>
 
 <?php } ?>

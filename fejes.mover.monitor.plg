@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.27.4" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
+<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.10.31.2" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
 <CHANGES>
+### 2026.10.28.4 (unpublished combined candidate)
+- Add a guarded multilingual profile editor for selective scope configuration.
+- Defer a fresh integrity-scan conflict before the first native move without creating an inspection latch.
+- Retain inspection for partial batches, interrupted runs and existing unresolved failures.
+- Use shared contrast-checked semantic palettes and consistent hover/focus feedback across all pages.
+### 2026.10.28.3 (RC1 appearance hotfix)
+- Repair mixed light/dark surfaces and low-contrast text without changing any movement helper or inspection state.
 ### 2026.10.27.4 (RC1 reliability and controls)
 - Keep the shared appearance when following the Unraid theme.
 - Align flag-only language, settings and detail controls with keyboard labels.
@@ -114,7 +121,7 @@
 - Optional legacy threshold settings, retained only on systems with the existing script.
 - Installer validates PHP before activation and preserves local backup files.
 </CHANGES>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMover.Dashboard.page"><INLINE><![CDATA[Menu="Dashboard:0"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/FejesMover.Dashboard.page"><INLINE><![CDATA[﻿Menu="Dashboard:0"
 ---
 <?php
 $fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
@@ -133,20 +140,22 @@ $fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~
 $fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,'.',','):'—';
-$fmdStatus=$fmdRun?'● Mover running':($fmdRaw?'⚠ Unverified status':'● Idle');$fmdColor=$fmdRun?'#f2b84b':($fmdRaw?'#ef967a':'#64b99b');
+$fmdStatus=$fmdRun?'● Checks or movement in progress':(($fmdRaw||$fmc['reportFault'])?'⚠ Unverified status':'● Idle');$fmdColor=$fmdRun?'var(--fejes-warning)' :(($fmdRaw||$fmc['reportFault'])?'var(--fejes-danger)' :'var(--fejes-success)' );
 }else{
-$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='#ef7d00';
+$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='var(--fejes-accent)';
 }
+$fmdSignal=$fmc['mode']==='demo'?'demo':($fmdRun?'running':(($fmdRaw||$fmc['reportFault'])?'unknown':'idle'));
 $fmcBanner=$fmc['banner'];$fmdSummary=$fmc['summary'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
+<style>#fejes-mover-dashboard #fmd-lamp[data-state="unknown"] [data-light="red"],#fejes-mover-dashboard #fmd-lamp[data-state="running"] [data-light="amber"],#fejes-mover-dashboard #fmd-lamp[data-state="idle"] [data-light="green"]{opacity:1!important;box-shadow:0 0 0 2px #fff8}#fejes-mover-dashboard #fmd-lamp i{display:block}</style>
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover Monitor">
 <tr><td><span class="tile-header"><span class="tile-header-left"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=" alt="FM — Fejes Mover" width="56" height="56" style="display:inline-block;vertical-align:middle;margin-right:10px;border-radius:10px"><div class="section"><h3 class="tile-header-main">MOVER MONITOR</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a class="fm-icon-control" href="/Tools/FejesMoverSettings" title="Mover Settings" aria-label="Mover Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/></svg></a><a class="fm-icon-control" href="/Tools/FejesMover" title="Detailed Mover Monitor" aria-label="Detailed Mover Monitor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-11 11M10 3H4v17h17v-6"/></svg></a></span></span></td></tr>
-<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache free: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Files and detailed status →</a></p><div id="fmd-summary">{$fmdSummary}</div><small id="fmd-updated">Data loaded · refresh every 10 sec</small></div></td></tr>
+<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><span id="fmd-lamp" data-state="{$fmdSignal}" role="img" aria-label="{$fmdStatus}" style="display:inline-flex;flex-direction:column;gap:3px;padding:5px;border:1px solid #8888;border-radius:12px;background:#2228;vertical-align:middle;margin-right:8px"><i data-light="red" style="width:11px;height:11px;border-radius:50%;background:#e45c5c;opacity:.2"></i><i data-light="amber" style="width:11px;height:11px;border-radius:50%;background:#efb13d;opacity:.2"></i><i data-light="green" style="width:11px;height:11px;border-radius:50%;background:#4fc49a;opacity:.2"></i></span><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache free: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Files and detailed status →</a></p><div id="fmd-summary">{$fmdSummary}</div><small id="fmd-updated">Data loaded · refresh every 10 sec</small></div></td></tr>
 </tbody>
 HTML;
 ?>
 <script>
-(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const summary=doc.getElementById('fm-summary-source');if(summary&&document.getElementById('fmd-summary'))document.getElementById('fmd-summary').innerHTML=summary.innerHTML;const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Mover running':unknown?'⚠ Unverified status':'● Idle';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Updated: '+new Date().toLocaleTimeString('en-US');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Refresh failed · stale data';}finally{clearTimeout(t);busy=false;}},10000);})();
+(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const summary=doc.getElementById('fm-summary-source');if(summary&&document.getElementById('fmd-summary'))document.getElementById('fmd-summary').innerHTML=summary.innerHTML;const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1'||d.reportFault==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Checks or movement in progress':unknown?'⚠ Unverified status':'● Idle';const lamp=document.getElementById('fmd-lamp');if(lamp){lamp.dataset.state=d.mode==='demo'?'demo':run?'running':unknown?'unknown':'idle';lamp.setAttribute('aria-label',document.getElementById('fmd-status').textContent);}document.getElementById('fmd-status').style.color=run?'var(--fejes-warning)' :unknown?'var(--fejes-danger)' :'var(--fejes-success)' ;document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Updated: '+new Date().toLocaleTimeString('en-US');}catch(e){const lamp=document.getElementById('fmd-lamp');if(lamp){lamp.dataset.state='unknown';lamp.setAttribute('aria-label','Unverified / Nem ellenőrizhető / Nicht verifiziert');}const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Refresh failed · stale data';}finally{clearTimeout(t);busy=false;}},10000);})();
 </script>
 
 
@@ -162,20 +171,22 @@ $fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~
 $fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,',',' '):'—';
-$fmdStatus=$fmdRun?'● Mover läuft':($fmdRaw?'⚠ Status nicht verifiziert':'● Leerlauf');$fmdColor=$fmdRun?'#f2b84b':($fmdRaw?'#ef967a':'#64b99b');
+$fmdStatus=$fmdRun?'● Prüfung oder Verschieben läuft':($fmdRaw?'⚠ Status nicht verifiziert':'● Leerlauf');$fmdColor=$fmdRun?'var(--fejes-warning)' :(($fmdRaw||$fmc['reportFault'])?'var(--fejes-danger)' :'var(--fejes-success)' );
 }else{
-$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='#ef7d00';
+$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='var(--fejes-accent)';
 }
+$fmdSignal=$fmc['mode']==='demo'?'demo':($fmdRun?'running':(($fmdRaw||$fmc['reportFault'])?'unknown':'idle'));
 $fmcBanner=$fmc['banner'];$fmdSummary=$fmc['summary'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
+<style>#fejes-mover-dashboard #fmd-lamp[data-state="unknown"] [data-light="red"],#fejes-mover-dashboard #fmd-lamp[data-state="running"] [data-light="amber"],#fejes-mover-dashboard #fmd-lamp[data-state="idle"] [data-light="green"]{opacity:1!important;box-shadow:0 0 0 2px #fff8}#fejes-mover-dashboard #fmd-lamp i{display:block}</style>
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover-Monitor">
 <tr><td><span class="tile-header"><span class="tile-header-left"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=" alt="FM — Fejes Mover" width="56" height="56" style="display:inline-block;vertical-align:middle;margin-right:10px;border-radius:10px"><div class="section"><h3 class="tile-header-main">MOVER-MONITOR</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a class="fm-icon-control" href="/Tools/FejesMoverSettings" title="Mover-Einstellungen" aria-label="Mover-Einstellungen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/></svg></a><a class="fm-icon-control" href="/Tools/FejesMover" title="Detaillierter Mover-Monitor" aria-label="Detaillierter Mover-Monitor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-11 11M10 3H4v17h17v-6"/></svg></a></span></span></td></tr>
-<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache frei: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Dateien und detaillierter Status →</a></p><div id="fmd-summary">{$fmdSummary}</div><small id="fmd-updated">Daten geladen · Aktualisierung alle 10 Sek.</small></div></td></tr>
+<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><span id="fmd-lamp" data-state="{$fmdSignal}" role="img" aria-label="{$fmdStatus}" style="display:inline-flex;flex-direction:column;gap:3px;padding:5px;border:1px solid #8888;border-radius:12px;background:#2228;vertical-align:middle;margin-right:8px"><i data-light="red" style="width:11px;height:11px;border-radius:50%;background:#e45c5c;opacity:.2"></i><i data-light="amber" style="width:11px;height:11px;border-radius:50%;background:#efb13d;opacity:.2"></i><i data-light="green" style="width:11px;height:11px;border-radius:50%;background:#4fc49a;opacity:.2"></i></span><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache frei: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Array</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Dateien und detaillierter Status →</a></p><div id="fmd-summary">{$fmdSummary}</div><small id="fmd-updated">Daten geladen · Aktualisierung alle 10 Sek.</small></div></td></tr>
 </tbody>
 HTML;
 ?>
 <script>
-(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const summary=doc.getElementById('fm-summary-source');if(summary&&document.getElementById('fmd-summary'))document.getElementById('fmd-summary').innerHTML=summary.innerHTML;const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Mover läuft':unknown?'⚠ Status nicht verifiziert':'● Leerlauf';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Aktualisiert: '+new Date().toLocaleTimeString('de-DE');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Aktualisierung fehlgeschlagen · veraltete Daten';}finally{clearTimeout(t);busy=false;}},10000);})();
+(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const summary=doc.getElementById('fm-summary-source');if(summary&&document.getElementById('fmd-summary'))document.getElementById('fmd-summary').innerHTML=summary.innerHTML;const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1'||d.reportFault==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Prüfung oder Verschieben läuft':unknown?'⚠ Status nicht verifiziert':'● Leerlauf';const lamp=document.getElementById('fmd-lamp');if(lamp){lamp.dataset.state=d.mode==='demo'?'demo':run?'running':unknown?'unknown':'idle';lamp.setAttribute('aria-label',document.getElementById('fmd-status').textContent);}document.getElementById('fmd-status').style.color=run?'var(--fejes-warning)' :unknown?'var(--fejes-danger)' :'var(--fejes-success)' ;document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Aktualisiert: '+new Date().toLocaleTimeString('de-DE');}catch(e){const lamp=document.getElementById('fmd-lamp');if(lamp){lamp.dataset.state='unknown';lamp.setAttribute('aria-label','Unverified / Nem ellenőrizhető / Nicht verifiziert');}const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Aktualisierung fehlgeschlagen · veraltete Daten';}finally{clearTimeout(t);busy=false;}},10000);})();
 </script>
 
 
@@ -191,27 +202,29 @@ $fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~
 $fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,',',' '):'—';
-$fmdStatus=$fmdRun?'● Mover fut':($fmdRaw?'⚠ Nem ellenőrizhető':'● Várakozik');$fmdColor=$fmdRun?'#f2b84b':($fmdRaw?'#ef967a':'#64b99b');
+$fmdStatus=$fmdRun?'● Ellenőrzés vagy mozgatás folyamatban':($fmdRaw?'⚠ Nem ellenőrizhető':'● Várakozik');$fmdColor=$fmdRun?'var(--fejes-warning)' :(($fmdRaw||$fmc['reportFault'])?'var(--fejes-danger)' :'var(--fejes-success)' );
 }else{
-$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='#ef7d00';
+$fmdRun=false;$fmdRaw='';$fmdUsed=65;$fmdDisplay='65%';$fmdFreeText='350';$fmdStatus='DEMO';$fmdColor='var(--fejes-accent)';
 }
+$fmdSignal=$fmc['mode']==='demo'?'demo':($fmdRun?'running':(($fmdRaw||$fmc['reportFault'])?'unknown':'idle'));
 $fmcBanner=$fmc['banner'];$fmdSummary=$fmc['summary'];
 $mytiles['fejes.mover.monitor']['column2']=<<<HTML
+<style>#fejes-mover-dashboard #fmd-lamp[data-state="unknown"] [data-light="red"],#fejes-mover-dashboard #fmd-lamp[data-state="running"] [data-light="amber"],#fejes-mover-dashboard #fmd-lamp[data-state="idle"] [data-light="green"]{opacity:1!important;box-shadow:0 0 0 2px #fff8}#fejes-mover-dashboard #fmd-lamp i{display:block}</style>
 <tbody id="fejes-mover-dashboard" class="mixed" title="Mover figyelő">
 <tr><td><span class="tile-header"><span class="tile-header-left"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=" alt="FM — Fejes Mover" width="56" height="56" style="display:inline-block;vertical-align:middle;margin-right:10px;border-radius:10px"><div class="section"><h3 class="tile-header-main">MOVER FIGYELŐ</h3></div></span><span class="tile-header-right">{$fmLanguageSelector}<a class="fm-icon-control" href="/Tools/FejesMoverSettings" title="Mover beállítások" aria-label="Mover beállítások"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/></svg></a><a class="fm-icon-control" href="/Tools/FejesMover" title="Részletes Mover figyelő" aria-label="Részletes Mover figyelő"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-11 11M10 3H4v17h17v-6"/></svg></a></span></span></td></tr>
-<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache szabad: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Lemeztömb</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Fájlok és részletes állapot →</a></p><div id="fmd-summary">{$fmdSummary}</div><small id="fmd-updated">Adatok betöltve · frissítés 10 mp-enként</small></div></td></tr>
+<tr><td><div id="fmd-mode">{$fmcBanner}</div><div id="fmd-body" style="padding:12px 8px"><div style="display:flex;align-items:center;gap:20px"><div id="fmd-ring" style="width:86px;height:86px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#ef7d00 {$fmdUsed}%,#7773 0)"><span id="fmd-percent" style="width:65px;height:65px;border-radius:50%;display:grid;place-items:center;background:#252525;color:#eee;font-size:19px">{$fmdDisplay}</span></div><div><span id="fmd-lamp" data-state="{$fmdSignal}" role="img" aria-label="{$fmdStatus}" style="display:inline-flex;flex-direction:column;gap:3px;padding:5px;border:1px solid #8888;border-radius:12px;background:#2228;vertical-align:middle;margin-right:8px"><i data-light="red" style="width:11px;height:11px;border-radius:50%;background:#e45c5c;opacity:.2"></i><i data-light="amber" style="width:11px;height:11px;border-radius:50%;background:#efb13d;opacity:.2"></i><i data-light="green" style="width:11px;height:11px;border-radius:50%;background:#4fc49a;opacity:.2"></i></span><strong id="fmd-status" style="font-size:20px;color:{$fmdColor}">{$fmdStatus}</strong><p style="margin:8px 0">Cache szabad: <b id="fmd-free">{$fmdFreeText}</b> GiB</p><small>Cache / SSD → Mover → Lemeztömb</small></div></div><p style="margin:14px 0 0"><a href="/Tools/FejesMover">Fájlok és részletes állapot →</a></p><div id="fmd-summary">{$fmdSummary}</div><small id="fmd-updated">Adatok betöltve · frissítés 10 mp-enként</small></div></td></tr>
 </tbody>
 HTML;
 ?>
 <script>
-(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const summary=doc.getElementById('fm-summary-source');if(summary&&document.getElementById('fmd-summary'))document.getElementById('fmd-summary').innerHTML=summary.innerHTML;const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Mover fut':unknown?'⚠ Nem ellenőrizhető':'● Várakozik';document.getElementById('fmd-status').style.color=run?'#f2b84b':unknown?'#ef967a':'#64b99b';document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Frissítve: '+new Date().toLocaleTimeString('hu-HU');}catch(e){const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Sikertelen frissítés · elavult adatok';}finally{clearTimeout(t);busy=false;}},10000);})();
+(()=>{if(window.fejesMoverDashTimer)clearInterval(window.fejesMoverDashTimer);let busy=false;window.fejesMoverDashTimer=setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch('/Tools/FejesMover',{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!r.ok)throw Error();const doc=new DOMParser().parseFromString(await r.text(),'text/html'),p=doc.getElementById('fm-monitor');if(!p)throw Error();const banner=p.querySelector('.fmc-mode');if(!banner)throw Error();const summary=doc.getElementById('fm-summary-source');if(summary&&document.getElementById('fmd-summary'))document.getElementById('fmd-summary').innerHTML=summary.innerHTML;const d=p.dataset,run=d.running==='1',unknown=d.uncertain==='1'||d.reportFault==='1';document.getElementById('fmd-mode').replaceChildren(banner);document.getElementById('fmd-status').textContent=d.mode==='demo'?'DEMO':run?'● Ellenőrzés vagy mozgatás folyamatban':unknown?'⚠ Nem ellenőrizhető':'● Várakozik';const lamp=document.getElementById('fmd-lamp');if(lamp){lamp.dataset.state=d.mode==='demo'?'demo':run?'running':unknown?'unknown':'idle';lamp.setAttribute('aria-label',document.getElementById('fmd-status').textContent);}document.getElementById('fmd-status').style.color=run?'var(--fejes-warning)' :unknown?'var(--fejes-danger)' :'var(--fejes-success)' ;document.getElementById('fmd-percent').textContent=d.available==='1'?d.used+'%':'—';document.getElementById('fmd-ring').style.background='conic-gradient(#ef7d00 '+(d.available==='1'?Number(d.used):0)+'%,#7773 0)';document.getElementById('fmd-free').textContent=d.free;document.getElementById('fmd-updated').textContent='Frissítve: '+new Date().toLocaleTimeString('hu-HU');}catch(e){const lamp=document.getElementById('fmd-lamp');if(lamp){lamp.dataset.state='unknown';lamp.setAttribute('aria-label','Unverified / Nem ellenőrizhető / Nicht verifiziert');}const p=document.getElementById('fmd-updated');if(p)p.textContent='⚠ Sikertelen frissítés · elavult adatok';}finally{clearTimeout(t);busy=false;}},10000);})();
 </script>
 
 
 
 <?php } ?>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Monitor"
 Icon="fa-exchange"
 Tag="cogs"
@@ -288,7 +301,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 #fm-monitor button:focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 #fm-monitor .fm-note{font-size:12px}
 </style>
-<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-report-fault="<?=$fmc['reportFault']?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
 <?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover Monitor</h2><p class="fm-sub">FejesNAS · Live status · Monitoring only</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Settings</a><button type="button" id="fm-toggle">Auto-refresh: ON (5 sec)</button> <span>Data timestamp: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
@@ -380,7 +393,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 #fm-monitor button:focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 #fm-monitor .fm-note{font-size:12px}
 </style>
-<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-report-fault="<?=$fmc['reportFault']?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
 <?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover-Monitor</h2><p class="fm-sub">FejesNAS · Live-Status · Nur Überwachung</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Einstellungen</a><button type="button" id="fm-toggle">Automatische Aktualisierung: AN (5 Sek.)</button> <span>Datenstand: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
@@ -472,7 +485,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 #fm-monitor button:focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 #fm-monitor .fm-note{font-size:12px}
 </style>
-<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
+<div id="fm-monitor" data-mode="<?=$fmEsc($fmc['mode'])?>" data-pool="<?=$fmEsc($fmc['pool'])?>" data-running="<?=$fmRun?1:0?>" data-uncertain="<?=$fmRaw&&!$fmRun?1:0?>" data-report-fault="<?=$fmc['reportFault']?1:0?>" data-available="<?=$fmUsed!==null?1:0?>" data-used="<?=$fmUsed??0?>" data-free="<?=$fmFree!==false?$fmGiB($fmFree):'—'?>">
 <?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover figyelő</h2><p class="fm-sub">FejesNAS · Élő állapot · Csak megfigyelés</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Beállítások</a><button type="button" id="fm-toggle">Automatikus frissítés: BE (5 mp)</button> <span>Adatok ideje: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
@@ -505,7 +518,166 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/FejesMoverProfile.page"><INLINE><![CDATA[Menu="Utilities"
+Title="Mover · Profil"
+Icon="fa-id-card"
+Tag="cogs"
+---
+<?php
+$fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
+$fmLang=is_string($fmCookie)&&in_array($fmCookie,['hu','en','de'],true)?$fmCookie:'hu';
+$fmLanguageSelector="<label style=\"display:inline-block;margin:10px 12px;font-size:14px\"><span aria-hidden=\"true\" style=\"display:inline-block;width:26px;margin-right:7px;vertical-align:middle\">FLAG_IMAGE</span><select aria-label=\"Language / Nyelv / Sprache\" onchange=\"document.cookie='fejes_mover_lang='+this.value+'; Path=/; Max-Age=31536000; SameSite=Lax';location.assign(location.pathname)\"><option value=\"hu\" HU_SELECTED>🇭🇺 Magyar</option><option value=\"en\" EN_SELECTED>🇺🇸 English (US)</option><option value=\"de\" DE_SELECTED>🇩🇪 Deutsch</option></select></label>";
+$fmLanguageSelector=str_replace(['HU_SELECTED','EN_SELECTED','DE_SELECTED'],[$fmLang==='hu'?'selected':'',$fmLang==='en'?'selected':'',$fmLang==='de'?'selected':''],$fmLanguageSelector);
+$fmLanguageSelector=str_replace('FLAG_IMAGE',['hu'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><path fill=\"#ce2939\" d=\"M0 0h190v34H0z\"/><path fill=\"#fff\" d=\"M0 34h190v33H0z\"/><path fill=\"#477050\" d=\"M0 67h190v33H0z\"/></svg>",'de'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><path fill=\"#000\" d=\"M0 0h190v34H0z\"/><path fill=\"#d00\" d=\"M0 34h190v33H0z\"/><path fill=\"#ffce00\" d=\"M0 67h190v33H0z\"/></svg>",'en'=>"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 190 100\" width=\"26\" height=\"16\"><rect y=\"0.000\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"7.692\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"15.385\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"23.077\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"30.769\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"38.462\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"46.154\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"53.846\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"61.538\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"69.231\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"76.923\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect y=\"84.615\" width=\"190\" height=\"7.702\" fill=\"#fff\"/><rect y=\"92.308\" width=\"190\" height=\"7.702\" fill=\"#b22234\"/><rect width=\"76\" height=\"53.85\" fill=\"#3c3b6e\"/><polygon fill=\"#fff\" points=\"6.33,2.68 6.95,4.54 8.90,4.55 7.33,5.71 7.92,7.57 6.33,6.43 4.75,7.57 5.33,5.71 3.77,4.55 5.72,4.54\"/><polygon fill=\"#fff\" points=\"19.00,2.68 19.62,4.54 21.57,4.55 20.00,5.71 20.59,7.57 19.00,6.43 17.41,7.57 18.00,5.71 16.43,4.55 18.38,4.54\"/><polygon fill=\"#fff\" points=\"31.67,2.68 32.28,4.54 34.23,4.55 32.67,5.71 33.25,7.57 31.67,6.43 30.08,7.57 30.67,5.71 29.10,4.55 31.05,4.54\"/><polygon fill=\"#fff\" points=\"44.33,2.68 44.95,4.54 46.90,4.55 45.33,5.71 45.92,7.57 44.33,6.43 42.75,7.57 43.33,5.71 41.77,4.55 43.72,4.54\"/><polygon fill=\"#fff\" points=\"57.00,2.68 57.62,4.54 59.57,4.55 58.00,5.71 58.59,7.57 57.00,6.43 55.41,7.57 56.00,5.71 54.43,4.55 56.38,4.54\"/><polygon fill=\"#fff\" points=\"69.67,2.68 70.28,4.54 72.23,4.55 70.67,5.71 71.25,7.57 69.67,6.43 68.08,7.57 68.67,5.71 67.10,4.55 69.05,4.54\"/><polygon fill=\"#fff\" points=\"12.67,8.07 13.28,9.92 15.23,9.94 13.67,11.09 14.25,12.95 12.67,11.82 11.08,12.95 11.67,11.09 10.10,9.94 12.05,9.92\"/><polygon fill=\"#fff\" points=\"25.33,8.07 25.95,9.92 27.90,9.94 26.33,11.09 26.92,12.95 25.33,11.82 23.75,12.95 24.33,11.09 22.77,9.94 24.72,9.92\"/><polygon fill=\"#fff\" points=\"38.00,8.07 38.62,9.92 40.57,9.94 39.00,11.09 39.59,12.95 38.00,11.82 36.41,12.95 37.00,11.09 35.43,9.94 37.38,9.92\"/><polygon fill=\"#fff\" points=\"50.67,8.07 51.28,9.92 53.23,9.94 51.67,11.09 52.25,12.95 50.67,11.82 49.08,12.95 49.67,11.09 48.10,9.94 50.05,9.92\"/><polygon fill=\"#fff\" points=\"63.33,8.07 63.95,9.92 65.90,9.94 64.33,11.09 64.92,12.95 63.33,11.82 61.75,12.95 62.33,11.09 60.77,9.94 62.72,9.92\"/><polygon fill=\"#fff\" points=\"6.33,13.46 6.95,15.31 8.90,15.32 7.33,16.48 7.92,18.34 6.33,17.21 4.75,18.34 5.33,16.48 3.77,15.32 5.72,15.31\"/><polygon fill=\"#fff\" points=\"19.00,13.46 19.62,15.31 21.57,15.32 20.00,16.48 20.59,18.34 19.00,17.21 17.41,18.34 18.00,16.48 16.43,15.32 18.38,15.31\"/><polygon fill=\"#fff\" points=\"31.67,13.46 32.28,15.31 34.23,15.32 32.67,16.48 33.25,18.34 31.67,17.21 30.08,18.34 30.67,16.48 29.10,15.32 31.05,15.31\"/><polygon fill=\"#fff\" points=\"44.33,13.46 44.95,15.31 46.90,15.32 45.33,16.48 45.92,18.34 44.33,17.21 42.75,18.34 43.33,16.48 41.77,15.32 43.72,15.31\"/><polygon fill=\"#fff\" points=\"57.00,13.46 57.62,15.31 59.57,15.32 58.00,16.48 58.59,18.34 57.00,17.21 55.41,18.34 56.00,16.48 54.43,15.32 56.38,15.31\"/><polygon fill=\"#fff\" points=\"69.67,13.46 70.28,15.31 72.23,15.32 70.67,16.48 71.25,18.34 69.67,17.21 68.08,18.34 68.67,16.48 67.10,15.32 69.05,15.31\"/><polygon fill=\"#fff\" points=\"12.67,18.84 13.28,20.69 15.23,20.71 13.67,21.86 14.25,23.72 12.67,22.59 11.08,23.72 11.67,21.86 10.10,20.71 12.05,20.69\"/><polygon fill=\"#fff\" points=\"25.33,18.84 25.95,20.69 27.90,20.71 26.33,21.86 26.92,23.72 25.33,22.59 23.75,23.72 24.33,21.86 22.77,20.71 24.72,20.69\"/><polygon fill=\"#fff\" points=\"38.00,18.84 38.62,20.69 40.57,20.71 39.00,21.86 39.59,23.72 38.00,22.59 36.41,23.72 37.00,21.86 35.43,20.71 37.38,20.69\"/><polygon fill=\"#fff\" points=\"50.67,18.84 51.28,20.69 53.23,20.71 51.67,21.86 52.25,23.72 50.67,22.59 49.08,23.72 49.67,21.86 48.10,20.71 50.05,20.69\"/><polygon fill=\"#fff\" points=\"63.33,18.84 63.95,20.69 65.90,20.71 64.33,21.86 64.92,23.72 63.33,22.59 61.75,23.72 62.33,21.86 60.77,20.71 62.72,20.69\"/><polygon fill=\"#fff\" points=\"6.33,24.23 6.95,26.08 8.90,26.09 7.33,27.25 7.92,29.11 6.33,27.98 4.75,29.11 5.33,27.25 3.77,26.09 5.72,26.08\"/><polygon fill=\"#fff\" points=\"19.00,24.23 19.62,26.08 21.57,26.09 20.00,27.25 20.59,29.11 19.00,27.98 17.41,29.11 18.00,27.25 16.43,26.09 18.38,26.08\"/><polygon fill=\"#fff\" points=\"31.67,24.23 32.28,26.08 34.23,26.09 32.67,27.25 33.25,29.11 31.67,27.98 30.08,29.11 30.67,27.25 29.10,26.09 31.05,26.08\"/><polygon fill=\"#fff\" points=\"44.33,24.23 44.95,26.08 46.90,26.09 45.33,27.25 45.92,29.11 44.33,27.98 42.75,29.11 43.33,27.25 41.77,26.09 43.72,26.08\"/><polygon fill=\"#fff\" points=\"57.00,24.23 57.62,26.08 59.57,26.09 58.00,27.25 58.59,29.11 57.00,27.98 55.41,29.11 56.00,27.25 54.43,26.09 56.38,26.08\"/><polygon fill=\"#fff\" points=\"69.67,24.23 70.28,26.08 72.23,26.09 70.67,27.25 71.25,29.11 69.67,27.98 68.08,29.11 68.67,27.25 67.10,26.09 69.05,26.08\"/><polygon fill=\"#fff\" points=\"12.67,29.61 13.28,31.46 15.23,31.48 13.67,32.63 14.25,34.49 12.67,33.36 11.08,34.49 11.67,32.63 10.10,31.48 12.05,31.46\"/><polygon fill=\"#fff\" points=\"25.33,29.61 25.95,31.46 27.90,31.48 26.33,32.63 26.92,34.49 25.33,33.36 23.75,34.49 24.33,32.63 22.77,31.48 24.72,31.46\"/><polygon fill=\"#fff\" points=\"38.00,29.61 38.62,31.46 40.57,31.48 39.00,32.63 39.59,34.49 38.00,33.36 36.41,34.49 37.00,32.63 35.43,31.48 37.38,31.46\"/><polygon fill=\"#fff\" points=\"50.67,29.61 51.28,31.46 53.23,31.48 51.67,32.63 52.25,34.49 50.67,33.36 49.08,34.49 49.67,32.63 48.10,31.48 50.05,31.46\"/><polygon fill=\"#fff\" points=\"63.33,29.61 63.95,31.46 65.90,31.48 64.33,32.63 64.92,34.49 63.33,33.36 61.75,34.49 62.33,32.63 60.77,31.48 62.72,31.46\"/><polygon fill=\"#fff\" points=\"6.33,34.99 6.95,36.85 8.90,36.86 7.33,38.02 7.92,39.88 6.33,38.74 4.75,39.88 5.33,38.02 3.77,36.86 5.72,36.85\"/><polygon fill=\"#fff\" points=\"19.00,34.99 19.62,36.85 21.57,36.86 20.00,38.02 20.59,39.88 19.00,38.74 17.41,39.88 18.00,38.02 16.43,36.86 18.38,36.85\"/><polygon fill=\"#fff\" points=\"31.67,34.99 32.28,36.85 34.23,36.86 32.67,38.02 33.25,39.88 31.67,38.74 30.08,39.88 30.67,38.02 29.10,36.86 31.05,36.85\"/><polygon fill=\"#fff\" points=\"44.33,34.99 44.95,36.85 46.90,36.86 45.33,38.02 45.92,39.88 44.33,38.74 42.75,39.88 43.33,38.02 41.77,36.86 43.72,36.85\"/><polygon fill=\"#fff\" points=\"57.00,34.99 57.62,36.85 59.57,36.86 58.00,38.02 58.59,39.88 57.00,38.74 55.41,39.88 56.00,38.02 54.43,36.86 56.38,36.85\"/><polygon fill=\"#fff\" points=\"69.67,34.99 70.28,36.85 72.23,36.86 70.67,38.02 71.25,39.88 69.67,38.74 68.08,39.88 68.67,38.02 67.10,36.86 69.05,36.85\"/><polygon fill=\"#fff\" points=\"12.67,40.38 13.28,42.23 15.23,42.25 13.67,43.40 14.25,45.26 12.67,44.13 11.08,45.26 11.67,43.40 10.10,42.25 12.05,42.23\"/><polygon fill=\"#fff\" points=\"25.33,40.38 25.95,42.23 27.90,42.25 26.33,43.40 26.92,45.26 25.33,44.13 23.75,45.26 24.33,43.40 22.77,42.25 24.72,42.23\"/><polygon fill=\"#fff\" points=\"38.00,40.38 38.62,42.23 40.57,42.25 39.00,43.40 39.59,45.26 38.00,44.13 36.41,45.26 37.00,43.40 35.43,42.25 37.38,42.23\"/><polygon fill=\"#fff\" points=\"50.67,40.38 51.28,42.23 53.23,42.25 51.67,43.40 52.25,45.26 50.67,44.13 49.08,45.26 49.67,43.40 48.10,42.25 50.05,42.23\"/><polygon fill=\"#fff\" points=\"63.33,40.38 63.95,42.23 65.90,42.25 64.33,43.40 64.92,45.26 63.33,44.13 61.75,45.26 62.33,43.40 60.77,42.25 62.72,42.23\"/><polygon fill=\"#fff\" points=\"6.33,45.77 6.95,47.62 8.90,47.63 7.33,48.79 7.92,50.65 6.33,49.52 4.75,50.65 5.33,48.79 3.77,47.63 5.72,47.62\"/><polygon fill=\"#fff\" points=\"19.00,45.77 19.62,47.62 21.57,47.63 20.00,48.79 20.59,50.65 19.00,49.52 17.41,50.65 18.00,48.79 16.43,47.63 18.38,47.62\"/><polygon fill=\"#fff\" points=\"31.67,45.77 32.28,47.62 34.23,47.63 32.67,48.79 33.25,50.65 31.67,49.52 30.08,50.65 30.67,48.79 29.10,47.63 31.05,47.62\"/><polygon fill=\"#fff\" points=\"44.33,45.77 44.95,47.62 46.90,47.63 45.33,48.79 45.92,50.65 44.33,49.52 42.75,50.65 43.33,48.79 41.77,47.63 43.72,47.62\"/><polygon fill=\"#fff\" points=\"57.00,45.77 57.62,47.62 59.57,47.63 58.00,48.79 58.59,50.65 57.00,49.52 55.41,50.65 56.00,48.79 54.43,47.63 56.38,47.62\"/><polygon fill=\"#fff\" points=\"69.67,45.77 70.28,47.62 72.23,47.63 70.67,48.79 71.25,50.65 69.67,49.52 68.08,50.65 68.67,48.79 67.10,47.63 69.05,47.62\"/></svg>"][$fmLang],$fmLanguageSelector);
+$fmPageTitle=['hu'=>"Mover · Profil",'en'=>"Mover · Profil",'de'=>"Mover · Profil"][$fmLang];
+?>
+<script>(()=>{const label=<?=json_encode($fmPageTitle)?>;const host=document.querySelector('div.title > span.left');if(host){const node=Array.from(host.childNodes).find(n=>n.nodeType===3&&n.textContent.trim());if(node)node.nodeValue=label;}document.title=document.title.split('/')[0]+'/'+label;})();</script>
+<?php
+if($fmLang==='en'){ ?>
+<?php
+echo $fmLanguageSelector;
+$cookie=$_COOKIE['fejes_mover_lang']??'hu';
+$lang=is_string($cookie)&&in_array($cookie,['hu','en','de'],true)?$cookie:'hu';
+$text=[
+ 'hu'=>['title'=>'Szelektív profil','intro'=>'A profil csak a környezetet írja le; önmagában nem indít mozgatást.','pool'=>'Pool','share'=>'Megosztás','container'=>'qBittorrent konténer','script'=>'User Scripts automatika neve','save'=>'Profil mentése','saved'=>'Profil elmentve. Ez nem indít Movert.','back'=>'Back to Mover Monitor','invalid'=>'Érvénytelen profilnév.','failed'=>'A profil mentése sikertelen.','note'=>'Observer mód az alapértelmezés. Advanced mozgatás csak külön jóváhagyással és minden védelmi feltétel mellett indulhat.'],
+ 'en'=>['title'=>'Selective profile','intro'=>'The profile describes the environment only; it never starts movement by itself.','pool'=>'Pool','share'=>'Share','container'=>'qBittorrent container','script'=>'User Scripts automation name','save'=>'Save profile','saved'=>'Profile saved. This does not start Mover.','back'=>'Back to Mover Monitor','invalid'=>'Invalid profile name.','failed'=>'Profile save failed.','note'=>'Observer mode is the default. Advanced movement still requires explicit approval and every safety guard.'],
+ 'de'=>['title'=>'Selektives Profil','intro'=>'Das Profil beschreibt nur die Umgebung; es startet niemals allein einen Transfer.','pool'=>'Pool','share'=>'Freigabe','container'=>'qBittorrent-Container','script'=>'Name der User-Scripts-Automation','save'=>'Profil speichern','saved'=>'Profil gespeichert. Mover wird nicht gestartet.','back'=>'Zurück zum Mover-Monitor','invalid'=>'Ungültiger Profilname.','failed'=>'Profil konnte nicht gespeichert werden.','note'=>'Beobachtermodus ist der Standard. Erweiterte Bewegung erfordert weiterhin ausdrückliche Zustimmung und alle Schutzprüfungen.']
+][$lang];
+$profilePath='/boot/config/plugins/fejes.mover.monitor/selective-profile.json';
+$defaults=['version'=>1,'pool'=>'cache','share'=>'Filmek','torrent_container'=>'binhex-qbittorrentvpn','launcher_script'=>'Filmek_Mover_Threshold'];
+$profile=$defaults;$message='';$error='';
+if(is_file($profilePath)&&!is_link($profilePath)){
+ $raw=@file_get_contents($profilePath);$decoded=is_string($raw)?json_decode($raw,true):null;
+ if(is_array($decoded)&&($decoded['version']??null)===1)$profile=array_merge($defaults,$decoded);
+}
+$fmcConfigWrite=true;
+$runtime=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$esc=$runtime['esc'];$token=$runtime['token']??'';$hash=$runtime['hash']??'';
+$nameOk=function($v){return is_string($v)&&preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D',$v);};
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  if(!is_resource($runtime['lock'])||$runtime['lockError']||$runtime['readError'])throw new RuntimeException($text['failed']);
+  if(!is_string($_POST['fmc_csrf']??null)||$token===''||!hash_equals($token,$_POST['fmc_csrf']))throw new RuntimeException('CSRF');
+  foreach(['pool','share','torrent_container','launcher_script'] as $field){if(!$nameOk($_POST[$field]??null))throw new RuntimeException($text['invalid']);}
+  $new=['version'=>1,'pool'=>$_POST['pool'],'share'=>$_POST['share'],'torrent_container'=>$_POST['torrent_container'],'launcher_script'=>$_POST['launcher_script']];
+  $data=json_encode($new,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)."\n";$dir=dirname($profilePath);if(!is_dir($dir)&&!@mkdir($dir,0700,true))throw new RuntimeException($text['failed']);
+  $tmp=tempnam($dir,'.profile-');if(!$tmp)throw new RuntimeException($text['failed']);
+  try{if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$profilePath))throw new RuntimeException($text['failed']);}finally{if(is_file($tmp))unlink($tmp);}
+  if(file_get_contents($profilePath)!==$data)throw new RuntimeException($text['failed']);
+  $profile=$new;$message=$text['saved'];
+ }catch(Throwable $e){$error=$e->getMessage();}
+}
+?>
+<main id="fmc-profile" style="max-width:900px;margin:24px auto;padding:0 16px;font:inherit">
+<a href="/Tools/FejesMover" style="display:inline-block;margin:12px 0;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← <?=$esc($text['back'])?></a>
+<h1><?=$esc($text['title'])?></h1><p><?=$esc($text['intro'])?></p><p style="padding:14px;border-left:3px solid #64b99b;background:#8881"><?=$esc($text['note'])?></p>
+<?php if($message):?><p role="status" style="padding:12px;border-left:3px solid #64b99b"><?=$esc($message)?></p><?php endif?>
+<?php if($error):?><p role="alert" style="padding:12px;border-left:3px solid #ef967a"><?=$esc($error)?></p><?php endif?>
+<form method="post" action="/Tools/FejesMoverProfile"><input type="hidden" name="fmc_csrf" value="<?=$esc($token)?>"><input type="hidden" name="config_hash" value="<?=$esc($hash)?>">
+<p><label><?=$esc($text['pool'])?><br><input name="pool" value="<?=$esc((string)$profile['pool'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['share'])?><br><input name="share" value="<?=$esc((string)$profile['share'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['container'])?><br><input name="torrent_container" value="<?=$esc((string)$profile['torrent_container'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['script'])?><br><input name="launcher_script" value="<?=$esc((string)$profile['launcher_script'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<button type="submit"><?=$esc($text['save'])?></button></form></main>
+
+<?php } elseif($fmLang==='de'){ ?>
+<?php
+echo $fmLanguageSelector;
+$cookie=$_COOKIE['fejes_mover_lang']??'hu';
+$lang=is_string($cookie)&&in_array($cookie,['hu','en','de'],true)?$cookie:'hu';
+$text=[
+ 'hu'=>['title'=>'Szelektív profil','intro'=>'A profil csak a környezetet írja le; önmagában nem indít mozgatást.','pool'=>'Pool','share'=>'Megosztás','container'=>'qBittorrent konténer','script'=>'User Scripts automatika neve','save'=>'Profil mentése','saved'=>'Profil elmentve. Ez nem indít Movert.','back'=>'Zurück zum Mover-Monitor','invalid'=>'Érvénytelen profilnév.','failed'=>'A profil mentése sikertelen.','note'=>'Beobachter mód az alapértelmezés. Erweitert mozgatás csak külön jóváhagyással és minden védelmi feltétel mellett indulhat.'],
+ 'en'=>['title'=>'Selective profile','intro'=>'The profile describes the environment only; it never starts movement by itself.','pool'=>'Pool','share'=>'Share','container'=>'qBittorrent container','script'=>'User Scripts automation name','save'=>'Save profile','saved'=>'Profile saved. This does not start Mover.','back'=>'Back to Mover Monitor','invalid'=>'Invalid profile name.','failed'=>'Profile save failed.','note'=>'Observer mode is the default. Advanced movement still requires explicit approval and every safety guard.'],
+ 'de'=>['title'=>'Selektives Profil','intro'=>'Das Profil beschreibt nur die Umgebung; es startet niemals allein einen Transfer.','pool'=>'Pool','share'=>'Freigabe','container'=>'qBittorrent-Container','script'=>'Name der User-Scripts-Automation','save'=>'Profil speichern','saved'=>'Profil gespeichert. Mover wird nicht gestartet.','back'=>'Zurück zum Mover-Monitor','invalid'=>'Ungültiger Profilname.','failed'=>'Profil konnte nicht gespeichert werden.','note'=>'Beobachtermodus ist der Standard. Erweiterte Bewegung erfordert weiterhin ausdrückliche Zustimmung und alle Schutzprüfungen.']
+][$lang];
+$profilePath='/boot/config/plugins/fejes.mover.monitor/selective-profile.json';
+$defaults=['version'=>1,'pool'=>'cache','share'=>'Filmek','torrent_container'=>'binhex-qbittorrentvpn','launcher_script'=>'Filmek_Mover_Threshold'];
+$profile=$defaults;$message='';$error='';
+if(is_file($profilePath)&&!is_link($profilePath)){
+ $raw=@file_get_contents($profilePath);$decoded=is_string($raw)?json_decode($raw,true):null;
+ if(is_array($decoded)&&($decoded['version']??null)===1)$profile=array_merge($defaults,$decoded);
+}
+$fmcConfigWrite=true;
+$runtime=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$esc=$runtime['esc'];$token=$runtime['token']??'';$hash=$runtime['hash']??'';
+$nameOk=function($v){return is_string($v)&&preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D',$v);};
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  if(!is_resource($runtime['lock'])||$runtime['lockError']||$runtime['readError'])throw new RuntimeException($text['failed']);
+  if(!is_string($_POST['fmc_csrf']??null)||$token===''||!hash_equals($token,$_POST['fmc_csrf']))throw new RuntimeException('CSRF');
+  foreach(['pool','share','torrent_container','launcher_script'] as $field){if(!$nameOk($_POST[$field]??null))throw new RuntimeException($text['invalid']);}
+  $new=['version'=>1,'pool'=>$_POST['pool'],'share'=>$_POST['share'],'torrent_container'=>$_POST['torrent_container'],'launcher_script'=>$_POST['launcher_script']];
+  $data=json_encode($new,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)."\n";$dir=dirname($profilePath);if(!is_dir($dir)&&!@mkdir($dir,0700,true))throw new RuntimeException($text['failed']);
+  $tmp=tempnam($dir,'.profile-');if(!$tmp)throw new RuntimeException($text['failed']);
+  try{if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$profilePath))throw new RuntimeException($text['failed']);}finally{if(is_file($tmp))unlink($tmp);}
+  if(file_get_contents($profilePath)!==$data)throw new RuntimeException($text['failed']);
+  $profile=$new;$message=$text['saved'];
+ }catch(Throwable $e){$error=$e->getMessage();}
+}
+?>
+<main id="fmc-profile" style="max-width:900px;margin:24px auto;padding:0 16px;font:inherit">
+<a href="/Tools/FejesMover" style="display:inline-block;margin:12px 0;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← <?=$esc($text['back'])?></a>
+<h1><?=$esc($text['title'])?></h1><p><?=$esc($text['intro'])?></p><p style="padding:14px;border-left:3px solid #64b99b;background:#8881"><?=$esc($text['note'])?></p>
+<?php if($message):?><p role="status" style="padding:12px;border-left:3px solid #64b99b"><?=$esc($message)?></p><?php endif?>
+<?php if($error):?><p role="alert" style="padding:12px;border-left:3px solid #ef967a"><?=$esc($error)?></p><?php endif?>
+<form method="post" action="/Tools/FejesMoverProfile"><input type="hidden" name="fmc_csrf" value="<?=$esc($token)?>"><input type="hidden" name="config_hash" value="<?=$esc($hash)?>">
+<p><label><?=$esc($text['pool'])?><br><input name="pool" value="<?=$esc((string)$profile['pool'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['share'])?><br><input name="share" value="<?=$esc((string)$profile['share'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['container'])?><br><input name="torrent_container" value="<?=$esc((string)$profile['torrent_container'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['script'])?><br><input name="launcher_script" value="<?=$esc((string)$profile['launcher_script'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<button type="submit"><?=$esc($text['save'])?></button></form></main>
+
+<?php } else{ ?>
+<?php
+echo $fmLanguageSelector;
+$cookie=$_COOKIE['fejes_mover_lang']??'hu';
+$lang=is_string($cookie)&&in_array($cookie,['hu','en','de'],true)?$cookie:'hu';
+$text=[
+ 'hu'=>['title'=>'Szelektív profil','intro'=>'A profil csak a környezetet írja le; önmagában nem indít mozgatást.','pool'=>'Pool','share'=>'Megosztás','container'=>'qBittorrent konténer','script'=>'User Scripts automatika neve','save'=>'Profil mentése','saved'=>'Profil elmentve. Ez nem indít Movert.','back'=>'Vissza a Mover figyelőhöz','invalid'=>'Érvénytelen profilnév.','failed'=>'A profil mentése sikertelen.','note'=>'Megfigyelő mód az alapértelmezés. Haladó mozgatás csak külön jóváhagyással és minden védelmi feltétel mellett indulhat.'],
+ 'en'=>['title'=>'Selective profile','intro'=>'The profile describes the environment only; it never starts movement by itself.','pool'=>'Pool','share'=>'Share','container'=>'qBittorrent container','script'=>'User Scripts automation name','save'=>'Save profile','saved'=>'Profile saved. This does not start Mover.','back'=>'Back to Mover Monitor','invalid'=>'Invalid profile name.','failed'=>'Profile save failed.','note'=>'Observer mode is the default. Advanced movement still requires explicit approval and every safety guard.'],
+ 'de'=>['title'=>'Selektives Profil','intro'=>'Das Profil beschreibt nur die Umgebung; es startet niemals allein einen Transfer.','pool'=>'Pool','share'=>'Freigabe','container'=>'qBittorrent-Container','script'=>'Name der User-Scripts-Automation','save'=>'Profil speichern','saved'=>'Profil gespeichert. Mover wird nicht gestartet.','back'=>'Zurück zum Mover-Monitor','invalid'=>'Ungültiger Profilname.','failed'=>'Profil konnte nicht gespeichert werden.','note'=>'Beobachtermodus ist der Standard. Erweiterte Bewegung erfordert weiterhin ausdrückliche Zustimmung und alle Schutzprüfungen.']
+][$lang];
+$profilePath='/boot/config/plugins/fejes.mover.monitor/selective-profile.json';
+$defaults=['version'=>1,'pool'=>'cache','share'=>'Filmek','torrent_container'=>'binhex-qbittorrentvpn','launcher_script'=>'Filmek_Mover_Threshold'];
+$profile=$defaults;$message='';$error='';
+if(is_file($profilePath)&&!is_link($profilePath)){
+ $raw=@file_get_contents($profilePath);$decoded=is_string($raw)?json_decode($raw,true):null;
+ if(is_array($decoded)&&($decoded['version']??null)===1)$profile=array_merge($defaults,$decoded);
+}
+$fmcConfigWrite=true;
+$runtime=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$esc=$runtime['esc'];$token=$runtime['token']??'';$hash=$runtime['hash']??'';
+$nameOk=function($v){return is_string($v)&&preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D',$v);};
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  if(!is_resource($runtime['lock'])||$runtime['lockError']||$runtime['readError'])throw new RuntimeException($text['failed']);
+  if(!is_string($_POST['fmc_csrf']??null)||$token===''||!hash_equals($token,$_POST['fmc_csrf']))throw new RuntimeException('CSRF');
+  foreach(['pool','share','torrent_container','launcher_script'] as $field){if(!$nameOk($_POST[$field]??null))throw new RuntimeException($text['invalid']);}
+  $new=['version'=>1,'pool'=>$_POST['pool'],'share'=>$_POST['share'],'torrent_container'=>$_POST['torrent_container'],'launcher_script'=>$_POST['launcher_script']];
+  $data=json_encode($new,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)."\n";$dir=dirname($profilePath);if(!is_dir($dir)&&!@mkdir($dir,0700,true))throw new RuntimeException($text['failed']);
+  $tmp=tempnam($dir,'.profile-');if(!$tmp)throw new RuntimeException($text['failed']);
+  try{if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$profilePath))throw new RuntimeException($text['failed']);}finally{if(is_file($tmp))unlink($tmp);}
+  if(file_get_contents($profilePath)!==$data)throw new RuntimeException($text['failed']);
+  $profile=$new;$message=$text['saved'];
+ }catch(Throwable $e){$error=$e->getMessage();}
+}
+?>
+<main id="fmc-profile" style="max-width:900px;margin:24px auto;padding:0 16px;font:inherit">
+<a href="/Tools/FejesMover" style="display:inline-block;margin:12px 0;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← <?=$esc($text['back'])?></a>
+<h1><?=$esc($text['title'])?></h1><p><?=$esc($text['intro'])?></p><p style="padding:14px;border-left:3px solid #64b99b;background:#8881"><?=$esc($text['note'])?></p>
+<?php if($message):?><p role="status" style="padding:12px;border-left:3px solid #64b99b"><?=$esc($message)?></p><?php endif?>
+<?php if($error):?><p role="alert" style="padding:12px;border-left:3px solid #ef967a"><?=$esc($error)?></p><?php endif?>
+<form method="post" action="/Tools/FejesMoverProfile"><input type="hidden" name="fmc_csrf" value="<?=$esc($token)?>"><input type="hidden" name="config_hash" value="<?=$esc($hash)?>">
+<p><label><?=$esc($text['pool'])?><br><input name="pool" value="<?=$esc((string)$profile['pool'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['share'])?><br><input name="share" value="<?=$esc((string)$profile['share'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['container'])?><br><input name="torrent_container" value="<?=$esc((string)$profile['torrent_container'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['script'])?><br><input name="launcher_script" value="<?=$esc((string)$profile['launcher_script'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<button type="submit"><?=$esc($text['save'])?></button></form></main>
+
+<?php } ?>
+<script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
+]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
 Title="FejesMover védelem"
 Icon="fa-shield"
 Tag="cogs"
@@ -868,7 +1040,7 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
 // Shared, fail-closed runtime configuration. No settings or automation writes here.
 return (static function ($configWrite) {
     $language = $_COOKIE['fejes_mover_lang'] ?? 'hu';
@@ -929,36 +1101,48 @@ return (static function ($configWrite) {
 .fm-lang-control>span{display:flex!important;align-items:center;justify-content:center;width:26px!important;margin:0!important;pointer-events:none}.fm-lang-control>select{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;opacity:0!important;cursor:pointer}.fm-icon-control svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.fm-lang-control:focus-within,.fm-icon-control:focus-visible{outline:2px solid #ed8b25;outline-offset:3px}@media(hover:hover){.fm-lang-control:hover,.fm-icon-control:hover{border-color:#ed8b25!important;background:#ed8b2520!important}}
 @property --fm-orbit-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes fm-control-orbit{to{--fm-orbit-angle:360deg}}
-:is(.fm-lang-control,.fm-icon-control)::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--fm-orbit-angle),transparent 0deg,transparent 210deg,#ed8b25 280deg,#ffe2b0 310deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;opacity:0;transition:opacity .15s}
+:is(.fm-lang-control,.fm-icon-control)::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--fm-orbit-angle),transparent 0deg,transparent 210deg,var(--fejes-accent) 280deg,var(--fejes-fg) 310deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none;opacity:0;transition:opacity .15s}
 @media(hover:hover){:is(.fm-lang-control,.fm-icon-control):hover::before{opacity:1;animation:fm-control-orbit 1.8s linear infinite}}
 :is(.fm-lang-control,.fm-icon-control):focus-within::before{opacity:1;animation:fm-control-orbit 1.8s linear infinite}
 @media(prefers-reduced-motion:reduce){:is(.fm-lang-control,.fm-icon-control)::before{animation:none!important;transition:none!important}}
 #fejes-mover-dashboard .tile-header{display:flex!important;align-items:center!important;justify-content:space-between;gap:12px;flex-wrap:wrap}#fejes-mover-dashboard .tile-header-left{display:flex;align-items:center;min-width:0}#fejes-mover-dashboard .tile-header-right{display:inline-flex!important;align-items:center!important;gap:8px!important;margin-left:auto;float:none!important;white-space:nowrap}#fejes-mover-dashboard .tile-header-main{margin:0!important}html[data-fejes-theme] #fejes-mover-dashboard .tile-header-right a.fm-icon-control{color:var(--fejes-fg,#edf0f5)!important}
 .fmc-theme{float:right;display:inline-flex;gap:8px;align-items:center;margin:0 0 8px 16px}.fmc-theme select{width:auto!important;padding:5px 8px!important;border:1px solid #8888!important;border-radius:5px!important}
-html[data-fejes-theme="auto"]{--fejes-bg:var(--background-color,#1d1b1b);--fejes-panel:var(--mild-background-color,#262626);--fejes-fg:var(--text-color,#f2f2f2);--fejes-line:var(--border-color,#404040);--fejes-link:var(--link-text-color,#486dba);--fejes-scheme:inherit}
-html[data-fejes-theme="white"]{--fejes-bg:#f2f2f2;--fejes-panel:#f7f9f9;--fejes-fg:#1d1b1b;--fejes-line:#d3d3d3;--fejes-link:#486dba;--fejes-scheme:light}
-html[data-fejes-theme="black"]{--fejes-bg:#1d1b1b;--fejes-panel:#262626;--fejes-fg:#f2f2f2;--fejes-line:#404040;--fejes-link:#486dba;--fejes-scheme:dark}
-html[data-fejes-theme="gray"]{--fejes-bg:#1d1b1b;--fejes-panel:#121510;--fejes-fg:#606e7f;--fejes-line:#606e7f;--fejes-link:#486dba;--fejes-scheme:dark}
-html[data-fejes-theme="azure"]{--fejes-bg:#e8e8e8;--fejes-panel:#edeaef;--fejes-fg:#606e7f;--fejes-line:#606e7f;--fejes-link:#486dba;--fejes-scheme:light}
-html[data-fejes-theme="light"]{--fejes-bg:#f5f6f8;--fejes-panel:#fff;--fejes-fg:#202632;--fejes-line:#c7cdd5;--fejes-link:#985000;--fejes-scheme:light}
-html[data-fejes-theme="dark"]{--fejes-bg:#171b22;--fejes-panel:#222833;--fejes-fg:#edf0f5;--fejes-line:#4a5362;--fejes-link:#ffb567;--fejes-scheme:dark}
+/* Shared semantic palette: every plugin surface and control uses these tokens. */
+html[data-fejes-theme]{--fejes-control:var(--fejes-panel);--fejes-hover:color-mix(in srgb,var(--fejes-control) 88%,var(--fejes-fg) 12%);--fejes-muted:color-mix(in srgb,var(--fejes-fg) 80%,var(--fejes-panel) 20%);--fejes-disabled:var(--fejes-muted);--fejes-accent:#ed8b25;--fejes-success:#54bda0;--fejes-warning:#e6a75b;--fejes-danger:#de8686}
+html[data-fejes-theme="auto"]{--fejes-bg:var(--background-color,#191b1f);--fejes-panel:var(--mild-background-color,#25282e);--fejes-fg:var(--fejes-auto-fg,var(--text-color,#f2f2f2));--fejes-line:color-mix(in srgb,var(--fejes-fg) 48%,var(--fejes-panel) 52%);--fejes-link:var(--fejes-auto-link,#9bcaff);--fejes-accent:var(--fejes-auto-accent,#ffb45e);--fejes-success:var(--fejes-auto-success,#54bda0);--fejes-warning:var(--fejes-auto-warning,#e6a75b);--fejes-danger:var(--fejes-auto-danger,#de8686);--fejes-scheme:inherit}
+html[data-fejes-theme="white"]{--fejes-bg:#f2f4f6;--fejes-panel:#ffffff;--fejes-control:#edf0f4;--fejes-fg:#202a36;--fejes-muted:#485769;--fejes-line:#7a8797;--fejes-link:#174f8a;--fejes-accent:#a04c00;--fejes-success:#17654e;--fejes-warning:#8c4b10;--fejes-danger:#a12d35;--fejes-scheme:light}
+html[data-fejes-theme="black"]{--fejes-bg:#191b1f;--fejes-panel:#25282e;--fejes-control:#30343c;--fejes-fg:#edf0f4;--fejes-muted:#bac3cf;--fejes-line:#788596;--fejes-link:#9bcaff;--fejes-accent:#ffb45e;--fejes-scheme:dark}
+html[data-fejes-theme="gray"]{--fejes-bg:#25292f;--fejes-panel:#303640;--fejes-control:#3a424e;--fejes-fg:#f0f3f7;--fejes-muted:#c4cdd9;--fejes-line:#8b98a9;--fejes-link:#add3ff;--fejes-accent:#ffbd76;--fejes-scheme:dark}
+html[data-fejes-theme="azure"]{--fejes-bg:#e8eef5;--fejes-panel:#f8fafc;--fejes-control:#e2eaf3;--fejes-fg:#24374a;--fejes-muted:#435b73;--fejes-line:#697e97;--fejes-link:#1c4f82;--fejes-accent:#9b4900;--fejes-success:#17654e;--fejes-warning:#8c4b10;--fejes-danger:#a12d35;--fejes-scheme:light}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode){background:var(--fejes-bg)!important;color:var(--fejes-fg)!important;color-scheme:var(--fejes-scheme);border-radius:8px}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard){padding:18px!important}
-html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(h1,h2,h3,p,span,strong,small,label,legend,summary,td,th,pre):not(#fmd-status){color:var(--fejes-fg)!important}
-html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(section,fieldset,.fm-card,.ms-card,.fms-panel,.fms-cards>div){background:var(--fejes-panel)!important;border-color:var(--fejes-line)!important}
-html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(input,select,button,thead th,tbody td){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :where(h1,h2,h3,p,span,strong,small,label,legend,summary,td,th,pre):where(:not(#fmd-status)){color:inherit!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(section,fieldset,.fm-card,.ms-card,.box,.hero,.fms-panel,.fms-cards>div,.fm-flow){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) :is(input,select,button,thead th,tbody td){background:var(--fejes-control)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
 html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard,.fmc-mode) a{color:var(--fejes-link)!important}
-html[data-fejes-theme] #fms .fms-primary{background:#a95206!important;color:#fff!important;border-color:#a95206!important}
-html[data-fejes-theme] #fms .fms-danger{border-color:#d65b51!important}
-html[data-fejes-theme] #fmd-percent{background:var(--fejes-panel)!important;color:var(--fejes-fg)!important}
-html[data-fejes-theme] #fm-monitor .fm-donut span{background:var(--fejes-panel)!important}
+html[data-fejes-theme] :is(#fmd-percent,#fm-monitor .fm-donut span){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup,#fejes-mover-dashboard) :is(.fm-note,.fm-sub,.fm-label,.fms-count,.kicker,small){color:var(--fejes-muted)!important;opacity:1!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) p{opacity:1!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(.notice,.fmc-notice,.badge){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(.error,[role="alert"],.fms-danger){color:var(--fejes-danger)!important;border-color:var(--fejes-danger)!important}
+html[data-fejes-theme] #fm-monitor .fm-moving{color:var(--fejes-warning)!important}
 @media(max-width:600px){.fmc-theme{float:none;display:flex;margin:0 0 10px}}
 </style>
 <label class="fmc-theme">THEME_LABEL <select data-fejes-theme-select aria-label="THEME_LABEL"><option value="auto">AUTO_LABEL</option><option value="white">WHITE_PALETTE_LABEL</option><option value="black">BLACK_PALETTE_LABEL</option><option value="gray">GRAY_PALETTE_LABEL</option><option value="azure">AZURE_PALETTE_LABEL</option></select></label>
 <script>(()=>{
 if(window.fejesMoverTheme)return;window.fejesMoverTheme=true;
 const key='fejesMoverTheme',valid=v=>{v=({light:'white',dark:'black'})[v]||v;return ['auto','white','black','gray','azure'].includes(v)?v:'auto';};
-function apply(value){value=valid(value);document.documentElement.setAttribute('data-fejes-theme',value);document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>el.value=value);}
+function readableHost(){
+const root=document.documentElement;if(!root.style?.setProperty)return;
+const css=getComputedStyle(root),read=(key,fallback)=>css.getPropertyValue?.(key).trim()||fallback;
+const rgb=value=>{const hex=value.match(/^#([0-9a-f]{6})$/i);if(hex)return [0,2,4].map(i=>parseInt(hex[1].slice(i,i+2),16)/255);const parts=value.match(/^rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)/);return parts?parts.slice(1,4).map(x=>Number(x)/255):null;};
+const lum=c=>c.map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0),contrast=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
+const bg=rgb(read('--background-color','#191b1f')),panel=rgb(read('--mild-background-color','#25282e'));if(!bg||!panel)return;
+const score=c=>Math.min(contrast(c,bg),contrast(c,panel));let color=read('--text-color','#f2f2f2'),text=rgb(color);
+if(!text||score(text)<7){const light=rgb('#f0f3f7'),dark=rgb('#202a36');color=score(light)>=score(dark)?'#f0f3f7':'#202a36';text=rgb(color);}
+const darkSurface=lum(text)>.5;root.style.setProperty('--fejes-auto-fg',color);root.style.setProperty('--fejes-auto-link',darkSurface?'#9bcaff':'#174f8a');root.style.setProperty('--fejes-auto-accent',darkSurface?'#ffb45e':'#a04c00');root.style.setProperty('--fejes-auto-success',darkSurface?'#54bda0':'#17654e');root.style.setProperty('--fejes-auto-warning',darkSurface?'#e6a75b':'#8c4b10');root.style.setProperty('--fejes-auto-danger',darkSurface?'#de8686':'#a12d35');
+}
+function apply(value){value=valid(value);document.documentElement.setAttribute('data-fejes-theme',value);if(value==='auto')readableHost();document.querySelectorAll('[data-fejes-theme-select]').forEach(el=>el.value=value);}
 function saved(){try{return valid(localStorage.getItem(key));}catch{return 'auto';}}
 let choice=saved();apply(choice);document.addEventListener('change',event=>{if(!event.target.matches('[data-fejes-theme-select]'))return;const value=valid(event.target.value);try{localStorage.setItem(key,value);}catch{}choice=value;apply(choice);});
 window.addEventListener('storage',event=>{if(event.key===key){choice=saved();apply(choice);}});
@@ -1008,7 +1192,7 @@ html[data-fejes-theme="dark"] #fms table.fms-queue th{background:#283140!importa
 @media(max-width:380px){#fms .fms-cards{grid-template-columns:1fr!important}}
 @media(prefers-reduced-motion:reduce){:is(#fm-monitor,#fms,#ms,#fmc-setup,#fejes-mover-dashboard,.fmc-nav) *{animation:none!important;transition:none!important;transform:none!important}}
 
-.fm-summary{position:relative;border:1px solid #8885;border-left:3px solid #ef8b24;border-radius:10px;padding:12px;margin:14px 0;line-height:1.5;overflow-wrap:anywhere}.fm-summary p{white-space:normal!important;margin:5px 0;font-size:12px}.fm-hover-help{display:inline-block;position:relative;margin-right:8px}.fm-hover-help summary{cursor:help;list-style:none;padding:3px 8px;border:1px solid #8886;border-radius:50%}.fm-hover-help>div{white-space:normal!important;overflow-wrap:anywhere;display:none;position:absolute;bottom:100%;left:0;width:min(270px,70vw);box-sizing:border-box;padding:12px;border:1px solid #888;border-radius:10px;background:var(--fejes-panel,#242a34);color:var(--fejes-fg,#eef1f6);box-shadow:0 8px 24px #0006;z-index:20;font-size:13px}.fm-hover-help[open]>div,.fm-hover-help:hover>div,.fm-hover-help:focus-within>div{display:block}
+.fm-summary{position:relative;border:1px solid #8885;border-left:3px solid #ef8b24;border-radius:10px;padding:12px;margin:14px 0;line-height:1.5;overflow-wrap:anywhere}.fm-summary p{white-space:normal!important;margin:5px 0;font-size:12px}.fm-summary-title{display:flex;align-items:center;gap:8px;font-size:14px}.fm-summary-icon{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#ef8b2420;color:#efb13d}.fm-summary--waiting{border-left-color:#efb13d;background:linear-gradient(100deg,#efb13d12,transparent 70%);animation:fm-waiting-pulse 2.8s ease-in-out infinite}.fm-summary--waiting .fm-summary-icon{box-shadow:0 0 0 0 #efb13d66;animation:fm-waiting-ring 2.8s ease-out infinite}.fm-summary-explain{font-size:13px!important}.fm-hover-help{display:inline-block;position:relative;margin-right:8px}.fm-hover-help summary{cursor:help;list-style:none;padding:3px 8px;border:1px solid #8886;border-radius:50%}.fm-hover-help>div{white-space:normal!important;overflow-wrap:anywhere;display:none;position:absolute;bottom:100%;left:0;width:min(270px,70vw);box-sizing:border-box;padding:12px;border:1px solid #888;border-radius:10px;background:var(--fejes-panel,#242a34);color:var(--fejes-fg,#eef1f6);box-shadow:0 8px 24px #0006;z-index:20;font-size:13px}.fm-hover-help[open]>div,.fm-hover-help:hover>div,.fm-hover-help:focus-within>div{display:block}@keyframes fm-waiting-pulse{0%,100%{box-shadow:0 0 0 0 #efb13d00}50%{box-shadow:0 0 0 4px #efb13d18}}@keyframes fm-waiting-ring{0%{box-shadow:0 0 0 0 #efb13d66}70%,100%{box-shadow:0 0 0 9px #efb13d00}}
 
 /* Consistent layout and stable control positions on every full plugin page. */
 :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup){box-sizing:border-box!important;max-width:1280px!important;margin:24px auto!important;padding-left:20px!important;padding-right:20px!important}
@@ -1022,8 +1206,30 @@ html[data-fejes-theme="dark"] #fms table.fms-queue th{background:#283140!importa
 @media(max-width:700px){.fmc-nav{top:40px;margin:10px 6px;padding:8px;gap:6px}.fmc-nav :is(a,button){min-width:92px;padding:0 10px}.fmc-nav .fmc-nav-pages{gap:6px;margin-left:0}:is(#fms,#fm-monitor,#ms,#fp,#fmc-setup){padding-left:10px!important;padding-right:10px!important}}
 
 .content:has(> .fmc-nav){overflow:visible!important}
-.fmc-page-tail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:24px 0;padding:12px 0;border-top:1px solid #8884}.fmc-support-strip{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;padding:16px;box-sizing:border-box;background:#42464b;color:#fff;border:1px solid #fff;border-radius:10px}.fmc-support-strip small{flex-basis:100%;text-align:center}.fmc-support-strip strong{font-size:18px}.fmc-support-strip a{background:#555b62!important;color:#fff!important;border-color:#fff!important}.fmc-page-tail :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:140px;padding:0 16px;border:1px solid #8886;border-radius:10px;text-decoration:none;color:inherit;font-weight:600;background:#8881;box-sizing:border-box}
+.fmc-page-tail{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin:24px 0;padding:12px 0;border-top:1px solid #8884}.fmc-support-strip{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;width:100%;max-width:760px;margin:0 auto;padding:10px 12px;box-sizing:border-box;background:#42464b;color:#fff;border:1px solid #fff;border-radius:10px;font-size:12px}.fmc-support-strip small{flex-basis:100%;text-align:center;font-size:11px}.fmc-support-strip strong{font-size:12px;font-weight:600}.fmc-page-tail .fmc-support-strip a{min-width:0;min-height:34px;padding:0 10px;background:transparent!important;color:inherit!important;border-color:currentColor!important;font-size:12px}.fmc-page-tail :is(a,button){display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:140px;padding:0 16px;border:1px solid #8886;border-radius:10px;text-decoration:none;color:inherit;font-weight:600;background:#8881;box-sizing:border-box}
 
+/* Support is part of the same neutral surface/control hierarchy. */
+html[data-fejes-theme] :is(.fmc-theme,.fmc-depth,.fmc-nav,.fm-lang-control,.fm-icon-control){background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(.fmc-theme,.fmc-depth) select{background:var(--fejes-control)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(.fm-lang-control:focus-within,.fm-icon-control:focus-visible){outline-color:var(--fejes-accent)!important}
+@media(hover:hover){html[data-fejes-theme] :is(.fm-lang-control,.fm-icon-control):hover{background:var(--fejes-hover)!important;border-color:var(--fejes-accent)!important}}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) .fmc-support-strip{background:var(--fejes-panel)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) .fmc-support-strip :is(strong,small){color:var(--fejes-fg)!important;opacity:1!important}
+/* Full-page control text never inherits the host link color. */
+html[data-fejes-theme] :is(.fmc-nav,.fmc-page-tail) :is(a,button),html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(button,.link){background:var(--fejes-control)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important;opacity:1}
+html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) .fmc-page-tail :is(a,button){background:var(--fejes-control)!important;color:var(--fejes-fg)!important;border-color:var(--fejes-line)!important}
+html[data-fejes-theme] :is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(button:disabled,input:disabled,select:disabled){background:var(--fejes-panel)!important;color:var(--fejes-disabled)!important;opacity:1!important;border-style:dashed!important;cursor:not-allowed}
+html[data-fejes-theme] :is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button,input,select,summary):focus-visible{outline:2px solid var(--fejes-accent)!important;outline-offset:3px}
+@media(hover:hover){html[data-fejes-theme] :is(.fmc-nav,.fmc-page-tail) :is(a,button:enabled):hover,html[data-fejes-theme] :is(#fms,#fm-monitor,#ms,#fp,#fmc-setup) button:enabled:hover{background:var(--fejes-hover)!important;border-color:var(--fejes-accent)!important;color:var(--fejes-fg)!important}}
+html[data-fejes-theme] #fms button.fms-danger{border-color:var(--fejes-danger)!important}
+/* One pointer-transparent orbit for full-page controls; no layout shift. */
+@property --fmc-orbit-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes fmc-control-orbit{to{--fmc-orbit-angle:360deg}}
+:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button:not(:disabled),summary){position:relative;isolation:isolate}
+:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button:not(:disabled),summary)::after{content:'';position:absolute;inset:-2px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--fmc-orbit-angle),transparent 0deg,transparent 230deg,var(--fejes-accent) 290deg,var(--fejes-fg) 320deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:0;transition:opacity .15s ease}
+@media(hover:hover){:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button:not(:disabled),summary):hover::after{opacity:1;animation:fmc-control-orbit 1.8s linear infinite}}
+:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button:not(:disabled),summary):focus-visible::after{opacity:1;animation:fmc-control-orbit 1.8s linear infinite}
+@media(prefers-reduced-motion:reduce){:is(.fmc-nav,#fms,#fm-monitor,#ms,#fp,#fmc-setup) :is(a,button,summary)::after{animation:none!important;transition:none!important}}
 .fmc-mode{display:flow-root!important;box-sizing:border-box}.fmc-mode .fmc-theme{float:none!important;display:flex!important;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 10px!important}.fmc-mode .fmc-theme select{margin:0!important;min-height:44px;max-width:100%;box-sizing:border-box}.fmc-mode .fmc-theme label{margin:0!important}
 </style>
 <label class="fmc-depth">DEPTH_LABEL <select data-fejes-depth-select aria-label="DEPTH_LABEL"><option value="raised">RAISED_LABEL</option><option value="flat">FLAT_LABEL</option></select></label>
@@ -1059,7 +1265,7 @@ HTML;
     $banner = substr_replace($banner, substr($design, 0, $designStyleEnd), strrpos($banner, '</div>'), 0);
     $banner .= substr($design, $designStyleEnd);
     // Aggregate report only. No scans, torrent queries or writes during UI refresh.
-    $summary='';
+    $summary='';$reportFault=false;
     if($mode==='advanced'&&$pool==='cache'){
         $lastPath='/boot/config/plugins/fejes.mover.monitor/selective-last.json';
         $last=is_link($lastPath)?null:json_decode(@file_get_contents($lastPath)?:'null',true);
@@ -1067,16 +1273,26 @@ HTML;
         $reasons=['capacity'=>$t('Szabadhely-küszöb','Free-space threshold','Freiplatzgrenze'),'cooldown'=>$t('Két kör közötti várakozás','Batch cooldown','Wartezeit zwischen Läufen'),'integrity'=>$t('Integritásvédelem','Integrity protection','Integritätsschutz'),'backup'=>$t('Biztonsági mentés','Backup','Sicherung'),'parity'=>$t('Paritásellenőrzés','Parity check','Paritätsprüfung')];
         $status=$t('Nincs olvasható jelentés','No readable report','Kein lesbarer Bericht');$detail='';
         if(is_array($last)){
+            $reportFault=($last['requires_inspection']??false)===true || (($last['state']??'')==='error'&&empty($last['inspection_resolution']));
             $status=$labels[$last['state']??'']??$t('Nem ellenőrizhető állapot','Unverified state','Ungeprüfter Zustand');
             if(($last['requires_inspection']??false)===true)$status=$t('Beavatkozás szükséges · mozgatás tiltva','Inspection required · movement blocked','Prüfung erforderlich · Verschieben gesperrt');
             if(!empty($last['inspection_resolution'])&&($last['state']??'')==='error'&&empty($last['requires_inspection']))$status=$t('Helyreállítás ellenőrizve · új körre vár','Recovery inspected · awaiting a new run','Wiederherstellung geprüft · wartet auf neuen Lauf');
             if(is_numeric($last['started']??null))$detail=$t('Jelentés ideje: ','Report time: ','Berichtszeit: ').date('Y-m-d H:i',(int)$last['started']);
             if(($last['state']??'')==='completed'&&is_numeric($last['moved_files']??null)&&is_numeric($last['moved_bytes']??null))$detail.=' · '.$last['moved_files'].' '.$t('fájl','files','Dateien').' · '.number_format($last['moved_bytes']/1073741824,2).' GiB';
+            if(($last['state']??'')==='completed'&&empty($last['requires_inspection'])&&is_numeric($last['moved_bytes']??null)&&($last['moved_bytes']??0)>0&&is_numeric($last['started']??null)&&is_numeric($last['finished']??null)&&$last['finished']>$last['started']){
+                $average=($last['moved_bytes']/1048576)/($last['finished']-$last['started']);
+                $detail.=' · '.$t('Legutóbbi igazolt futás átlaga: ','Last verified run average: ','Durchschnitt des letzten geprüften Laufs: ').number_format($average,1,'.','').' MiB/s';
+            }
             if(($last['state']??'')==='error'&&($last['error_code']??'')==='torrent_snapshot_unavailable')$detail.=' · '.$t('A torrentállapot nem kérdezhető le; a biztonság nem igazolható.','Torrent state could not be queried; safety could not be verified.','Torrentstatus konnte nicht abgefragt werden; Sicherheit nicht verifiziert.');
             if(is_array($last['blockers']??null)&&$last['blockers'])$detail.=' · '.implode(', ',array_map(static fn($key)=>$reasons[$key]??$t('További védelmi feltétel','Additional guard','Weitere Schutzbedingung'),$last['blockers']));
         }
-        $tip=$t('A legutóbbi jelentés pillanatkép. A futó háttérfolyamat önmagában nem bizonyít adatátvitelt. A Részletek oldalon látható a várólista és a védelmek.','The last report is a snapshot. A running worker alone does not prove data transfer. Open Details for the queue and guards.','Der letzte Bericht ist eine Momentaufnahme. Ein laufender Prozess allein beweist keinen Datentransfer. Details zeigen Warteliste und Schutzbedingungen.');
-        $summary='<section class="fm-summary" aria-label="'.$esc($t('Mozgatási jelentés','Movement report','Verschiebebericht')).'"><strong>'.$esc($status).'</strong><p>'.$esc($detail).'</p><details class="fm-hover-help"><summary aria-label="'.$esc($t('Állapotsúgó','Status help','Statushilfe')).'">ⓘ</summary><div>'.$esc($tip).'</div></details> <a href="/Tools/FejesMoverSelective">'.$esc($t('Részletek és várólista →','Details and queue →','Details und Warteliste →')).'</a></section>';
+        $isDeferred=($last['state']??'')==='deferred';
+        $summaryClass=$isDeferred?' fm-summary--waiting':'';
+        $headline=$isDeferred?$t('Biztonsági várakozás','Safety hold','Sicherheitspause'):$status;
+        $tip=$t('A legutóbbi jelentés pillanatkép. A futó háttérfolyamat önmagában nem bizonyít adatátvitelt. A Részletek oldalon látható a várólista és a védelmek.','The last report is a snapshot. A running worker alone does not prove data transfer. Open Details for the queue and guards.','Der letzte Bericht ist eine Momentaufnahme. Ein laufender Prozess allein beweist keinen Datentransfer. Details zeigen Warteschlange und Schutzbedingungen.');
+        $explain=$isDeferred?$t('A Mover most nem indít mozgatást, mert egy védelmi feltétel még aktív. A következő ellenőrzés automatikusan újraértékeli az állapotot.','Mover is not starting a move because a safety guard is still active. The next check will re-evaluate it automatically.','Mover startet nicht, weil eine Schutzbedingung noch aktiv ist. Die nächste Prüfung bewertet den Zustand automatisch neu.'):
+            '';
+        $summary='<section class="fm-summary'.$summaryClass.'" aria-label="'.$esc($t('Mozgatási jelentés','Movement report','Verschiebebericht')).'"><div class="fm-summary-title"><span class="fm-summary-icon" aria-hidden="true">'.($isDeferred?'⏸':'●').'</span><strong>'.$esc($headline).'</strong></div>'.($explain!==''?'<p class="fm-summary-explain">'.$esc($explain).'</p>':'').'<p>'.$esc($detail).'</p><details class="fm-hover-help"><summary aria-label="'.$esc($t('Állapotsúgó','Status help','Statushilfe')).'">ⓘ</summary><div>'.$esc($tip).'</div></details> <a href="/Tools/FejesMoverSelective">'.$esc($t('Részletek és várólista →','Details and queue →','Details und Warteliste →')).'</a></section>';
     }
 
     $token = @parse_ini_file('/var/local/emhttp/var.ini');
@@ -1085,10 +1301,10 @@ HTML;
         'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
         'hash'=>hash('sha256',$raw === false ? '' : $raw),'lock'=>$lock,
         'token'=>is_array($token) ? ($token['csrf_token'] ?? '') : '',
-        't'=>$t,'esc'=>$esc,'banner'=>$banner,'summary'=>$summary];
+        't'=>$t,'esc'=>$esc,'banner'=>$banner,'summary'=>$summary,'reportFault'=>$reportFault];
 })(!empty($fmcConfigWrite));
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverSelective.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/FejesMoverSelective.page"><INLINE><![CDATA[Menu="Utilities"
 
 Title="Mover · Selective"
 
@@ -1131,7 +1347,7 @@ try {
      try{if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$path))throw new RuntimeException('Save failed');}finally{if(is_file($tmp))unlink($tmp);}
      if(file_get_contents($path)!==$data)throw new RuntimeException('Readback failed');$raw=$data;
     }
-    $days=(int)$new;$ratioTarget=(float)$ratio;$batchGiB=(int)$batch;$message=$t('A korhatár, körméret és aránycél elmentve.','Age, batch size and ratio target saved.','Alter, Lauflimit und Verhältnisziel gespeichert.');
+    $days=(int)$new;$ratioTarget=(float)$ratio;$batchGiB=(int)$batch;$message=$t('A torrentek korhatára, körméret és aránycél elmentve.','Torrent age, batch size and ratio target saved.','Torrent-Alter, Lauflimit und Verhältnisziel gespeichert.');
    }finally{flock($lock,LOCK_UN);fclose($lock);}
   }elseif(in_array($action,['preview','observe','run'],true)){
    if(!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
@@ -1167,7 +1383,11 @@ $skipLabels=[
  'batch_file_limit'=>$t('Egy kör fájlszámkorlátja: következő futásra marad','Batch file limit: deferred to a later run','Dateilimit pro Lauf: auf späteren Lauf verschoben'),
  'existing_array_copy'=>$t('Már létező célpéldány, nincs felülírás','Existing target, no overwrite','Ziel vorhanden, kein Überschreiben'),
  'native_retained_source'=>$t('A natív mozgató kihagyta','Skipped by native mover','Vom nativen Mover übersprungen'),
- 'fresh_conditions_changed'=>$t('Közben megváltozott feltételek','Conditions changed during checks','Bedingungen während Prüfung geändert')];
+ 'fresh_conditions_changed'=>$t('Közben megváltozott feltételek','Conditions changed during checks','Bedingungen während Prüfung geändert'),
+ 'unit_not_ready'=>$t('Az együtt tartozó fájlok egy része még nem alkalmas','Part of this unit is not eligible yet','Ein Teil dieser Einheit ist noch nicht geeignet'),
+ 'unit_file_limit'=>$t('A teljes egység meghaladja a 8 fájlos körkorlátot','Whole unit exceeds the 8-file batch cap','Gesamte Einheit überschreitet das Limit von 8 Dateien'),
+ 'unit_size_limit'=>$t('A teljes egység meghaladja a kör méretkorlátját','Whole unit exceeds the batch size cap','Gesamte Einheit überschreitet das Größenlimit'),
+ 'unit_changed'=>$t('Az együtt tartozó fájlok állapota megváltozott','Unit conditions changed','Zustand der Einheit hat sich geändert')];
 $states=[
  'not_run'=>$t('Még nem futott','Not run yet','Noch nicht ausgeführt'),
  'running'=>$t('Fut: ellenőrzés / natív mozgatás / visszaellenőrzés','Running: checks / native movement / verification','Läuft: Prüfung / natives Verschieben / Kontrolle'),
@@ -1196,7 +1416,7 @@ $help=function($label,$text)use(&$helpIndex,$e,$t){
 };
 ?>
 <div class="fms-toolbar"><div><h2><?=$e($t('Várakozó fájlok','Waiting files','Wartende Dateien'))?></h2><span><?=$e($t('Cache → lemeztömb · megfigyelés és biztonságos műveletek','Cache → array · observation and guarded actions','Cache → Array · Beobachtung und geschützte Aktionen'))?></span></div><button name="fms_action" value="preview" class="fms-primary"><?=$e($t('Friss állapot lekérése','Refresh status','Status aktualisieren'))?></button></div>
-<p class="fms-refresh-hint"><?=$e($t('Csak felmérés, fájlmozgatás nélkül. A mentett szabályokat használja; a módosított mezőket külön kell menteni.','Observation only, without moving files. Uses saved rules; save edited fields separately.','Nur Erfassung, ohne Dateien zu verschieben. Verwendet gespeicherte Regeln; geänderte Felder separat speichern.'))?></p>
+<div class="fms-action-guide" role="note"><strong><?=$e($t('Mit csinál ez az oldal?','What does this page do?','Was macht diese Seite?'))?></strong><span><?=$e($t('Megnézés és szűrés: nem mozgat fájlt.','Viewing and filtering: no files move.','Ansehen und Filtern: keine Datei wird verschoben.'))?></span><span><?=$e($t('Beállításmentés: csak a következő futások szabályait módosítja.','Saving settings: changes rules for later runs only.','Einstellungen speichern: ändert nur Regeln für spätere Läufe.'))?></span><span><?=$e($t('Kézi mozgatás: külön megerősítés után minden alkalmas fájlból választhat, nem csak a látható sorokból.','Manual movement: after separate confirmation, may choose from all eligible files, not only visible rows.','Manuelles Verschieben: nach gesonderter Bestätigung aus allen geeigneten Dateien, nicht nur sichtbaren Zeilen.'))?></span><span><?=$e($t('Torrent: a beállított korhatár érvényes. Más tartalom: két stabil megfigyelés és a teljes egység ellenőrzése után alkalmas.','Torrent: saved age applies. Other content: eligible after two stable observations and a complete unit check.','Torrent: gespeichertes Alter gilt. Sonstige Inhalte: nach zwei stabilen Beobachtungen und Prüfung der gesamten Einheit geeignet.'))?></span></div><p class="fms-refresh-hint"><?=$e($t('Csak felmérés, fájlmozgatás nélkül. A mentett szabályokat használja; a módosított mezőket külön kell menteni.','Observation only, without moving files. Uses saved rules; save edited fields separately.','Nur Erfassung, ohne Dateien zu verschieben. Verwendet gespeicherte Regeln; geänderte Felder separat speichern.'))?></p>
 <div class="fms-quick-help"><?=$help($t('Használati útmutató','User guide','Bedienungsanleitung'),$t('1. Állapot: a felső kártyák a legutóbbi jelentést és a cache szabad helyét mutatják. A Fut állapot önmagában nem bizonyít folyamatos adatátvitelt; a nagy fájlok másolása és ellenőrzése alatt a számlálók várhatnak. 2. Friss állapot lekérése: mozgatás nélküli felmérés. A táblázat pillanatkép; figyeld az időpontját. 3. Keresés, szűrők és rendezés: csak a kijelzést változtatják, nem jelölik ki a mozgatandó fájlokat. A fájlnévre kattintva látható a teljes útvonal. 4. Beállítások: külön menthető korhatár, körméret és aránycél. Az arány csak sorrendezés; az alacsony vagy ismeretlen érték nem tilt. A küszöb és várakozás a külön Beállítások oldalon van. 5. Kézi műveletek: csak tudatos megerősítéssel; a mentett szabályok szerint minden alkalmas fájlból választhat, legfeljebb 8 fájlt és az elmentett GiB-korlátot. Nem a szűrt sorokat mozgatja. 6. Várakozás: backup, paritás, scrub, integritásellenőrzés, aktív torrent, nyitott fájl vagy várakozási idő miatt halaszthat. 7. Hiba vagy vizsgálati igény: nézd meg az Utolsó futás részletei és napló részt; ne töröld a jelentést, és ne indíts új kört bizonytalan állapotban. A súgóbuborék Bezárás gombbal, Escape billentyűvel vagy mellékattintással bezárható.','1. Status: top cards show the last report and cache free space. Running alone is not proof of continuous transfer; large-file copying and verification can leave counters unchanged temporarily. 2. Refresh status performs a read-only observation. The queue is a timestamped snapshot. 3. Search, filters and sorting change the display only; they do not select files for movement. Click a filename for its full path. 4. Settings save age, batch size and ratio target separately. Ratio affects priority only; low or unknown values do not block. Threshold and cooldown are on the separate Settings page. 5. Manual actions require confirmation and select from all eligible content using saved rules, at most 8 files and the saved GiB cap, not just filtered rows. 6. Waiting can be caused by backup, parity, scrub, integrity verification, active torrents, open files or cooldown. 7. On error or inspection required, review Last run details and log; do not erase the report or restart in an uncertain state. Close help with Close, Escape or a click outside.','1. Status: obere Karten zeigen letzten Bericht und freien Cache. Laufend allein beweist keinen ständigen Transfer; große Dateien und Prüfungen können Zähler vorübergehend unverändert lassen. 2. Status aktualisieren erfasst nur lesend; die Liste ist eine datierte Momentaufnahme. 3. Suche, Filter und Sortierung ändern nur die Anzeige und wählen keine Dateien zum Verschieben. Dateiname öffnet den vollständigen Pfad. 4. Einstellungen speichern Alter, Lauflimit und Verhältnisziel; niedrige oder unbekannte Verhältnisse blockieren nicht. Freiplatzgrenze und Wartezeit stehen auf der separaten Einstellungsseite. 5. Manuelle Aktionen erfordern Bestätigung und berücksichtigen alle geeigneten Inhalte nach gespeicherten Regeln, höchstens 8 Dateien und das GiB-Limit, nicht nur gefilterte Zeilen. 6. Backup, Parität, Scrub, Integritätsprüfung, aktive Torrents, offene Dateien oder Wartezeit können verzögern. 7. Bei Fehler oder Prüfbedarf letzten Lauf und Protokoll ansehen; Bericht nicht löschen und bei Unsicherheit keinen neuen Lauf starten. Hilfe mit Schließen, Escape oder Klick außerhalb schließen.'))?><?=$help($t('Infó · a program története','Info · project history','Info · Projektgeschichte'),$t('A Fejes Mover Monitor először a natív Unraid Mover állapotát, megnyitott fájljait és naplóját mutatta. Később külön engedélyezhető szelektív mozgatást kapott: korhatár, torrent- és fájlhasználati védelem, SHA-256- és metaadat-ellenőrzés. Ezután háromnyelvű kezelőfelület, világos/sötét téma, térhatású vagy sík kártyák, navigáció és rendezhető várólista készült. Az RC1 a nagyobb alkalmas fájlokat részesíti előnyben az aránycsoportokon belül. Jelenlegi szint: RC1, kiadásra jelölt változat. Ez nem stabil minősítés; a trackerjóváírás, peerfeltöltés, áramkimaradás és NAS-újraindítás utáni működés nincs igazolva.','Fejes Mover Monitor began by displaying native Unraid Mover status, open files and logs. Opt-in selective movement followed, with age, torrent and open-file guards plus SHA-256 and metadata verification. Three languages, light/dark themes, raised/flat cards, navigation and a sortable queue followed. RC1 prioritizes larger eligible files inside ratio groups. Current stage: RC1 release candidate, not certified stable. Tracker credit, peer upload, power-loss recovery and NAS reboot persistence remain unverified.','Fejes Mover Monitor zeigte zunächst Status, offene Dateien und Protokolle des nativen Unraid Mover. Danach folgte optionales selektives Verschieben mit Alters-, Torrent- und Dateischutz sowie SHA-256- und Metadatenprüfung. Drei Sprachen, helle/dunkle Themen, erhabene/flache Karten, Navigation und sortierbare Wartelisten kamen hinzu. RC1 bevorzugt größere geeignete Dateien innerhalb der Verhältnisgruppen. Aktuell: RC1-Vorabversion, keine stabile Freigabe. Tracker-Gutschrift, Peer-Upload, Stromausfall und NAS-Neustart sind nicht bestätigt.'))?></div>
 <?php if($report!==null):?>
 <h3><?=$e($t('Friss ellenőrzés','Fresh check','Aktuelle Prüfung'))?></h3>
@@ -1217,7 +1437,7 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <div><span><?=$e($t('Következő korhatár lejárta','Next age eligibility','Nächste Altersfreigabe'))?></span><strong><?php if($nextAge!==null):?><time data-fms-time="<?=$e($nextAge)?>"><?=$e(date('Y-m-d H:i',(int)$nextAge))?></time><?php else:?>—<?php endif?></strong><small><?=$e($t('Nem garantált indulási idő','Not a guaranteed start time','Kein garantierter Startzeitpunkt'))?></small></div>
 </div>
 <style>
-#fms{--fm-accent:#ef8b24}#fms .fms-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:18px 0}#fms .fms-toolbar h2{margin:0 0 6px}#fms button{padding:10px 16px!important;margin:4px;border-radius:6px!important;cursor:pointer}#fms .fms-primary{border:1px solid var(--fm-accent)!important;background:#b96010!important;color:white!important}#fms .fms-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}#fms .fms-cards>div{border:1px solid #8885;border-top:3px solid var(--fm-accent);border-radius:7px;padding:16px;background:#8881}#fms .fms-cards span,#fms .fms-cards small{display:block;opacity:.8}#fms .fms-cards strong{display:block;font-size:18px;line-height:1.4;margin:9px 0}#fms details.fms-panel{margin:18px 0;border:1px solid #8885;border-radius:7px;padding:16px}#fms details.fms-panel>summary{cursor:pointer;font-weight:bold}#fms .fms-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:14px 0}#fms .fms-filters input[type=search]{min-width:240px;padding:9px!important}#fms .fms-filters select{padding:8px!important}#fms .fms-file summary{cursor:pointer;overflow-wrap:anywhere}#fms .fms-file small{display:block;opacity:.8;margin-top:8px;overflow-wrap:anywhere}#fms .fms-queue tr[hidden]{display:none!important}#fms .fms-queue thead th{position:sticky;top:0;background:#292929;color:#eee;z-index:1}#fms .fms-danger{border:2px solid #c55!important}#fms .fms-count{margin-left:auto} @media(max-width:900px){#fms .fms-cards{grid-template-columns:repeat(2,minmax(0,1fr))}#fms .fms-toolbar{flex-wrap:wrap}}@media(max-width:550px){#fms .fms-cards{grid-template-columns:1fr}}
+#fms{--fm-accent:#ef8b24}#fms .fms-action-guide{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0;padding:10px 12px;border:1px solid #8885;border-radius:8px}#fms .fms-action-guide strong{margin-right:8px}#fms .fms-action-guide span{padding:5px 8px;border:1px solid #8885;border-radius:6px}#fms .fms-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:18px 0}#fms .fms-toolbar h2{margin:0 0 6px}#fms button{padding:10px 16px!important;margin:4px;border-radius:6px!important;cursor:pointer}#fms .fms-primary{border:1px solid var(--fm-accent)!important;background:#b96010!important;color:white!important}#fms .fms-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}#fms .fms-cards>div{border:1px solid #8885;border-top:3px solid var(--fm-accent);border-radius:7px;padding:16px;background:#8881}#fms .fms-cards span,#fms .fms-cards small{display:block;opacity:.8}#fms .fms-cards strong{display:block;font-size:18px;line-height:1.4;margin:9px 0}#fms details.fms-panel{margin:18px 0;border:1px solid #8885;border-radius:7px;padding:16px}#fms details.fms-panel>summary{cursor:pointer;font-weight:bold}#fms .fms-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:14px 0}#fms .fms-filters input[type=search]{min-width:240px;padding:9px!important}#fms .fms-filters select{padding:8px!important}#fms .fms-file summary{cursor:pointer;overflow-wrap:anywhere}#fms .fms-file small{display:block;opacity:.8;margin-top:8px;overflow-wrap:anywhere}#fms .fms-queue tr[hidden]{display:none!important}#fms .fms-queue thead th{position:sticky;top:0;background:#292929;color:#eee;z-index:1}#fms .fms-danger{border:2px solid #c55!important}#fms .fms-count{margin-left:auto} @media(max-width:900px){#fms .fms-cards{grid-template-columns:repeat(2,minmax(0,1fr))}#fms .fms-toolbar{flex-wrap:wrap}}@media(max-width:550px){#fms .fms-cards{grid-template-columns:1fr}}
 
 
 #fms .fms-quick-help{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px}
@@ -1244,20 +1464,20 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <p data-fms-stale="<?=$e($forecast['observed_at']??0)?>" role="status"><?=$e($t('Pillanatkép: frissítéshez használd a Friss állapot lekérése gombot. A régi felmérés már elmozdult vagy megváltozott fájlt is tartalmazhat.','Snapshot: use Refresh status to refresh. An older observation may include files that have moved or changed.','Momentaufnahme: mit Status aktualisieren erneuern. Ältere Erfassungen können inzwischen verschobene oder veränderte Dateien enthalten.'))?></p>
 <?php if(!empty($forecast['blockers'])):?><p><?=$e($t('A felméréskor indítást akadályozó feltételek','Start blockers at observation','Startblockaden bei der Erfassung'))?>: <?=$e($blockerText($forecast['blockers']))?></p><?php endif?>
 <div class="fms-filters"><input type="search" id="fms-search" aria-label="<?=$e($t('Fájl keresése','Search files','Dateien suchen'))?>" placeholder="<?=$e($t('Keresés fájlnév vagy útvonal alapján…','Search filename or path…','Dateiname oder Pfad suchen…'))?>"><select id="fms-filter" aria-label="<?=$e($t('Állapotszűrő','Status filter','Statusfilter'))?>">
-<?php foreach(['all'=>$t('Minden állapot','All states','Alle Zustände'),'too_young'=>$t('Túl fiatal','Too young','Zu jung'),'protected_content'=>$t('Torrentvédelem','Torrent protection','Torrent-Schutz'),'ready'=>$t('Kor szerint alkalmas','Age eligible','Alter erfüllt'),'other'=>$t('Egyéb akadály','Other blocker','Andere Blockade')] as $value=>$label):?><option value="<?=$e($value)?>"><?=$e($label)?></option><?php endforeach?></select><label><input type="checkbox" id="fms-video"> <?=$e($t('Csak videók','Videos only','Nur Videos'))?></label><span class="fms-count" id="fms-visible" role="status" aria-live="polite"></span></div><div class="fms-sort-controls"><label for="fms-sort-key"><?=$e($t('Rendezés','Sort by','Sortieren nach'))?></label><select id="fms-sort-key"><?php foreach(['original'=>$t('Eredeti sorrend','Original order','Ursprüngliche Reihenfolge'),'name'=>$t('Fájl','File','Datei'),'size'=>$t('Méret','Size','Größe'),'ratio'=>$t('Megosztási arány','Share ratio','Freigabeverhältnis'),'ready'=>$t('Korhatár lejárta','Age eligible from','Altersfreigabe ab'),'remaining'=>$t('Korhatárig hátra','Time remaining','Verbleibende Zeit'),'status'=>$t('Állapot','Status','Status')] as $key=>$label):?><option value="<?=$e($key)?>"><?=$e($label)?></option><?php endforeach?></select><button type="button" id="fms-sort-direction" aria-label="<?=$e($t('Sorrend megfordítása','Reverse sort direction','Sortierrichtung umkehren'))?>" disabled>↑ <span><?=$e($t('Növekvő','Ascending','Aufsteigend'))?></span></button><small><?=$e($t('Csak a kijelzést rendezi.','Sorts the display only.','Sortiert nur die Anzeige.'))?></small></div><p id="fms-no-results" hidden><?=$e($t('Nincs találat ezekkel a szűrőkkel.','No files match these filters.','Keine Dateien entsprechen diesen Filtern.'))?></p><div class="fms-queue-scroll" style="max-height:540px;overflow:auto"><table style="width:100%;border-collapse:collapse;text-align:left" class="fms-queue"><thead><tr>
+<?php foreach(['all'=>$t('Minden állapot','All states','Alle Zustände'),'too_young'=>$t('Túl fiatal','Too young','Zu jung'),'protected_content'=>$t('Torrentvédelem','Torrent protection','Torrent-Schutz'),'ready'=>$t('Előzetesen alkalmas','Preliminarily eligible','Vorläufig geeignet'),'other'=>$t('Egyéb akadály','Other blocker','Andere Blockade')] as $value=>$label):?><option value="<?=$e($value)?>"><?=$e($label)?></option><?php endforeach?></select><label><input type="checkbox" id="fms-video"> <?=$e($t('Csak videók','Videos only','Nur Videos'))?></label><span class="fms-count" id="fms-visible" role="status" aria-live="polite"></span></div><div class="fms-sort-controls"><label for="fms-sort-key"><?=$e($t('Rendezés','Sort by','Sortieren nach'))?></label><select id="fms-sort-key"><?php foreach(['original'=>$t('Eredeti sorrend','Original order','Ursprüngliche Reihenfolge'),'name'=>$t('Fájl','File','Datei'),'size'=>$t('Méret','Size','Größe'),'ratio'=>$t('Megosztási arány','Share ratio','Freigabeverhältnis'),'ready'=>$t('Korhatár lejárta','Age eligible from','Altersfreigabe ab'),'remaining'=>$t('Korhatárig hátra','Time remaining','Verbleibende Zeit'),'status'=>$t('Állapot','Status','Status')] as $key=>$label):?><option value="<?=$e($key)?>"><?=$e($label)?></option><?php endforeach?></select><button type="button" id="fms-sort-direction" aria-label="<?=$e($t('Sorrend megfordítása','Reverse sort direction','Sortierrichtung umkehren'))?>" disabled>↑ <span><?=$e($t('Növekvő','Ascending','Aufsteigend'))?></span></button><small><?=$e($t('Csak a kijelzést rendezi.','Sorts the display only.','Sortiert nur die Anzeige.'))?></small></div><p id="fms-no-results" hidden><?=$e($t('Nincs találat ezekkel a szűrőkkel.','No files match these filters.','Keine Dateien entsprechen diesen Filtern.'))?></p><div class="fms-queue-scroll" style="max-height:540px;overflow:auto"><table style="width:100%;border-collapse:collapse;text-align:left" class="fms-queue"><thead><tr>
 <?php foreach([$t('Fájl a Filmek megosztásban','File in Filmek share','Datei in der Filmek-Freigabe'),$t('Méret','Size','Größe'),$t('Megosztási arány','Share ratio','Freigabeverhältnis'),$t('Korhatár lejárta','Age eligible from','Altersfreigabe ab'),$t('Korhatárig hátra','Time until age eligible','Zeit bis Altersfreigabe'),$t('Állapot / akadály','Status / blocker','Status / Blockade')] as $column=>$heading):?><th aria-sort="none" style="padding:9px;border-bottom:1px solid #888"><button type="button" class="fms-sort-heading" data-fms-sort="<?=$e(['name','size','ratio','ready','remaining','status'][$column])?>"><?=$e($heading)?> <span data-sort-arrow aria-hidden="true">↕</span></button></th><?php endforeach?>
 </tr></thead><tbody>
 <?php foreach($forecast['rows'] as $row): if(!is_array($row))continue; $ready=$row['age_ready_at']??null;$reason=$row['reason']??'unknown'; ?>
-<tr data-fms-row data-sort-name="<?=$e($row['file']??'')?>" data-sort-size="<?=$e($row['bytes']??'')?>" data-sort-ratio="<?=$e($row['ratio']??'')?>" data-sort-ready="<?=$e(is_numeric($ready)?$ready:'')?>" data-reason="<?=$e($reason)?>" data-video="<?=in_array(strtolower(pathinfo($row['file']??'',PATHINFO_EXTENSION)),['mkv','mp4','avi','m4v','mov','ts','m2ts','webm','wmv','mpg','mpeg'],true)?'1':'0'?>"><td style="padding:9px"><details class="fms-file"><summary><?=$e(basename($row['file']??'—'))?></summary><small><?=$e($row['file']??'—')?></small></details></td><td style="padding:9px;white-space:nowrap"><?=$e(number_format(($row['bytes']??0)/1073741824,3))?> GiB</td>
+<tr data-fms-row data-sort-name="<?=$e($row['file']??'')?>" data-sort-size="<?=$e($row['bytes']??'')?>" data-sort-ratio="<?=$e($row['ratio']??'')?>" data-sort-ready="<?=$e(is_numeric($ready)?$ready:'')?>" data-reason="<?=$e($reason)?>" data-video="<?=in_array(strtolower(pathinfo($row['file']??'',PATHINFO_EXTENSION)),['mkv','mp4','avi','m4v','mov','ts','m2ts','webm','wmv','mpg','mpeg'],true)?'1':'0'?>"><td style="padding:9px"><details class="fms-file"><summary><?=$e(basename($row['file']??'—'))?></summary><small><?=$e($row['file']??'—')?></small><small><?=$e($t('Együtt kezelt egység','Grouped unit','Gemeinsam behandelte Einheit'))?>: <?=$e($row['unit_files']??1)?> <?=$e($t('fájl','files','Dateien'))?> · <?=$e(number_format(($row['unit_bytes']??($row['bytes']??0))/1073741824,2))?> GiB</small><small><?=$e(($row['torrent_owned']??false)?$t('Torrent: beállított várakozási idő','Torrent: saved waiting period','Torrent: gespeicherte Wartezeit'):$t('Nem torrent: stabilitás után','Not a torrent: after stability checks','Kein Torrent: nach Stabilitätsprüfung'))?></small></details></td><td style="padding:9px;white-space:nowrap"><?=$e(number_format(($row['bytes']??0)/1073741824,3))?> GiB</td>
 <td style="padding:9px;white-space:nowrap"><?php $ratio=$row['ratio']??null;echo $e(is_numeric($ratio)&&is_finite((float)$ratio)&&(float)$ratio>=0?number_format((float)$ratio,2):'—');if(($row['ratio_target_met']??false)===true):?><small> · <?=$e($t('Cél elérve','Target met','Ziel erreicht'))?></small><?php endif?></td>
 <td style="padding:9px;white-space:nowrap"><?php if(is_numeric($ready)):?><time data-fms-time="<?=$e($ready)?>"><?=$e(date('Y-m-d H:i:s',(int)$ready))?></time><?php else:?>—<?php endif?></td>
 <td style="padding:9px;white-space:nowrap" <?=is_numeric($ready)?'data-fms-countdown="'.$e($ready).'"':''?>><?=$e(is_numeric($ready)?$t('Számítás…','Calculating…','Berechnung…'):$t('Nem becsülhető','Cannot estimate','Nicht schätzbar'))?></td>
-<td style="padding:9px"><?=$e($reason==='ready'?$t('Kor szerint kész; a többi feltételt újra ellenőrzi','Age eligible; other conditions will be rechecked','Alter erfüllt; weitere Bedingungen werden erneut geprüft'):($skipLabels[$reason]??$t('Bizonytalan állapot','Unverifiable state','Ungeprüfter Zustand')))?></td></tr>
+<td style="padding:9px"><?=$e($reason==='ready'?$t('Előzetesen alkalmas; a teljes egységet és a védelmeket újra ellenőrzi','Preliminarily eligible; full unit and guards will be rechecked','Vorläufig geeignet; gesamte Einheit und Schutzbedingungen werden erneut geprüft'):($skipLabels[$reason]??$t('Bizonytalan állapot','Unverifiable state','Ungeprüfter Zustand')))?></td></tr>
 <?php endforeach?>
 </tbody></table></div>
 <?php else:?><p><?=$e($t('Még nincs aktuális felmérés ehhez a korhatárhoz. Nyomd meg a Friss állapot lekérése gombot: ez nem mozgat fájlt.','No current observation for this age setting. Press Refresh status; it does not move files.','Keine aktuelle Erfassung für dieses Alter. Status aktualisieren drücken; dabei werden keine Dateien verschoben.'))?></p><?php endif?>
 </section>
-<details class="fms-panel"><summary><?=$e($t('Mozgatási szabályok · korhatár, körméret, arány','Movement rules · age, batch size, ratio','Verschieberegeln · Alter, Lauflimit, Verhältnis'))?></summary><fieldset><legend><?=$e($t('Minimumkor','Minimum age','Mindestalter'))?></legend>
+<details class="fms-panel"><summary><?=$e($t('Mozgatási szabályok · korhatár, körméret, arány','Movement rules · age, batch size, ratio','Verschieberegeln · Alter, Lauflimit, Verhältnis'))?></summary><fieldset><legend><?=$e($t('Torrent minimumkor','Torrent minimum age','Torrent-Mindestalter'))?></legend>
 <?php foreach([1,7,14,30] as $choice):?><label style="margin-right:22px"><input type="radio" name="age_days" value="<?=$choice?>" <?=$days===$choice?'checked':''?>> <?=$choice?> <?=$e($t('nap','days','Tage'))?></label><?php endforeach?>
 </fieldset>
 <fieldset><legend><?=$e($t('Mozgatási kör méretkorlátja','Movement batch limit','Größenlimit pro Lauf'))?></legend>
@@ -1296,7 +1516,7 @@ headings.forEach(button=>button.addEventListener('click',()=>{if(key===button.da
 })();</script>
 
 <script>(()=>{
-const readyLabel=<?=json_encode($t('Korhatár lejárt','Age eligible now','Alter erfüllt'))?>,dayLabel=<?=json_encode($t('nap','days','Tage'))?>;
+const readyLabel=<?=json_encode($t('Várakozás letelt','Waiting period elapsed','Wartezeit abgelaufen'))?>,dayLabel=<?=json_encode($t('nap','days','Tage'))?>;
 function tick(){document.querySelectorAll('[data-fms-time]').forEach(el=>{const ms=Number(el.dataset.fmsTime)*1000;if(Number.isFinite(ms))el.textContent=new Date(ms).toLocaleString();});document.querySelectorAll('[data-fms-countdown]').forEach(el=>{const seconds=Math.max(0,Math.ceil(Number(el.dataset.fmsCountdown)-Date.now()/1000));if(!Number.isFinite(seconds))return;const days=Math.floor(seconds/86400),hours=Math.floor(seconds%86400/3600),minutes=Math.floor(seconds%3600/60),secs=seconds%60;el.textContent=seconds===0?readyLabel:(days?days+' '+dayLabel+' ':'')+[hours,minutes,secs].map(n=>String(n).padStart(2,'0')).join(':');});}tick();setInterval(tick,1000);
 
 const rows=Array.from(document.querySelectorAll('[data-fms-row]')),search=document.getElementById('fms-search'),filter=document.getElementById('fms-filter'),video=document.getElementById('fms-video');
@@ -1306,7 +1526,7 @@ const freshLabel=<?=json_encode($t('Kijelzés frissítve. A felmérés időpontj
 let busy=false;setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),timer=setTimeout(()=>c.abort(),8000);try{const response=await fetch(location.pathname,{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!response.ok)throw Error();const doc=new DOMParser().parseFromString(await response.text(),'text/html');const part=doc.getElementById('fms-last'),current=document.getElementById('fms-last'),nextRun=doc.getElementById('fms-run'),oldRun=document.getElementById('fms-run');if(!part||!current||!nextRun||!oldRun)throw Error('Missing selective status');current.replaceWith(part);for(const selector of ['[data-fms-status-card]','[data-fms-space-card]']){const next=doc.querySelector(selector),old=document.querySelector(selector);if(next&&old)old.replaceWith(next);}oldRun.disabled=nextRun.disabled;const status=document.getElementById('fms-refresh-state');if(status&&status.textContent!==freshLabel)status.textContent=freshLabel;tick();}catch{const status=document.getElementById('fms-refresh-state');if(status&&status.textContent!==staleLabel)status.textContent=staleLabel;const run=document.getElementById('fms-run');if(run)run.disabled=true;}finally{clearTimeout(timer);busy=false;}},5000);
 })();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Settings"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1603,7 +1823,7 @@ const labels=<?=json_encode([$fmc['t']('Elmentett értékek változatlanok.','Sa
 function update(){const invalid=fields.some(e=>!e.checkValidity());status.textContent=invalid?labels[2]:fields.some((e,i)=>e.value!==saved[i])?labels[1]+fields.map((e,i)=>saved[i]+' → '+e.value+' '+(e.name==='KUSZOB_GIB'?'GiB':'min')).join(' · '):labels[0];status.style.color=invalid?'#ed916e':'';}form.addEventListener('input',update);form.addEventListener('change',update);update();})();
 </script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover · Mód és pool"
 Icon="fa-sliders"
 Tag="cogs"
@@ -1654,12 +1874,14 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
  }catch(Throwable $e){$fmcError=$e->getMessage();}
 }
+echo $fmc['banner'];
 ?>
 <style>
 #fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 </style>
 <main id="fmc-setup"><h1>Operating mode and monitored pool</h1>
 <p>Unraid 7.x · Default installation: Observer mode. Changing mode never starts a transfer.</p>
+<aside class="fmc-notice" role="note"><strong>Installation environment</strong><p>Monitoring supports Unraid 7.x. Selective movement currently supports only a reviewed local setup: pool cache, Filmek share, existing Filmek_Mover_Threshold User Scripts automation, binhex-qbittorrentvpn qBittorrent container and torrent paths under /mnt/user. Other pools, shares and clients do not yet have a setup wizard; use Observer mode there. Unraid 8 compatibility is unverified.</p></aside>
 <?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
 <?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
 <form method="post" action="/Tools/FejesMoverSetup">
@@ -1674,7 +1896,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · not mounted'?></option>
 <?php endforeach?></select><p>The list comes from Unraid pool configuration. Unmounted pool capacity remains unavailable.</p></fieldset>
 <fieldset><legend>Advanced mode acknowledgment</legend><label><input type="checkbox" name="advanced_ack" value="yes"> I understand that Advanced mode can modify the existing automation script.</label><p>Mode and pool selection only save plugin configuration. Automation changes require a separate save with a backup.</p></fieldset>
-<button type="submit">Save mode and pool</button> <a href="/Tools/FejesMover">Back to Mover Monitor</a>
+<button type="submit">Save mode and pool</button> <a href="/Tools/FejesMoverProfile">Edit selective profile</a> <a href="/Tools/FejesMover">Back to Mover Monitor</a>
 </form></main>
 
 <?php } elseif($fmLang==='de'){ ?>
@@ -1713,12 +1935,14 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
  }catch(Throwable $e){$fmcError=$e->getMessage();}
 }
+echo $fmc['banner'];
 ?>
 <style>
 #fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 </style>
 <main id="fmc-setup"><h1>Betriebsmodus und überwachter Pool</h1>
 <p>Unraid 7.x · Standard: Beobachtermodus. Ein Moduswechsel startet keine Übertragung.</p>
+<aside class="fmc-notice" role="note"><strong>Installationsumgebung</strong><p>Die Überwachung unterstützt Unraid 7.x. Selektives Verschieben ist derzeit nur für eine geprüfte lokale Umgebung vorgesehen: Pool cache, Freigabe Filmek, vorhandenes User-Scripts-Skript Filmek_Mover_Threshold, qBittorrent-Container binhex-qbittorrentvpn und Torrent-Pfade unter /mnt/user. Für andere Pools, Freigaben oder Clients gibt es noch keinen Einrichtungsassistenten; dort Beobachtermodus verwenden. Unraid 8 ist nicht verifiziert.</p></aside>
 <?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
 <?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
 <form method="post" action="/Tools/FejesMoverSetup">
@@ -1733,7 +1957,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · nicht eingehängt'?></option>
 <?php endforeach?></select><p>Die Liste stammt aus der Unraid-Poolkonfiguration. Die Kapazität nicht eingehängter Pools bleibt unbekannt.</p></fieldset>
 <fieldset><legend>Bestätigung des erweiterten Modus</legend><label><input type="checkbox" name="advanced_ack" value="yes"> Ich verstehe, dass der erweiterte Modus das vorhandene Automatisierungsskript ändern kann.</label><p>Modus- und Poolauswahl speichern nur die Plugin-Konfiguration. Änderungen an der Automatisierung erfordern separates Speichern mit Sicherung.</p></fieldset>
-<button type="submit">Modus und Pool speichern</button> <a href="/Tools/FejesMover">Zurück zum Mover-Monitor</a>
+<button type="submit">Modus und Pool speichern</button> <a href="/Tools/FejesMoverProfile">Selektives Profil bearbeiten</a> <a href="/Tools/FejesMover">Zurück zum Mover-Monitor</a>
 </form></main>
 
 <?php } else{ ?>
@@ -1772,12 +1996,14 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   $fmc['mode']=$newMode;$fmc['pool']=$newPool;$fmc['hash']=hash('sha256',$data);
  }catch(Throwable $e){$fmcError=$e->getMessage();}
 }
+echo $fmc['banner'];
 ?>
 <style>
 #fmc-setup{max-width:1050px;margin:24px auto;padding:0 16px;font:inherit}#fmc-setup h1{font-size:24px}#fmc-setup fieldset{border:1px solid #8885;border-radius:4px;margin:16px 0;padding:20px}#fmc-setup .fmc-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#fmc-setup .fmc-option{border:1px solid #8885;padding:16px;border-radius:4px}#fmc-setup .fmc-option:has(input:checked){border-color:#ef7d00}#fmc-setup input{accent-color:#ef7d00}#fmc-setup select,#fmc-setup button{font:inherit;padding:8px 14px;border:1px solid #8887;border-radius:3px;background:transparent;color:inherit}#fmc-setup button{background:#d96312;color:#fff;border-color:#ef7d00;cursor:pointer}#fmc-setup .fmc-notice{padding:14px;border-left:3px solid #64b99b;background:#8881}#fmc-setup [role=alert]{border-left-color:#ef967a}#fmc-setup p{line-height:1.6}#fmc-setup :focus-visible{outline:2px solid #ef7d00;outline-offset:3px}
 </style>
 <main id="fmc-setup"><h1>Működési mód és figyelt pool</h1>
 <p>Unraid 7.x · A telepítés alapértelmezése: Megfigyelő mód. A módváltás nem indít mozgatást.</p>
+<aside class="fmc-notice" role="note"><strong>Telepítési környezet</strong><p>A figyelő Unraid 7.x rendszeren használható. A szelektív mozgatás jelenleg csak ellenőrzött helyi környezetben támogatott: cache nevű pool, Filmek megosztás, meglévő Filmek_Mover_Threshold User Scripts automatika, binhex-qbittorrentvpn qBittorrent konténer és /mnt/user alatti torrentútvonalak. Más poolhoz, megosztáshoz vagy klienshez még nincs beállítóvarázsló; ilyen környezetben maradj Megfigyelő módban. Unraid 8 kompatibilitás nincs igazolva.</p></aside>
 <?php if($fmcMessage):?><p class="fmc-notice" role="status"><?=$fmcEsc($fmcMessage)?></p><?php endif?>
 <?php if($fmcError):?><p class="fmc-notice" role="alert"><?=$fmcEsc($fmcError)?></p><?php endif?>
 <form method="post" action="/Tools/FejesMoverSetup">
@@ -1792,13 +2018,13 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <option value="<?=$fmcEsc($name)?>" <?=$name===$fmc['pool']?'selected':''?>><?=$fmcEsc($name)?><?=$mounted?'':' · nem csatolt'?></option>
 <?php endforeach?></select><p>A lista az Unraid poolbeállításaiból származik. A nem csatolt pool kapacitása ismeretlen marad.</p></fieldset>
 <fieldset><legend>Haladó mód jóváhagyása</legend><label><input type="checkbox" name="advanced_ack" value="yes"> Értem, hogy a Haladó mód a meglévő automatika scriptjét is módosíthatja.</label><p>A mód- és poolválasztás kizárólag a bővítmény saját beállítását menti. Az automatika csak külön mentéskor változik, biztonsági másolattal.</p></fieldset>
-<button type="submit">Mód és pool mentése</button> <a href="/Tools/FejesMover">Vissza a Mover figyelőhöz</a>
+<button type="submit">Mód és pool mentése</button> <a href="/Tools/FejesMoverProfile">Szelektív profil szerkesztése</a> <a href="/Tools/FejesMover">Vissza a Mover figyelőhöz</a>
 </form></main>
 
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Read-only, conservative qBittorrent gate for an external Mover launcher."""
 import argparse
 import json
@@ -1914,7 +2140,128 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/torrent_capacity_guard.py"><INLINE><![CDATA[#!/usr/bin/env python3
+"""Fail-closed torrent pause/resume policy for cache pressure.
+
+This module deliberately contains no credentials, shell calls, or live API
+mutations.  The caller supplies a qBittorrent adapter and persists the returned
+state.  Only torrents paused by this policy may be resumed later.
+"""
+from dataclasses import dataclass
+
+
+DOWNLOAD_STATES = {
+    "allocating", "checkingDL", "downloading", "stalledDL", "queuedDL",
+    "forcedDL", "stoppedDL", "pausedDL", "metaDL", "forcedMetaDL",
+}
+KNOWN_STATES = DOWNLOAD_STATES | {
+    "uploading", "stalledUP", "queuedUP", "forcedUP", "stoppedUP", "pausedUP",
+}
+
+
+@dataclass(frozen=True)
+class CapacityDecision:
+    action: str
+    warning: str
+    hashes: tuple
+    reason: str
+
+
+def _hash(item):
+    value = item.get("hash")
+    if not isinstance(value, str) or not value or len(value) > 128:
+        raise ValueError("invalid torrent hash")
+    return value
+
+
+def plan(torrents, free_bytes, pause_below_bytes, resume_at_bytes, owned_paused=()):
+    """Return an idempotent pause/resume plan without changing qBittorrent."""
+    if not isinstance(torrents, list) or not isinstance(free_bytes, int):
+        raise ValueError("invalid capacity snapshot")
+    if not isinstance(pause_below_bytes, int) or not isinstance(resume_at_bytes, int):
+        raise ValueError("invalid thresholds")
+    if pause_below_bytes < 0 or resume_at_bytes < pause_below_bytes:
+        raise ValueError("invalid threshold ordering")
+    owned = tuple(dict.fromkeys(owned_paused))
+    if any(not isinstance(value, str) for value in owned):
+        raise ValueError("invalid owned pause state")
+    downloading = []
+    for item in torrents:
+        if not isinstance(item, dict):
+            raise ValueError("invalid torrent snapshot")
+        state = item.get("state")
+        if state not in KNOWN_STATES:
+            raise ValueError("unknown torrent state")
+        if state in DOWNLOAD_STATES:
+            downloading.append(_hash(item))
+    if free_bytes < pause_below_bytes:
+        return CapacityDecision(
+            "pause", "Alacsony szabad kapacitás – torrentletöltések szüneteltetve.",
+            tuple(downloading), "capacity_below_pause_threshold")
+    if free_bytes >= resume_at_bytes:
+        return CapacityDecision(
+            "resume", "A felszabadult hely elérte a biztonságos szintet – korábban automatikusan szüneteltetett letöltések folytatása.",
+            owned, "capacity_recovered")
+    return CapacityDecision("none", "", (), "capacity_hysteresis")
+
+
+def apply(adapter, decision):
+    """Apply one decision through an injected adapter and return successful IDs."""
+    if decision.action == "none":
+        return ()
+    if not hasattr(adapter, "pause") or not hasattr(adapter, "resume"):
+        raise ValueError("adapter must expose pause/resume")
+    changed = []
+    operation = adapter.pause if decision.action == "pause" else adapter.resume
+    for torrent_hash in decision.hashes:
+        operation(torrent_hash)
+        changed.append(torrent_hash)
+    return tuple(changed)
+]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/qbit_capacity_adapter.py"><INLINE><![CDATA[#!/usr/bin/env python3
+"""Small qBittorrent pause/resume adapter with injected transport.
+
+The adapter never stores credentials and never logs response bodies. The
+production caller must provide a short-lived authenticated cookie/session and
+must keep the adapter behind the mover coordination lock.
+"""
+import re
+import urllib.parse
+import urllib.request
+
+
+class QbitCapacityAdapter:
+    def __init__(self, base_url, session_cookie, transport=None):
+        if not isinstance(base_url, str) or not re.match(r"^https?://[^/]+/?$", base_url):
+            raise ValueError("invalid qBittorrent base URL")
+        if not isinstance(session_cookie, str) or not session_cookie.strip():
+            raise ValueError("authenticated session cookie required")
+        self.base_url = base_url.rstrip("/")
+        self._cookie = session_cookie
+        self._transport = transport or self._default_transport
+
+    def _default_transport(self, url, data):
+        request = urllib.request.Request(
+            url, data=data, method="POST",
+            headers={"Cookie": self._cookie,
+                     "Content-Type": "application/x-www-form-urlencoded"})
+        with urllib.request.urlopen(request, timeout=5) as response:
+            if response.status < 200 or response.status >= 300:
+                raise RuntimeError("qBittorrent API rejected request")
+
+    def _change(self, endpoint, torrent_hash):
+        if not isinstance(torrent_hash, str) or not re.fullmatch(r"[A-Za-z0-9]{8,128}", torrent_hash):
+            raise ValueError("invalid torrent hash")
+        data = urllib.parse.urlencode({"hashes": torrent_hash}).encode("ascii")
+        self._transport(self.base_url + endpoint, data)
+
+    def pause(self, torrent_hash):
+        self._change("/api/v2/torrents/pause", torrent_hash)
+
+    def resume(self, torrent_hash):
+        self._change("/api/v2/torrents/resume", torrent_hash)
+]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Run an existing generated Bunker schedule with live torrent exclusions."""
 import argparse
 import pathlib
@@ -2016,7 +2363,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Route the existing File Integrity cron job through its reviewed preflight."""
 import argparse
 import datetime
@@ -2124,7 +2471,7 @@ if __name__ == "__main__":
               "errno=" + str(getattr(exc, "errno", None)))
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Shared read-only diagnostics and an opt-in guarded legacy Mover launcher."""
 import argparse
 import fcntl
@@ -2140,21 +2487,24 @@ import sys
 from torrent_preflight import assess, read_snapshot
 from wire_integrity_cron import ORIGINAL, REPLACEMENT, rewrite_cron
 from wire_mover_gate import rewrite_launcher
+from selective_profile import load_profile
 
 ROOT = Path('/boot/config/plugins/dynamix.file.integrity')
-LAUNCHER = Path('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script')
-CACHE = '/mnt/cache'
+PROFILE = load_profile()
+LAUNCHER = PROFILE.launcher
+CACHE = str(Path('/mnt') / PROFILE.pool)
 LOCK = '/var/run/fejes-mover-launch.lock'
 ERRORS = (ValueError, TypeError, KeyError, AttributeError, OSError, subprocess.SubprocessError)
 BACKUP_MARKER = Path('/tmp/appdata.backup/running')
 MDSTAT = Path('/proc/mdstat')
 ATTEMPT = Path('/var/run/filmek_mover_last_attempt')
 MOVER_PID = Path('/var/run/mover.pid')
-SHARE = Path('/mnt/user/Filmek')
+SHARE = Path(PROFILE.canonical)
 
 
-def dry_run(container='binhex-qbittorrentvpn', include_items=False):
+def dry_run(container=None, include_items=False):
     """Read-only decision snapshot. Never execute a launcher or write a timestamp."""
+    container = container or PROFILE.torrent_container
     report = status(container, include_items=include_items)
     checks = []
     def add(key, state, detail=''):
@@ -2243,7 +2593,8 @@ def cron_state(source):
     return 'wired' if source == expected else 'original'
 
 
-def status(container='binhex-qbittorrentvpn', reserve_gib=20, include_items=False):
+def status(container=None, reserve_gib=20, include_items=False):
+    container = container or PROFILE.torrent_container
     result = {'torrent': 'unavailable', 'cache': 'unavailable',
               'integrity_config': 'unknown', 'integrity_active': 'unknown',
               'legacy_launcher_present': LAUNCHER.is_file(),
@@ -2335,7 +2686,7 @@ def run_mover(container):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['status', 'dry-run', 'run-mover'])
-    parser.add_argument('--container', default='binhex-qbittorrentvpn')
+    parser.add_argument('--container', default=PROFILE.torrent_container)
     parser.add_argument('--include-items', action='store_true', help='Private UI: include protected file/folder basenames in dry-run output only')
     args = parser.parse_args(argv)
     if not args.container or args.container.startswith('-'):
@@ -2351,7 +2702,7 @@ def main(argv=None):
 if __name__ == '__main__':
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Add an opt-in torrent gate to the reviewed legacy threshold script."""
 import argparse
 import datetime
@@ -2489,7 +2840,7 @@ if __name__ == '__main__':
         print('Mover wiring did not complete:', type(exc).__name__)
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/selection_policy.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/selection_policy.py"><INLINE><![CDATA[﻿#!/usr/bin/env python3
 """Pure selection policy; never authorizes or executes a live move.
 
 Inputs must be collected by a trusted host adapter. Files and torrent content
@@ -2563,6 +2914,41 @@ def prioritize(candidates, torrents, mounts, target=0, sizes=None):
     return sorted(candidates, key=order)
 
 
+def unit_groups(files, root, arrival_window=1800):
+    """Group a top-level folder or nearby root arrivals as one bounded unit.
+
+    This is conservative: ambiguous loose files can be grouped together, never
+    split into separately eligible fragments merely to fit a batch.
+    """
+    root = absolute_path(root)
+    folders, loose = {}, []
+    for item in files:
+        path = absolute_path(item['path'])
+        if path == root or not within(path, root):
+            raise ValueError('Out-of-root unit')
+        relative = path[len(root)+1:]
+        first = timestamp(item.get('first_seen'))
+        if '/' in relative:
+            folders.setdefault(relative.split('/', 1)[0], []).append(path)
+        else:
+            loose.append((first, path))
+    groups = [sorted(paths) for _, paths in sorted(folders.items())]
+    loose.sort()
+    loose_groups = []
+    last_loose = None
+    for first, path in loose:
+        if last_loose is None or first - last_loose > arrival_window:
+            loose_groups.append([])
+        loose_groups[-1].append(path)
+        last_loose = first
+    return groups + loose_groups
+
+
+def torrent_owner(path, torrents, mounts):
+    return any(within(path, host_path(t['content_path'], mounts)) or
+               within(host_path(t['content_path'], mounts), path) for t in torrents)
+
+
 def protected_content(torrents, mounts, now, days):
     # Reuse fail-closed validation, but never turn a global DEFER into a start.
     assess(torrents, mounts)
@@ -2623,7 +3009,10 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
                 raise ValueError('Duplicate or out-of-root file')
             seen.add(path)
             reason = None
-            if any(within(path, p) or within(p, path) for p in protected):
+            # Preserve the reviewed local Emby metadata exclusion on updates.
+            if within(path, root + '/EMBY'):
+                reason = 'excluded_directory'
+            elif any(within(path, p) or within(p, path) for p in protected):
                 reason = 'protected_content'
             elif (item.get('regular') is not True or item.get('symlink') is not False
                   or type(item.get('nlink')) is not int or item['nlink'] != 1):
@@ -2636,7 +3025,7 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
                     arrived = timestamp(item.get('first_seen'))
                     if max(modified, arrived) > now:
                         reason = 'unknown_age'
-                    elif now - max(modified, arrived) < days * 86400:
+                    elif torrent_owner(path, torrents, mounts) and now - max(modified, arrived) < days * 86400:
                         reason = 'too_young'
                 except ValueError:
                     reason = 'unknown_age'
@@ -2644,6 +3033,14 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
                 result['skipped'].append({'path': path, 'reason': reason})
             else:
                 result['candidates'].append(path)
+        selected=set(result['candidates'])
+        for group in unit_groups(files, root):
+            if selected.intersection(group) and not selected.issuperset(group):
+                for path in group:
+                    if path in selected:
+                        selected.remove(path)
+                        result['skipped'].append({'path':path,'reason':'unit_not_ready'})
+        result['candidates']=[path for path in result['candidates'] if path in selected]
         result['decision'] = 'preview_only'
     except (ValueError, TypeError, KeyError, AttributeError):
         # Avoid publishing partial candidates after an invalid snapshot.
@@ -2662,6 +3059,9 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
         raise ValueError('Forecast snapshot unavailable')
     reasons={x['path']:x['reason'] for x in diagnostic['skipped']}
     resolved=[(host_path(t['content_path'],mounts),t) for t in torrents]
+    units=unit_groups(files,root)
+    unit_info={path:(len(group),sum(inventory[key]['signature'][2] for key in group))
+               for group in units for path in group}
     rows=[]
     for item in files:
         key=item['path'];reason=reasons.get(key,'ready')
@@ -2677,11 +3077,13 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
         if reason in ('ready','too_young'):
             dates=[timestamp(item['mtime']),timestamp(item['first_seen'])]
             dates.extend(timestamp(t['completion_on']) for t in related)
-            ready=max(dates)+days*86400
+            ready=max(dates)+days*86400 if related else now
         if size>max_bytes:
             reason='file_exceeds_batch_limit';ready=None
         ratio=content_ratio(key,torrents,mounts)
+        unit_count,unit_bytes=unit_info[key]
         rows.append({'file':key[len(root)+1:],'bytes':size,'age_ready_at':ready,'reason':reason,
+                     'torrent_owned':bool(related),'unit_files':unit_count,'unit_bytes':unit_bytes,
                      'ratio':ratio,'ratio_target_met':ratio is not None and target_ratio>0 and ratio>=target_ratio})
     rows.sort(key=lambda r:(r['age_ready_at'] is None,r['age_ready_at'] or 0,r['file']))
     return {'version':1,'observed_at':now,'age_days':days,'rows':rows,
@@ -2718,7 +3120,89 @@ if __name__ == '__main__':
     import sys
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/selective_preview.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/selective_profile.py"><INLINE><![CDATA[#!/usr/bin/env python3
+"""Validated profile for the opt-in selective mover.
+
+The owner-tested profile remains the safe default, but paths and the torrent
+container are no longer embedded in the movement engine.  Invalid or partial
+profiles fail closed and never enable a new scope implicitly.
+"""
+from dataclasses import dataclass
+import json
+from pathlib import Path
+import re
+
+BASE = Path('/boot/config/plugins/fejes.mover.monitor')
+PROFILE_PATH = BASE / 'selective-profile.json'
+_NAME = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$')
+
+
+def _name(value, field):
+    if not isinstance(value, str) or not _NAME.fullmatch(value):
+        raise ValueError(f'Invalid profile {field}')
+    return value
+
+
+def _script(value):
+    value = _name(value, 'launcher_script')
+    if '/' in value or '\\' in value or value in {'.', '..'}:
+        raise ValueError('Invalid profile launcher_script')
+    return value
+
+
+@dataclass(frozen=True)
+class SelectiveProfile:
+    pool: str
+    share: str
+    torrent_container: str
+    launcher_script: str
+
+    @property
+    def source(self):
+        return Path('/mnt') / self.pool / self.share
+
+    @property
+    def canonical(self):
+        return '/mnt/user/' + self.share
+
+    @property
+    def share_config(self):
+        return Path('/boot/config/shares') / (self.share + '.cfg')
+
+    @property
+    def launcher(self):
+        return Path('/boot/config/plugins/user.scripts/scripts') / self.launcher_script / 'script'
+
+
+DEFAULT = SelectiveProfile('cache', 'Filmek', 'binhex-qbittorrentvpn', 'Filmek_Mover_Threshold')
+
+
+def load_profile(path=PROFILE_PATH):
+    """Load an explicit profile, preserving the owner profile when absent.
+
+    A profile is configuration only; callers still need Advanced mode and all
+    existing safety guards before movement can start.
+    """
+    path = Path(path)
+    if path.is_symlink():
+        raise ValueError('Symlink profile configuration')
+    if not path.exists():
+        return DEFAULT
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError('Unreadable profile configuration') from exc
+    if not isinstance(data, dict) or data.get('version') != 1:
+        raise ValueError('Unknown profile configuration')
+    values = {
+        'pool': _name(data.get('pool'), 'pool'),
+        'share': _name(data.get('share'), 'share'),
+        'torrent_container': _name(data.get('torrent_container'), 'torrent_container'),
+        'launcher_script': _script(data.get('launcher_script')),
+    }
+    return SelectiveProfile(**values)
+]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/selective_preview.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Live inventory and read-only selection preview. No movement entry point."""
 import argparse
 import fcntl
@@ -2734,11 +3218,14 @@ from collections import Counter
 from selection_policy import plan, age_days
 from torrent_preflight import read_snapshot, absolute_path
 from fejes_service import dry_run
+from selective_profile import load_profile
 
 CONFIG = Path('/boot/config/plugins/fejes.mover.monitor/selective.json')
 INVENTORY = Path('/boot/config/plugins/fejes.mover.monitor/selective-inventory.json')
-SOURCE = Path('/mnt/cache/Filmek')
-CANONICAL = '/mnt/user/Filmek'
+PROFILE = load_profile()
+SOURCE = PROFILE.source
+CANONICAL = PROFILE.canonical
+POOL_ROOT = Path('/mnt') / PROFILE.pool
 
 
 def read_json(path, default):
@@ -2771,9 +3258,11 @@ def atomic_json(path, data):
 def canonical(path):
     path = absolute_path(path)
     # Known Unraid views only; the scanner itself traverses physical cache only.
-    match = re.match(r'^/mnt/(?:cache|user0|disk[1-9][0-9]*)(/.*)?$', path)
+    match = re.match(r'^/mnt/(?:user0|disk[1-9][0-9]*)(/.*)?$', path)
     if match:
         return '/mnt/user' + (match[1] or '')
+    if path == str(POOL_ROOT) or path.startswith(str(POOL_ROOT) + '/'):
+        return CANONICAL + path[len(str(POOL_ROOT)):]
     if path == '/mnt/user' or path.startswith('/mnt/user/'):
         return path
     raise ValueError('Unrecognized host path namespace')
@@ -2796,7 +3285,7 @@ def open_paths():
 
 
 def inventory(now, previous):
-    if not os.path.ismount('/mnt/cache') or SOURCE.is_symlink() or not SOURCE.is_dir():
+    if not os.path.ismount(POOL_ROOT) or SOURCE.is_symlink() or not SOURCE.is_dir():
         raise ValueError('Source unavailable')
     opened = open_paths()
     files, current = [], {}
@@ -2804,9 +3293,9 @@ def inventory(now, previous):
     def fail(error):
         raise error
     for folder, directories, names in os.walk(SOURCE, followlinks=False, onerror=fail):
-        directories[:] = [name for name in directories
-                          if not (Path(folder)/name).is_symlink()]
-        for name in names:
+        blocked_dirs = [name for name in directories if (Path(folder)/name).is_symlink()]
+        directories[:] = [name for name in directories if name not in blocked_dirs]
+        for name in names + blocked_dirs:
             path = Path(folder)/name
             info = path.lstat()
             if info.st_dev != device:
@@ -2856,7 +3345,7 @@ def collect(update_inventory=False):
     if previous.get('version') != 1 or not isinstance(previous.get('files'), dict):
         raise ValueError('Invalid inventory')
     files, current = inventory(now, previous['files'])
-    torrents, mounts = read_snapshot('binhex-qbittorrentvpn', 5)
+    torrents, mounts = read_snapshot(PROFILE.torrent_container, 5)
     mounts = [dict(m, Source=canonical(m['Source'])) if m.get('Type') == 'bind' and
               m.get('Source', '').startswith('/mnt/') else m for m in mounts]
     # Require every resolved torrent path to be canonical, including completed ones.
@@ -2909,10 +3398,10 @@ def main():
 if __name__ == '__main__':
     raise SystemExit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/selective_mover.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/selective_mover.py"><INLINE><![CDATA[﻿#!/usr/bin/env python3
 """Age-filtered native Unraid movement. No global mover invocation.
 
-Production scope is fixed to cache/Filmek -> the array with unchanged user-share
+Production scope is a validated profile -> the array with unchanged user-share
 paths. Global maintenance guards remain mandatory; torrent exclusions are per
 content path. All actions fail closed when their required evidence is missing.
 """
@@ -2932,17 +3421,20 @@ import traceback
 
 import selective_preview as inventory_adapter
 from selective_preview import canonical, read_json, atomic_json
-from selection_policy import plan, age_days, within, waiting_table, ratio_target, prioritize, batch_bytes
+from selection_policy import plan, age_days, within, waiting_table, ratio_target, prioritize, batch_bytes, unit_groups
 from torrent_preflight import read_snapshot, host_path, assess
 from fejes_service import dry_run
+from selective_profile import load_profile
 
 BASE = Path('/boot/config/plugins/fejes.mover.monitor')
 CONFIG = BASE/'selective.json'
 INVENTORY = BASE/'selective-inventory.json'
 LAST = BASE/'selective-last.json'
 FORECAST = BASE/'selective-forecast.json'
-SOURCE = Path('/mnt/cache/Filmek')
-ROOT = '/mnt/user/Filmek'
+PROFILE = load_profile()
+SOURCE = PROFILE.source
+ROOT = PROFILE.canonical
+POOL_ROOT = Path('/mnt') / PROFILE.pool
 ENGINE = '/usr/libexec/unraid/move'
 PID = Path('/var/run/mover.pid')
 ATTEMPT = Path('/var/run/fejes-selective-last-attempt')
@@ -2966,7 +3458,7 @@ def valid_file(path):
     for parent in (path, *path.parents):
         if parent.is_symlink():
             raise ValueError('Symlink source or parent')
-        if parent == Path('/mnt/cache'): break
+        if parent == POOL_ROOT: break
     info=path.lstat()
     if not stat.S_ISREG(info.st_mode) or info.st_nlink!=1 or info.st_dev!=SOURCE.stat().st_dev:
         raise ValueError('Unsupported source file')
@@ -2980,7 +3472,7 @@ def sha256(path):
 
 
 def destinations(path):
-    relative=Path(path).relative_to('/mnt/cache')
+    relative=Path(path).relative_to(POOL_ROOT)
     return [disk/relative for disk in array_disks() if (disk/relative).exists() or (disk/relative).is_symlink()]
 
 
@@ -3003,7 +3495,7 @@ def array_disks():
 
 
 def torrent_snapshot():
-    items,mounts=read_snapshot('binhex-qbittorrentvpn',5)
+    items,mounts=read_snapshot(PROFILE.torrent_container,5)
     assess(items,mounts)  # Includes errored/unknown-state and missing-data rejection.
     converted=[]
     for mount in mounts:
@@ -3024,17 +3516,17 @@ def torrent_snapshot():
 
 def guards(owned=False):
     prior=read_json(LAST,{})
-    if (prior.get('requires_inspection') is True or
-        (not owned and (prior.get('state')=='running' or prior.get('active_file_started') is True))):
+    if prior.get('requires_inspection') is True or (not owned and
+        (prior.get('state')=='running' or prior.get('active_file_started') is True)):
         raise ValueError('Previous movement requires inspection')
     runtime=read_json(BASE/'settings.json',{})
     if runtime.get('version')!=1 or runtime.get('mode')!='advanced' or runtime.get('pool')!='cache':
         raise ValueError('Advanced cache mode required')
-    if not os.path.ismount('/mnt/cache') or not os.path.ismount('/mnt/user'):
+    if not os.path.ismount(POOL_ROOT) or not os.path.ismount('/mnt/user'):
         raise ValueError('Storage mount unavailable')
     if SOURCE.is_symlink() or not SOURCE.is_dir(): raise ValueError('Share unavailable')
-    cfg=Path('/boot/config/shares/Filmek.cfg').read_text()
-    for key,expected in [('shareUseCache','yes'),('shareCachePool','cache'),('shareCachePool2','')]:
+    cfg=PROFILE.share_config.read_text()
+    for key,expected in [('shareUseCache','yes'),('shareCachePool',PROFILE.pool),('shareCachePool2','')]:
         values=re.findall(r'^'+key+r'="([^"]*)"\s*$',cfg,re.M)
         if values!=[expected]: raise ValueError('Share direction changed')
     settings=Path('/boot/config/share.cfg').read_text()
@@ -3046,17 +3538,17 @@ def guards(owned=False):
     result={key:checks.get(key,'unknown') for key in ('backup','parity','mover','cooldown','capacity')}
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
-    launcher=Path('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script').read_text()
+    launcher=PROFILE.launcher.read_text()
     wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
     if len(wait)!=1: raise ValueError('Cooldown unavailable')
     if not owned and ATTEMPT.exists():
         last=ATTEMPT.read_text().strip()
         if not last.isdigit() or int(last)>time.time(): raise ValueError('Invalid selective timestamp')
         if time.time()-int(last)<int(wait[0])*60: result['cooldown']='wait'
-    scrub=subprocess.check_output(['btrfs','scrub','status','/mnt/cache'],text=True,timeout=10)
+    scrub=subprocess.check_output(['btrfs','scrub','status',str(POOL_ROOT)],text=True,timeout=10)
     if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub active or unhealthy')
-    stats=subprocess.check_output(['btrfs','device','stats','/mnt/cache'],text=True,timeout=10)
+    stats=subprocess.check_output(['btrfs','device','stats',str(POOL_ROOT)],text=True,timeout=10)
     if not stats.strip() or any(not line.split()[-1].isdigit() or int(line.split()[-1]) for line in stats.splitlines()):
         raise ValueError('Cache device errors or unavailable')
     args=[]; integrity_scanning=False
@@ -3064,7 +3556,7 @@ def guards(owned=False):
         try: values=entry.read_bytes().split(b'\0')
         except FileNotFoundError: continue
         if any(v.endswith(b'/bunker') for v in values):
-            if owned: raise ValueError('Integrity hashing active')
+            if owned: raise IntegrityBusy('Integrity hashing active')
             integrity_scanning=True
         args.append(values)
     watcher=b'/usr/local/emhttp/plugins/dynamix.file.integrity/scripts/watcher'
@@ -3139,7 +3631,7 @@ def failure_code(error):
     if isinstance(error, subprocess.CalledProcessError):
         command=error.cmd
         if (isinstance(command,(list,tuple)) and len(command)>=5 and
-                command[:4]==['docker','exec','binhex-qbittorrentvpn','curl'] and
+                command[:4]==['docker','exec',PROFILE.torrent_container,'curl'] and
                 command[-1]=='http://127.0.0.1:8080/api/v2/torrents/info'):
             return 'torrent_snapshot_unavailable'
     return 'required_state_unverified'
@@ -3165,6 +3657,10 @@ def record_failure(report, active_key=None):
     except (OSError,ValueError):
         # Diagnostic failure must never clear a failed movement or its latch.
         pass
+
+
+class IntegrityBusy(ValueError):
+    """A fresh pre-native guard found an active integrity scan."""
 
 
 class NativeMoveError(RuntimeError):
@@ -3215,7 +3711,7 @@ def execute_file(key,expected,days):
 
 def run():
     report={'version':1,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
-            'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
+            'skipped':{},'scope':f'{PROFILE.pool}/{PROFILE.share} -> Array; selected files only',
             'requires_inspection':False}
     locks=[]; own_pid=False; coordinated=False
     try:
@@ -3234,7 +3730,7 @@ def run():
             raise ValueError('Previous movement requires inspection')
         if PID.exists(): raise ValueError('Mover PID already present')
         report['stage']='preflight_collection'
-        selection,_,current,items,_,_=collect(True)
+        selection,files,current,items,_,_=collect(True)
         report.update(age_days=selection['age_days'],candidate_count=len(selection['candidates']),blockers=selection['blockers'],
                       skipped=dict(Counter(x['reason'] for x in selection['skipped'])))
         if selection['blockers']:
@@ -3249,24 +3745,47 @@ def run():
         limit=selection.get('max_bytes',MAX_BYTES)
         report['batch_bytes_limit']=limit
         skips=Counter(report['skipped'])
-        for key in selection['candidates']:
-            size=current[key]['signature'][2]
-            if size>limit:
-                skips['file_exceeds_batch_limit']+=1;continue
-            if report['moved_files']>=MAX_FILES:
-                skips['batch_file_limit']+=1;continue
-            if report['moved_bytes']+size>limit:
-                skips['batch_size_limit']+=1;continue
-            report['stage']='file_verification_or_move'
-            report['active_file_started']=True
-            atomic_json(LAST,report)  # Durable intent before any native file operation.
-            outcome=execute_file(key,current[key],selection['age_days'])
-            report['active_file_started']=False
-            if outcome['state']=='moved':
-                report['moved_files']+=1;report['moved_bytes']+=outcome['bytes']
-                log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
-            else: skips[outcome['reason']]+=1
-            report['skipped']=dict(skips);atomic_json(LAST,report)
+        selected=set(selection['candidates'])
+        groups=[group for group in unit_groups(files,ROOT) if selected.intersection(group)]
+        rank={key:i for i,key in enumerate(selection['candidates'])}
+        groups.sort(key=lambda group:min(rank.get(key,len(rank)) for key in group))
+        for group in groups:
+            if not selected.issuperset(group):
+                skips['unit_not_ready']+=len(group);continue
+            unit_size=sum(current[key]['signature'][2] for key in group)
+            if len(group)>MAX_FILES-report['moved_files']:
+                skips['batch_file_limit' if len(group)==1 else 'unit_file_limit']+=len(group);continue
+            if unit_size>limit-report['moved_bytes']:
+                skips['file_exceeds_batch_limit' if len(group)==1 and unit_size>limit else ('batch_size_limit' if len(group)==1 else 'unit_size_limit')]+=len(group);continue
+            # Recheck every member before allowing the first native file move.
+            ready=True
+            for key in group:
+                path,eligible=fresh_candidate(key,current[key],selection['age_days'])
+                if not eligible or destinations(path):
+                    ready=False;break
+                opened=subprocess.run(['fuser','-s',str(path)],capture_output=True)
+                if opened.returncode==0:
+                    ready=False;break
+                if opened.returncode!=1:raise ValueError('Open-file state unavailable')
+            if not ready:
+                skips['unit_changed']+=len(group);continue
+            moved_in_unit=0
+            for key in sorted(group,key=lambda key:rank[key]):
+                report['stage']='file_verification_or_move'
+                report['active_file_started']=True
+                atomic_json(LAST,report)
+                outcome=execute_file(key,current[key],selection['age_days'])
+                report['active_file_started']=False
+                if outcome['state']=='moved':
+                    moved_in_unit+=1
+                    report['moved_files']+=1;report['moved_bytes']+=outcome['bytes']
+                    log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
+                else:
+                    skips[outcome['reason'] if len(group)==1 else 'unit_changed']+=len(group)-moved_in_unit
+                    if moved_in_unit:
+                        raise RuntimeError('Unit partially moved; inspect before another run')
+                    break
+                report['skipped']=dict(skips);atomic_json(LAST,report)
         # Trailing limit skips never reach the per-file write above.
         report['skipped']=dict(skips)
         final,_=torrent_snapshot()
@@ -3280,6 +3799,17 @@ def run():
         report['state']='completed' if report['moved_files'] else 'no_files_moved'
         if report['moved_files']: atomic_json(ATTEMPT,int(time.time()))
         log(f'finished; verified files={report["moved_files"]}, bytes={report["moved_bytes"]}')
+    except IntegrityBusy:
+        # Raised only by fresh_candidate guards, before the native invocation.
+        # Earlier completed files still require conservative batch inspection.
+        if report['moved_files'] or report['requires_inspection']:
+            record_failure(report, locals().get('key'))
+            report.update(state='error',error_code='required_state_unverified',
+                          error='Integrity scanning began during a partial batch; inspect before another run.',
+                          requires_inspection=True)
+        else:
+            report.update(state='deferred',blockers=['integrity'],
+                          active_file_started=False,requires_inspection=False)
     except BlockingIOError:
         record_failure(report, locals().get('key'))
         # Lock contention before launch is different from EAGAIN during file I/O.
@@ -3328,7 +3858,7 @@ def main():
 
 if __name__=='__main__': raise SystemExit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.10.27.4/wire_selective.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.10.31.2/wire_selective.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Reviewed opt-in dispatch; default is check-only, never starts movement."""
 import argparse
 import datetime
@@ -3387,28 +3917,28 @@ if __name__=='__main__':
 ]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.10.27.4
+src=/tmp/fejes-mover-monitor-2026.10.31.2
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }
 tools=/boot/config/plugins/fejes.mover.monitor/tools
 command -v python3 >/dev/null || exit 1
-for name in torrent_preflight.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_preview.py selective_mover.py wire_selective.py; do
+for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py; do
   python3 -c 'import sys; compile(open(sys.argv[1], "rb").read(), sys.argv[1], "exec")' "$src/$name"
 done
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
   php -l "$src/$name" >/dev/null
  done
 install -d -m 0755 "$dst"
 install -d -m 0700 "$tools"
-for name in torrent_preflight.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_preview.py selective_mover.py wire_selective.py; do
+for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py; do
   if [[ -f "$tools/$name" ]] && ! cmp -s "$src/$name" "$tools/$name"; then
     backup=$(mktemp "$tools/$name.before-XXXXXXXX")
     cp -p -- "$tools/$name" "$backup"
   fi
   install -m 0700 "$src/$name" "$tools/$name"
 done
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
   install -m 0644 "$src/$name" "$dst/$name"
  done
 printf '%s\n' 'Fejes Mover Monitor installed. Open Tools / Mover figyelo.'
@@ -3418,7 +3948,7 @@ set -euo pipefail
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 # Keep shared helpers and external schedule wiring intact.
 # Remove only runtime files owned by this plugin. Preserve settings and backups.
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
   rm -f -- "$dst/$name"
 done
 rmdir "$dst" 2>/dev/null || true

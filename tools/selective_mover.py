@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Age-filtered native Unraid movement. No global mover invocation.
 
-Production scope is fixed to cache/Filmek -> the array with unchanged user-share
+Production scope is a validated profile -> the array with unchanged user-share
 paths. Global maintenance guards remain mandatory; torrent exclusions are per
 content path. All actions fail closed when their required evidence is missing.
 """
@@ -21,17 +21,20 @@ import traceback
 
 import selective_preview as inventory_adapter
 from selective_preview import canonical, read_json, atomic_json
-from selection_policy import plan, age_days, within, waiting_table, ratio_target, prioritize, batch_bytes
+from selection_policy import plan, age_days, within, waiting_table, ratio_target, prioritize, batch_bytes, unit_groups
 from torrent_preflight import read_snapshot, host_path, assess
 from fejes_service import dry_run
+from selective_profile import load_profile
 
 BASE = Path('/boot/config/plugins/fejes.mover.monitor')
 CONFIG = BASE/'selective.json'
 INVENTORY = BASE/'selective-inventory.json'
 LAST = BASE/'selective-last.json'
 FORECAST = BASE/'selective-forecast.json'
-SOURCE = Path('/mnt/cache/Filmek')
-ROOT = '/mnt/user/Filmek'
+PROFILE = load_profile()
+SOURCE = PROFILE.source
+ROOT = PROFILE.canonical
+POOL_ROOT = Path('/mnt') / PROFILE.pool
 ENGINE = '/usr/libexec/unraid/move'
 PID = Path('/var/run/mover.pid')
 ATTEMPT = Path('/var/run/fejes-selective-last-attempt')
@@ -55,7 +58,7 @@ def valid_file(path):
     for parent in (path, *path.parents):
         if parent.is_symlink():
             raise ValueError('Symlink source or parent')
-        if parent == Path('/mnt/cache'): break
+        if parent == POOL_ROOT: break
     info=path.lstat()
     if not stat.S_ISREG(info.st_mode) or info.st_nlink!=1 or info.st_dev!=SOURCE.stat().st_dev:
         raise ValueError('Unsupported source file')
@@ -69,7 +72,7 @@ def sha256(path):
 
 
 def destinations(path):
-    relative=Path(path).relative_to('/mnt/cache')
+    relative=Path(path).relative_to(POOL_ROOT)
     return [disk/relative for disk in array_disks() if (disk/relative).exists() or (disk/relative).is_symlink()]
 
 
@@ -92,7 +95,7 @@ def array_disks():
 
 
 def torrent_snapshot():
-    items,mounts=read_snapshot('binhex-qbittorrentvpn',5)
+    items,mounts=read_snapshot(PROFILE.torrent_container,5)
     assess(items,mounts)  # Includes errored/unknown-state and missing-data rejection.
     converted=[]
     for mount in mounts:
@@ -113,17 +116,17 @@ def torrent_snapshot():
 
 def guards(owned=False):
     prior=read_json(LAST,{})
-    if (prior.get('requires_inspection') is True or
-        (not owned and (prior.get('state')=='running' or prior.get('active_file_started') is True))):
+    if prior.get('requires_inspection') is True or (not owned and
+        (prior.get('state')=='running' or prior.get('active_file_started') is True)):
         raise ValueError('Previous movement requires inspection')
     runtime=read_json(BASE/'settings.json',{})
     if runtime.get('version')!=1 or runtime.get('mode')!='advanced' or runtime.get('pool')!='cache':
         raise ValueError('Advanced cache mode required')
-    if not os.path.ismount('/mnt/cache') or not os.path.ismount('/mnt/user'):
+    if not os.path.ismount(POOL_ROOT) or not os.path.ismount('/mnt/user'):
         raise ValueError('Storage mount unavailable')
     if SOURCE.is_symlink() or not SOURCE.is_dir(): raise ValueError('Share unavailable')
-    cfg=Path('/boot/config/shares/Filmek.cfg').read_text()
-    for key,expected in [('shareUseCache','yes'),('shareCachePool','cache'),('shareCachePool2','')]:
+    cfg=PROFILE.share_config.read_text()
+    for key,expected in [('shareUseCache','yes'),('shareCachePool',PROFILE.pool),('shareCachePool2','')]:
         values=re.findall(r'^'+key+r'="([^"]*)"\s*$',cfg,re.M)
         if values!=[expected]: raise ValueError('Share direction changed')
     settings=Path('/boot/config/share.cfg').read_text()
@@ -135,17 +138,17 @@ def guards(owned=False):
     result={key:checks.get(key,'unknown') for key in ('backup','parity','mover','cooldown','capacity')}
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
-    launcher=Path('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script').read_text()
+    launcher=PROFILE.launcher.read_text()
     wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
     if len(wait)!=1: raise ValueError('Cooldown unavailable')
     if not owned and ATTEMPT.exists():
         last=ATTEMPT.read_text().strip()
         if not last.isdigit() or int(last)>time.time(): raise ValueError('Invalid selective timestamp')
         if time.time()-int(last)<int(wait[0])*60: result['cooldown']='wait'
-    scrub=subprocess.check_output(['btrfs','scrub','status','/mnt/cache'],text=True,timeout=10)
+    scrub=subprocess.check_output(['btrfs','scrub','status',str(POOL_ROOT)],text=True,timeout=10)
     if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub active or unhealthy')
-    stats=subprocess.check_output(['btrfs','device','stats','/mnt/cache'],text=True,timeout=10)
+    stats=subprocess.check_output(['btrfs','device','stats',str(POOL_ROOT)],text=True,timeout=10)
     if not stats.strip() or any(not line.split()[-1].isdigit() or int(line.split()[-1]) for line in stats.splitlines()):
         raise ValueError('Cache device errors or unavailable')
     args=[]; integrity_scanning=False
@@ -153,7 +156,7 @@ def guards(owned=False):
         try: values=entry.read_bytes().split(b'\0')
         except FileNotFoundError: continue
         if any(v.endswith(b'/bunker') for v in values):
-            if owned: raise ValueError('Integrity hashing active')
+            if owned: raise IntegrityBusy('Integrity hashing active')
             integrity_scanning=True
         args.append(values)
     watcher=b'/usr/local/emhttp/plugins/dynamix.file.integrity/scripts/watcher'
@@ -228,7 +231,7 @@ def failure_code(error):
     if isinstance(error, subprocess.CalledProcessError):
         command=error.cmd
         if (isinstance(command,(list,tuple)) and len(command)>=5 and
-                command[:4]==['docker','exec','binhex-qbittorrentvpn','curl'] and
+                command[:4]==['docker','exec',PROFILE.torrent_container,'curl'] and
                 command[-1]=='http://127.0.0.1:8080/api/v2/torrents/info'):
             return 'torrent_snapshot_unavailable'
     return 'required_state_unverified'
@@ -254,6 +257,10 @@ def record_failure(report, active_key=None):
     except (OSError,ValueError):
         # Diagnostic failure must never clear a failed movement or its latch.
         pass
+
+
+class IntegrityBusy(ValueError):
+    """A fresh pre-native guard found an active integrity scan."""
 
 
 class NativeMoveError(RuntimeError):
@@ -304,7 +311,7 @@ def execute_file(key,expected,days):
 
 def run():
     report={'version':1,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
-            'skipped':{},'scope':'cache/Filmek -> Array; selected files only',
+            'skipped':{},'scope':f'{PROFILE.pool}/{PROFILE.share} -> Array; selected files only',
             'requires_inspection':False}
     locks=[]; own_pid=False; coordinated=False
     try:
@@ -323,7 +330,7 @@ def run():
             raise ValueError('Previous movement requires inspection')
         if PID.exists(): raise ValueError('Mover PID already present')
         report['stage']='preflight_collection'
-        selection,_,current,items,_,_=collect(True)
+        selection,files,current,items,_,_=collect(True)
         report.update(age_days=selection['age_days'],candidate_count=len(selection['candidates']),blockers=selection['blockers'],
                       skipped=dict(Counter(x['reason'] for x in selection['skipped'])))
         if selection['blockers']:
@@ -338,24 +345,47 @@ def run():
         limit=selection.get('max_bytes',MAX_BYTES)
         report['batch_bytes_limit']=limit
         skips=Counter(report['skipped'])
-        for key in selection['candidates']:
-            size=current[key]['signature'][2]
-            if size>limit:
-                skips['file_exceeds_batch_limit']+=1;continue
-            if report['moved_files']>=MAX_FILES:
-                skips['batch_file_limit']+=1;continue
-            if report['moved_bytes']+size>limit:
-                skips['batch_size_limit']+=1;continue
-            report['stage']='file_verification_or_move'
-            report['active_file_started']=True
-            atomic_json(LAST,report)  # Durable intent before any native file operation.
-            outcome=execute_file(key,current[key],selection['age_days'])
-            report['active_file_started']=False
-            if outcome['state']=='moved':
-                report['moved_files']+=1;report['moved_bytes']+=outcome['bytes']
-                log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
-            else: skips[outcome['reason']]+=1
-            report['skipped']=dict(skips);atomic_json(LAST,report)
+        selected=set(selection['candidates'])
+        groups=[group for group in unit_groups(files,ROOT) if selected.intersection(group)]
+        rank={key:i for i,key in enumerate(selection['candidates'])}
+        groups.sort(key=lambda group:min(rank.get(key,len(rank)) for key in group))
+        for group in groups:
+            if not selected.issuperset(group):
+                skips['unit_not_ready']+=len(group);continue
+            unit_size=sum(current[key]['signature'][2] for key in group)
+            if len(group)>MAX_FILES-report['moved_files']:
+                skips['batch_file_limit' if len(group)==1 else 'unit_file_limit']+=len(group);continue
+            if unit_size>limit-report['moved_bytes']:
+                skips['file_exceeds_batch_limit' if len(group)==1 and unit_size>limit else ('batch_size_limit' if len(group)==1 else 'unit_size_limit')]+=len(group);continue
+            # Recheck every member before allowing the first native file move.
+            ready=True
+            for key in group:
+                path,eligible=fresh_candidate(key,current[key],selection['age_days'])
+                if not eligible or destinations(path):
+                    ready=False;break
+                opened=subprocess.run(['fuser','-s',str(path)],capture_output=True)
+                if opened.returncode==0:
+                    ready=False;break
+                if opened.returncode!=1:raise ValueError('Open-file state unavailable')
+            if not ready:
+                skips['unit_changed']+=len(group);continue
+            moved_in_unit=0
+            for key in sorted(group,key=lambda key:rank[key]):
+                report['stage']='file_verification_or_move'
+                report['active_file_started']=True
+                atomic_json(LAST,report)
+                outcome=execute_file(key,current[key],selection['age_days'])
+                report['active_file_started']=False
+                if outcome['state']=='moved':
+                    moved_in_unit+=1
+                    report['moved_files']+=1;report['moved_bytes']+=outcome['bytes']
+                    log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
+                else:
+                    skips[outcome['reason'] if len(group)==1 else 'unit_changed']+=len(group)-moved_in_unit
+                    if moved_in_unit:
+                        raise RuntimeError('Unit partially moved; inspect before another run')
+                    break
+                report['skipped']=dict(skips);atomic_json(LAST,report)
         # Trailing limit skips never reach the per-file write above.
         report['skipped']=dict(skips)
         final,_=torrent_snapshot()
@@ -369,6 +399,17 @@ def run():
         report['state']='completed' if report['moved_files'] else 'no_files_moved'
         if report['moved_files']: atomic_json(ATTEMPT,int(time.time()))
         log(f'finished; verified files={report["moved_files"]}, bytes={report["moved_bytes"]}')
+    except IntegrityBusy:
+        # Raised only by fresh_candidate guards, before the native invocation.
+        # Earlier completed files still require conservative batch inspection.
+        if report['moved_files'] or report['requires_inspection']:
+            record_failure(report, locals().get('key'))
+            report.update(state='error',error_code='required_state_unverified',
+                          error='Integrity scanning began during a partial batch; inspect before another run.',
+                          requires_inspection=True)
+        else:
+            report.update(state='deferred',blockers=['integrity'],
+                          active_file_started=False,requires_inspection=False)
     except BlockingIOError:
         record_failure(report, locals().get('key'))
         # Lock contention before launch is different from EAGAIN during file I/O.

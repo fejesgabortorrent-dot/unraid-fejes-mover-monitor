@@ -1,4 +1,4 @@
-import importlib.util
+﻿import importlib.util
 import io
 import json
 import os
@@ -36,10 +36,10 @@ class SelectionSafety(unittest.TestCase):
                 result=self.select(guards=dict(self.guards,**{guard:'unknown'}))
                 self.assertFalse(result['candidates'])
 
-    def test_young_mtime_or_arrival_always_excluded(self):
+    def test_young_mtime_or_arrival_excluded_for_torrent(self):
         for field in ('mtime','first_seen'):
             with self.subTest(field=field):
-                self.assertFalse(self.select(item=dict(self.item,**{field:self.now-86400}))['candidates'])
+                self.assertFalse(self.select(item=dict(self.item,**{field:self.now-86400}),torrents=[dict(self.torrent,content_path='/data/old.bin')])['candidates'])
 
     def test_open_unstable_symlink_and_hardlinks_excluded(self):
         for change in (dict(open=True),dict(stable=False),dict(symlink=True),dict(nlink=2),dict(regular=False)):
@@ -68,7 +68,7 @@ class SelectionSafety(unittest.TestCase):
             self.assertEqual(self.select(torrents=[dict(self.torrent,**change)])['decision'],'unknown')
 
     def test_14_and_30_day_choices_not_accidentally_7(self):
-        for days in (14,30): self.assertFalse(self.select(days=days)['candidates'])
+        for days in (14,30): self.assertFalse(self.select(days=days,torrents=[dict(self.torrent,content_path='/data/old.bin')])['candidates'])
 
 class NativeSafety(unittest.TestCase):
     def test_sticky_integrity_failure_prevents_another_launch(self):
@@ -119,12 +119,13 @@ class DispatchSafety(unittest.TestCase):
         with self.assertRaises(ValueError): prepare(guarded+'\n# unexpected drift\n')
 
 class BatchReporting(unittest.TestCase):
-    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False,inspection_on_lock=False,larger_first=False):
+    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False,inspection_on_lock=False,larger_first=False,integrity_after=None,paths=None,retained_after=None):
         from contextlib import ExitStack
         with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
             root=Path(folder)
-            candidates=[f'/mnt/user/Filmek/{i:02}.bin' for i in range(len(sizes))]
+            candidates=paths or [f'/mnt/user/Filmek/{i:02}.bin' for i in range(len(sizes))]
             inventory={key:{'signature':[1,i,size,0,0]} for i,(key,size) in enumerate(zip(candidates,sizes))}
+            files=[{'path':key,'first_seen':i*3600} for i,key in enumerate(candidates)]
             if larger_first:candidates=mover.prioritize(candidates,[],[],0,sizes={k:inventory[k]['signature'][2] for k in candidates})
             writes=[]
             stack.enter_context(patch.object(mover,'LAST',root/'last.json'))
@@ -143,10 +144,23 @@ class BatchReporting(unittest.TestCase):
             stack.enter_context(patch.object(mover,'read_json',side_effect=lambda *args:dict(prior)))
             stack.enter_context(patch.object(mover,'atomic_json',side_effect=save))
             stack.enter_context(patch.object(mover,'log'))
-            stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'max_bytes':limit,'candidates':candidates,'blockers':[],'skipped':[]},[],inventory,[],[],{})))
+            stack.enter_context(patch.object(mover,'fresh_candidate',side_effect=lambda key,*args:(Path(key),True)))
+            stack.enter_context(patch.object(mover,'destinations',return_value=[]))
+            stack.enter_context(patch.object(mover.subprocess,'run',return_value=type('Result',(),{'returncode':1})()))
+            stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'max_bytes':limit,'candidates':candidates,'blockers':[],'skipped':[]},files,inventory,[],[],{})))
             stack.enter_context(patch.object(mover,'torrent_snapshot',return_value=([],[])))
             execute=stack.enter_context(patch.object(mover,'execute_file',side_effect=lambda key,*a:{'state':'skipped','reason':'native_retained_source'} if retained else {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'fixture'}))
             if io_error:execute.side_effect=BlockingIOError('fixture file I/O unavailable')
+            if retained_after is not None:
+                def retain_later(key,*args):
+                    if execute.call_count>retained_after:return {'state':'skipped','reason':'native_retained_source'}
+                    return {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'fixture'}
+                execute.side_effect=retain_later
+            if integrity_after is not None:
+                def integrity_outcome(key,*args):
+                    if execute.call_count>integrity_after:raise mover.IntegrityBusy('Integrity hashing active')
+                    return {'state':'moved','bytes':inventory[key]['signature'][2],'sha256':'fixture'}
+                execute.side_effect=integrity_outcome
             result=mover.run()
             self.assertEqual(writes[-1],result)
             if execute.call_count:self.assertTrue(any(w.get('active_file_started') is True for w in writes))
@@ -160,12 +174,49 @@ class BatchReporting(unittest.TestCase):
         self.assertEqual(report['moved_bytes'],22*gib+6)
         self.assertEqual(report['skipped']['batch_file_limit'],2)
 
+    def test_integrity_race_before_first_native_move_defers_without_sticky_latch(self):
+        report,calls,attempt=self.run_batch([1],integrity_after=0)
+        self.assertEqual(report['state'],'deferred')
+        self.assertEqual(report['blockers'],['integrity'])
+        self.assertFalse(report['active_file_started'])
+        self.assertFalse(report['requires_inspection'])
+        self.assertEqual(report['moved_files'],0)
+        self.assertEqual(calls,1);self.assertFalse(attempt)
+
+    def test_integrity_race_after_partial_batch_keeps_inspection(self):
+        report,calls,attempt=self.run_batch([1,1],integrity_after=1)
+        self.assertEqual(report['state'],'error')
+        self.assertTrue(report['requires_inspection'])
+        self.assertEqual(report['moved_files'],1)
+        self.assertEqual(calls,2);self.assertFalse(attempt)
+
     def test_large_first_still_fills_only_remaining_byte_budget(self):
         gib=1024**3
         report,calls,_=self.run_batch([12*gib,10*gib,8*gib,2*gib,1*gib],limit=16*gib,larger_first=True)
         self.assertEqual(report['moved_bytes'],15*gib)
         self.assertEqual(calls,3)
         self.assertEqual(report['skipped']['batch_size_limit'],2)
+
+    def test_folder_over_file_cap_is_not_split(self):
+        paths=[f'/mnt/user/Filmek/Movie/{i:02}.bin' for i in range(9)]
+        report,calls,_=self.run_batch([1]*9,paths=paths)
+        self.assertEqual(calls,0)
+        self.assertEqual(report['skipped'],{'unit_file_limit':9})
+
+    def test_folder_over_byte_cap_is_not_split(self):
+        gib=1024**3
+        paths=['/mnt/user/Filmek/Movie/a.bin','/mnt/user/Filmek/Movie/b.bin']
+        report,calls,_=self.run_batch([12*gib,10*gib],limit=16*gib,paths=paths)
+        self.assertEqual(calls,0)
+        self.assertEqual(report['skipped'],{'unit_size_limit':2})
+
+    def test_partial_unit_requires_inspection(self):
+        paths=['/mnt/user/Filmek/Movie/a.bin','/mnt/user/Filmek/Movie/b.bin']
+        report,calls,_=self.run_batch([1,1],paths=paths,retained_after=1)
+        self.assertEqual(calls,2)
+        self.assertEqual(report['state'],'error')
+        self.assertTrue(report['requires_inspection'])
+        self.assertEqual(report['moved_files'],1)
 
     def test_lock_setup_error_preserves_saved_outcome(self):
         import io

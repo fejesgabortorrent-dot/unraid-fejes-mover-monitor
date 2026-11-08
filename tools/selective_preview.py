@@ -14,11 +14,14 @@ from collections import Counter
 from selection_policy import plan, age_days
 from torrent_preflight import read_snapshot, absolute_path
 from fejes_service import dry_run
+from selective_profile import load_profile
 
 CONFIG = Path('/boot/config/plugins/fejes.mover.monitor/selective.json')
 INVENTORY = Path('/boot/config/plugins/fejes.mover.monitor/selective-inventory.json')
-SOURCE = Path('/mnt/cache/Filmek')
-CANONICAL = '/mnt/user/Filmek'
+PROFILE = load_profile()
+SOURCE = PROFILE.source
+CANONICAL = PROFILE.canonical
+POOL_ROOT = Path('/mnt') / PROFILE.pool
 
 
 def read_json(path, default):
@@ -51,9 +54,11 @@ def atomic_json(path, data):
 def canonical(path):
     path = absolute_path(path)
     # Known Unraid views only; the scanner itself traverses physical cache only.
-    match = re.match(r'^/mnt/(?:cache|user0|disk[1-9][0-9]*)(/.*)?$', path)
+    match = re.match(r'^/mnt/(?:user0|disk[1-9][0-9]*)(/.*)?$', path)
     if match:
         return '/mnt/user' + (match[1] or '')
+    if path == str(POOL_ROOT) or path.startswith(str(POOL_ROOT) + '/'):
+        return CANONICAL + path[len(str(POOL_ROOT)):]
     if path == '/mnt/user' or path.startswith('/mnt/user/'):
         return path
     raise ValueError('Unrecognized host path namespace')
@@ -76,7 +81,7 @@ def open_paths():
 
 
 def inventory(now, previous):
-    if not os.path.ismount('/mnt/cache') or SOURCE.is_symlink() or not SOURCE.is_dir():
+    if not os.path.ismount(POOL_ROOT) or SOURCE.is_symlink() or not SOURCE.is_dir():
         raise ValueError('Source unavailable')
     opened = open_paths()
     files, current = [], {}
@@ -84,9 +89,9 @@ def inventory(now, previous):
     def fail(error):
         raise error
     for folder, directories, names in os.walk(SOURCE, followlinks=False, onerror=fail):
-        directories[:] = [name for name in directories
-                          if not (Path(folder)/name).is_symlink()]
-        for name in names:
+        blocked_dirs = [name for name in directories if (Path(folder)/name).is_symlink()]
+        directories[:] = [name for name in directories if name not in blocked_dirs]
+        for name in names + blocked_dirs:
             path = Path(folder)/name
             info = path.lstat()
             if info.st_dev != device:
@@ -136,7 +141,7 @@ def collect(update_inventory=False):
     if previous.get('version') != 1 or not isinstance(previous.get('files'), dict):
         raise ValueError('Invalid inventory')
     files, current = inventory(now, previous['files'])
-    torrents, mounts = read_snapshot('binhex-qbittorrentvpn', 5)
+    torrents, mounts = read_snapshot(PROFILE.torrent_container, 5)
     mounts = [dict(m, Source=canonical(m['Source'])) if m.get('Type') == 'bind' and
               m.get('Source', '').startswith('/mnt/') else m for m in mounts]
     # Require every resolved torrent path to be canonical, including completed ones.

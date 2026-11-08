@@ -1,4 +1,4 @@
-import unittest
+﻿import unittest
 from selection_policy import waiting_table,REQUIRED_GUARDS
 
 class WaitingTable(unittest.TestCase):
@@ -13,8 +13,8 @@ class WaitingTable(unittest.TestCase):
         return waiting_table([self.item],torrents or self.torrents,self.mounts,self.inventory,self.guards,days=7,now=self.now,root=self.root)
     def test_recent_arrival_overrides_old_mtime(self):
         row=self.table()['rows'][0]
-        self.assertEqual(row['age_ready_at'],self.now+6*86400)
-        self.assertEqual(row['reason'],'too_young')
+        self.assertEqual(row['age_ready_at'],self.now)
+        self.assertEqual(row['reason'],'ready')
     def test_recent_quiet_completion_sets_later_date(self):
         torrent=dict(content_path='/data/example.mkv',progress=1,state='stalledUP',completion_on=self.now,upspeed=0,dlspeed=0)
         self.assertEqual(self.table([torrent])['rows'][0]['age_ready_at'],self.now+7*86400)

@@ -14,21 +14,24 @@ import sys
 from torrent_preflight import assess, read_snapshot
 from wire_integrity_cron import ORIGINAL, REPLACEMENT, rewrite_cron
 from wire_mover_gate import rewrite_launcher
+from selective_profile import load_profile
 
 ROOT = Path('/boot/config/plugins/dynamix.file.integrity')
-LAUNCHER = Path('/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script')
-CACHE = '/mnt/cache'
+PROFILE = load_profile()
+LAUNCHER = PROFILE.launcher
+CACHE = str(Path('/mnt') / PROFILE.pool)
 LOCK = '/var/run/fejes-mover-launch.lock'
 ERRORS = (ValueError, TypeError, KeyError, AttributeError, OSError, subprocess.SubprocessError)
 BACKUP_MARKER = Path('/tmp/appdata.backup/running')
 MDSTAT = Path('/proc/mdstat')
 ATTEMPT = Path('/var/run/filmek_mover_last_attempt')
 MOVER_PID = Path('/var/run/mover.pid')
-SHARE = Path('/mnt/user/Filmek')
+SHARE = Path(PROFILE.canonical)
 
 
-def dry_run(container='binhex-qbittorrentvpn', include_items=False):
+def dry_run(container=None, include_items=False):
     """Read-only decision snapshot. Never execute a launcher or write a timestamp."""
+    container = container or PROFILE.torrent_container
     report = status(container, include_items=include_items)
     checks = []
     def add(key, state, detail=''):
@@ -117,7 +120,8 @@ def cron_state(source):
     return 'wired' if source == expected else 'original'
 
 
-def status(container='binhex-qbittorrentvpn', reserve_gib=20, include_items=False):
+def status(container=None, reserve_gib=20, include_items=False):
+    container = container or PROFILE.torrent_container
     result = {'torrent': 'unavailable', 'cache': 'unavailable',
               'integrity_config': 'unknown', 'integrity_active': 'unknown',
               'legacy_launcher_present': LAUNCHER.is_file(),
@@ -209,7 +213,7 @@ def run_mover(container):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['status', 'dry-run', 'run-mover'])
-    parser.add_argument('--container', default='binhex-qbittorrentvpn')
+    parser.add_argument('--container', default=PROFILE.torrent_container)
     parser.add_argument('--include-items', action='store_true', help='Private UI: include protected file/folder basenames in dry-run output only')
     args = parser.parse_args(argv)
     if not args.container or args.container.startswith('-'):

@@ -16,9 +16,13 @@ Historical owner-test evidence does not certify stable-release readiness. See [c
 
 [Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
 
-Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Installation and mode changes never start movement or install a schedule. Advanced/cache mode includes authenticated, opt-in age-filtered movement for the existing `Filmek` share and reviewed threshold automation. The app is listed in the owner's Community Applications search; listing is not broad hardware certification.
+**Installation environment:** The monitoring interface targets Unraid 7.x (manifest minimum 7.0.0). Selective movement currently requires a pool named `cache`, a `Filmek` share configured cache-to-array, the existing `Filmek_Mover_Threshold` User Scripts automation, a `binhex-qbittorrentvpn` qBittorrent container, and torrent paths bound through `/mnt/user`. These are compatibility constraints of this candidate, not settings to publish from an owner NAS. Other pools, shares and clients must remain in Observer mode until a validated local setup flow exists. Unraid 8 compatibility is unverified.
 
-**Magyar:** Az új szelektív mozgató kihagyja a túl fiatal, félkész, aktív, megnyitott vagy megváltozott fájlokat. A korhatár 1 / 7 / 14 / 30 nap; a cache-ben igazolt első megfigyelés is számít. A natív Unraid-mozgatót használja, a célon SHA-256-ot és metaadatokat ellenőriz. Az automatikus bekötés külön, mentéssel történik; telepítéskor nem változik a meglévő ütemezés.
+Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Installation and mode changes never start movement or install a schedule. Advanced/cache mode includes authenticated, opt-in selective movement with a torrent-only age threshold for the existing `Filmek` share and reviewed threshold automation. The app is listed in the owner's Community Applications search; listing is not broad hardware certification.
+
+**Magyar:** Az új szelektív mozgató kihagyja a félkész, aktív, megnyitott vagy megváltozott fájlokat. A torrenthez tartozó fájlokra 1 / 7 / 14 / 30 napos korhatár érvényes; a cache-ben igazolt első megfigyelés is számít. A más tartalom két stabil megfigyelés és a teljes együtt tartozó egység ellenőrzése után válhat alkalmassá. A natív Unraid-mozgatót használja, a célon SHA-256-ot és metaadatokat ellenőriz. Az automatikus bekötés külön, mentéssel történik; telepítéskor nem változik a meglévő ütemezés.
+
+The current RC1 interface adds aligned navigation, in-place Back to top, report summaries, accessible help and unsaved-setting feedback. A shared optional PayPal support strip offers coffee (2 EUR), beer (5 EUR), pizza (10 EUR) and a custom amount; every feature remains free. Payment requires separate confirmation on PayPal.
 
 The current RC1 interface adds aligned navigation, in-place Back to top, report summaries, accessible help and unsaved-setting feedback. A shared optional PayPal support strip offers coffee (2 EUR), beer (5 EUR), pizza (10 EUR) and a custom amount; every feature remains free. Payment requires separate confirmation on PayPal.
 
@@ -68,7 +72,7 @@ To refresh the gallery after a design change, run `tools/export_store_preview.py
 - Recent Mover-related syslog lines, escaped before display.
 - Polling only while the page is visible, with timeouts and stale-data notices.
 - Optional settings page for an existing `Filmek_Mover_Threshold` User Scripts automation.
-- Optional age-filtered native movement, with exact single-file input and no global Mover invocation.
+- Optional native movement with torrent-only age threshold and whole-unit selection; each file is sent as exact input to the native mover, never a global Mover invocation. A native multi-file move is not atomic across crashes.
 - Per-content torrent exclusions, fresh maintenance/open-file checks, SHA-256 and metadata verification.
 - Authenticated manual start and explicit, backed-up integration with an existing schedule.
 

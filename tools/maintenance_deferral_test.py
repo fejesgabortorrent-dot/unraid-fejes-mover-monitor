@@ -2,7 +2,7 @@ from contextlib import ExitStack
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
-import stat,unittest
+import stat,tempfile,unittest
 import selective_mover as mover
 from selection_policy import plan
 
@@ -26,7 +26,18 @@ class IntegrityMaintenance(unittest.TestCase):
   selection=plan([],[],[],guards,days=1,now=1000000,observed_at=1000000,root='/mnt/user/Filmek')
   self.assertIn('integrity',selection['blockers']);self.assertFalse(selection['candidates'])
  def test_scan_during_owned_execution_still_aborts(self):
-  with self.assertRaisesRegex(ValueError,'Integrity hashing active'):self.check(owned=True)
+  with self.assertRaisesRegex(mover.IntegrityBusy,'Integrity hashing active'):self.check(owned=True)
+ def test_integrity_race_never_reaches_native_or_hashing(self):
+  with patch.object(mover,'fresh_candidate',side_effect=mover.IntegrityBusy('Integrity hashing active')),patch.object(mover.subprocess,'run') as native,patch.object(mover,'sha256') as hashing:
+   with self.assertRaises(mover.IntegrityBusy):mover.execute_file('/fixture',{},1)
+   native.assert_not_called();hashing.assert_not_called()
+ def test_integrity_race_after_source_hash_never_reaches_native(self):
+  with tempfile.TemporaryDirectory() as folder:
+   path=Path(folder)/'fixture.bin';path.write_bytes(b'unchanged fixture')
+   with patch.object(mover,'fresh_candidate',side_effect=[(path,True),mover.IntegrityBusy('Integrity hashing active')]),patch.object(mover,'destinations',return_value=[]),patch.object(mover,'valid_file',return_value=path.stat()),patch.object(mover.os,'listxattr',return_value=[]),patch.object(mover,'sha256',return_value='fixture') as hashing,patch.object(mover.subprocess,'run') as native:
+    with self.assertRaises(mover.IntegrityBusy):mover.execute_file('/fixture',{},1)
+    hashing.assert_called_once_with(path);native.assert_not_called()
+   self.assertEqual(path.read_bytes(),b'unchanged fixture')
  def test_finished_scan_can_pass_with_verified_wiring(self):self.assertEqual(self.check(scanning=False)['integrity'],'pass')
  def test_unknown_wiring_is_not_promoted_to_wait_or_pass(self):self.assertEqual(self.check(wired=False)['integrity'],'unknown')
 

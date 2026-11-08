@@ -1,0 +1,49 @@
+Menu="Utilities"
+Title="Mover · Profil"
+Icon="fa-id-card"
+Tag="cogs"
+---
+<?php
+$cookie=$_COOKIE['fejes_mover_lang']??'hu';
+$lang=is_string($cookie)&&in_array($cookie,['hu','en','de'],true)?$cookie:'hu';
+$text=[
+ 'hu'=>['title'=>'Szelektív profil','intro'=>'A profil csak a környezetet írja le; önmagában nem indít mozgatást.','pool'=>'Pool','share'=>'Megosztás','container'=>'qBittorrent konténer','script'=>'User Scripts automatika neve','save'=>'Profil mentése','saved'=>'Profil elmentve. Ez nem indít Movert.','back'=>'Vissza a Mover figyelőhöz','invalid'=>'Érvénytelen profilnév.','failed'=>'A profil mentése sikertelen.','note'=>'Megfigyelő mód az alapértelmezés. Haladó mozgatás csak külön jóváhagyással és minden védelmi feltétel mellett indulhat.'],
+ 'en'=>['title'=>'Selective profile','intro'=>'The profile describes the environment only; it never starts movement by itself.','pool'=>'Pool','share'=>'Share','container'=>'qBittorrent container','script'=>'User Scripts automation name','save'=>'Save profile','saved'=>'Profile saved. This does not start Mover.','back'=>'Back to Mover Monitor','invalid'=>'Invalid profile name.','failed'=>'Profile save failed.','note'=>'Observer mode is the default. Advanced movement still requires explicit approval and every safety guard.'],
+ 'de'=>['title'=>'Selektives Profil','intro'=>'Das Profil beschreibt nur die Umgebung; es startet niemals allein einen Transfer.','pool'=>'Pool','share'=>'Freigabe','container'=>'qBittorrent-Container','script'=>'Name der User-Scripts-Automation','save'=>'Profil speichern','saved'=>'Profil gespeichert. Mover wird nicht gestartet.','back'=>'Zurück zum Mover-Monitor','invalid'=>'Ungültiger Profilname.','failed'=>'Profil konnte nicht gespeichert werden.','note'=>'Beobachtermodus ist der Standard. Erweiterte Bewegung erfordert weiterhin ausdrückliche Zustimmung und alle Schutzprüfungen.']
+][$lang];
+$profilePath='/boot/config/plugins/fejes.mover.monitor/selective-profile.json';
+$defaults=['version'=>1,'pool'=>'cache','share'=>'Filmek','torrent_container'=>'binhex-qbittorrentvpn','launcher_script'=>'Filmek_Mover_Threshold'];
+$profile=$defaults;$message='';$error='';
+if(is_file($profilePath)&&!is_link($profilePath)){
+ $raw=@file_get_contents($profilePath);$decoded=is_string($raw)?json_decode($raw,true):null;
+ if(is_array($decoded)&&($decoded['version']??null)===1)$profile=array_merge($defaults,$decoded);
+}
+$fmcConfigWrite=true;
+$runtime=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$esc=$runtime['esc'];$token=$runtime['token']??'';$hash=$runtime['hash']??'';
+$nameOk=function($v){return is_string($v)&&preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/D',$v);};
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  if(!is_resource($runtime['lock'])||$runtime['lockError']||$runtime['readError'])throw new RuntimeException($text['failed']);
+  if(!is_string($_POST['fmc_csrf']??null)||$token===''||!hash_equals($token,$_POST['fmc_csrf']))throw new RuntimeException('CSRF');
+  foreach(['pool','share','torrent_container','launcher_script'] as $field){if(!$nameOk($_POST[$field]??null))throw new RuntimeException($text['invalid']);}
+  $new=['version'=>1,'pool'=>$_POST['pool'],'share'=>$_POST['share'],'torrent_container'=>$_POST['torrent_container'],'launcher_script'=>$_POST['launcher_script']];
+  $data=json_encode($new,JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR)."\n";$dir=dirname($profilePath);if(!is_dir($dir)&&!@mkdir($dir,0700,true))throw new RuntimeException($text['failed']);
+  $tmp=tempnam($dir,'.profile-');if(!$tmp)throw new RuntimeException($text['failed']);
+  try{if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$profilePath))throw new RuntimeException($text['failed']);}finally{if(is_file($tmp))unlink($tmp);}
+  if(file_get_contents($profilePath)!==$data)throw new RuntimeException($text['failed']);
+  $profile=$new;$message=$text['saved'];
+ }catch(Throwable $e){$error=$e->getMessage();}
+}
+?>
+<main id="fmc-profile" style="max-width:900px;margin:24px auto;padding:0 16px;font:inherit">
+<a href="/Tools/FejesMover" style="display:inline-block;margin:12px 0;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← <?=$esc($text['back'])?></a>
+<h1><?=$esc($text['title'])?></h1><p><?=$esc($text['intro'])?></p><p style="padding:14px;border-left:3px solid #64b99b;background:#8881"><?=$esc($text['note'])?></p>
+<?php if($message):?><p role="status" style="padding:12px;border-left:3px solid #64b99b"><?=$esc($message)?></p><?php endif?>
+<?php if($error):?><p role="alert" style="padding:12px;border-left:3px solid #ef967a"><?=$esc($error)?></p><?php endif?>
+<form method="post" action="/Tools/FejesMoverProfile"><input type="hidden" name="fmc_csrf" value="<?=$esc($token)?>"><input type="hidden" name="config_hash" value="<?=$esc($hash)?>">
+<p><label><?=$esc($text['pool'])?><br><input name="pool" value="<?=$esc((string)$profile['pool'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['share'])?><br><input name="share" value="<?=$esc((string)$profile['share'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['container'])?><br><input name="torrent_container" value="<?=$esc((string)$profile['torrent_container'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<p><label><?=$esc($text['script'])?><br><input name="launcher_script" value="<?=$esc((string)$profile['launcher_script'])?>" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label></p>
+<button type="submit"><?=$esc($text['save'])?></button></form></main>
