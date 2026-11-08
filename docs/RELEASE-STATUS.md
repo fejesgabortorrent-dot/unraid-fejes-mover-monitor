@@ -1,4 +1,4 @@
-# Release Candidate 1 — candidate build 2026.10.31.1
+# Release Candidate 1 — published build 2026.10.31.2
 
 RC1 is a prerelease for the documented Unraid 7.x documented scope. See
 [RC1 release notes](RC1.md) and [selection/execution rules](SELECTIVE-MOVEMENT.md).
@@ -10,9 +10,9 @@ larger eligible files first inside the existing ratio-priority groups. Low or
 unknown ratios never exclude an otherwise eligible file. File/byte caps, age,
 cooldown, maintenance and source/target guards are unchanged.
 
-## Current unpublished candidate
+## Current published candidate
 
-Build 2026.10.31.1 preserves the reviewed top-level EMBY directory exclusion during updates. Regression coverage verifies exact-directory boundaries and prevents a promised move date for excluded files. Package lifecycle and 136 isolated Python tests passed on Linux. This build is not installed or published. Observer mode remains the safe installation default; movement configuration is still limited to the documented reviewed cache/Filmek setup. General source/share/target setup is not implemented.
+Build 2026.10.31.2 preserves the reviewed top-level EMBY directory exclusion during updates and adds the guarded selective-mover profile contract plus the profile settings page. Regression coverage verifies exact-directory boundaries and prevents a promised move date for excluded files. Package lifecycle and 154 isolated Python tests passed on Linux. This build is published on the main branch; NAS installation remains a separate observer-mode-gated action. Movement configuration is still limited to the documented reviewed cache/Filmek setup. General source/share/target setup is not implemented.
 
 ## Prior integrity-wait candidate
 
