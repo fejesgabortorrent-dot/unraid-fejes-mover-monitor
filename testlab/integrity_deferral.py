@@ -14,12 +14,14 @@ root=Path('/mnt/disk1/fm-acceptance/guarded')
 state=json.loads((root/'current.json').read_text())
 source=Path(state['source'])
 assert hashlib.sha256(source.read_bytes()).hexdigest()==state['sha256']
-probe=root/('integrity-probe-'+str(time.time_ns())+'.bin')
+directory=root/('integrity-probe-'+str(time.time_ns()))
+directory.mkdir(mode=0o700)
+probe=directory/'data.bin'
 with probe.open('xb') as stream:
     for _ in range(64):stream.write(b'\0'*1024**2)
 probe.chmod(0o600)
 scanner='/usr/local/emhttp/plugins/dynamix.file.integrity/scripts/bunker'
-process=subprocess.Popen([scanner,'-aq',str(probe)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+process=subprocess.Popen([scanner,'-aq',str(directory)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 try:
     process.send_signal(signal.SIGSTOP)
     deadline=time.monotonic()+3
