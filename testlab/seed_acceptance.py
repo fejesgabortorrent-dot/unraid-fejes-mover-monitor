@@ -84,8 +84,10 @@ def authenticate(name):
         reply = command(['docker', 'exec', name, 'curl', '-q', '-fsS', '-c', COOKIE,
                          '--data-urlencode', 'username=admin', '--data-urlencode',
                          'password=' + matches[-1], URL + 'auth/login'], secret=True)
-        if reply.strip() != 'Ok.':
-            raise RuntimeError('Local test authentication rejected')
+        # An authenticated read is authoritative even when login returns an empty 200 body.
+        verified = command(['docker','exec',name,'curl','-q','-fsS','-b',COOKIE,URL+'app/version'],secret=True)
+        if not re.fullmatch(r'v?\d+\.\d+[^\s]*',verified.strip()):
+            raise RuntimeError('Authenticated test API version unavailable')
     # The production adapter invokes curl inside the container. Give that curl
     # an authenticated local session, rather than disabling WebUI authentication.
     config = 'cookie = "' + COOKIE + '"\n'
