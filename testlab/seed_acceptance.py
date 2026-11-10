@@ -69,15 +69,16 @@ def container(name):
 
 
 def authenticate(name):
-    container(name)
+    inspected=container(name)
     # A successful existing session can be reused without changing credentials.
     probe = subprocess.run(['docker', 'exec', name, 'curl', '-q', '-fsS',
                             '-b', COOKIE, URL + 'app/version'], capture_output=True, text=True)
     if probe.returncode:
-        logs = command(['docker', 'logs', name], secret=True)
-        # Docker stores some image startup output on stderr.
-        raw = subprocess.run(['docker', 'logs', name], capture_output=True, text=True)
-        matches = re.findall(r'temporary password[^\n]*?:\s*(\S+)', logs + raw.stderr, re.I)
+        # Ignore credentials from previous container starts, including stderr.
+        raw = subprocess.run(['docker','logs','--since',inspected['State']['StartedAt'],name],
+                             capture_output=True,text=True,timeout=15)
+        if raw.returncode:raise RuntimeError('Current startup log unavailable')
+        matches = re.findall(r'temporary password[^\n]*?:\s*(\S+)', raw.stdout + raw.stderr, re.I)
         if not matches:
             raise RuntimeError('Generated temporary credential unavailable; no password changed')
         reply = command(['docker', 'exec', name, 'curl', '-q', '-fsS', '-c', COOKIE,
