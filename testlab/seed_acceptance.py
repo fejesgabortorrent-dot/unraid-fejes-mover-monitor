@@ -25,6 +25,10 @@ COOKIE = '/tmp/fm-acceptance.cookies'
 URL = 'http://127.0.0.1:8080/api/v2/'
 
 
+class MissingTestTorrent(RuntimeError):
+    pass
+
+
 def command(args, data=None, secret=False, timeout=60):
     result = subprocess.run(args, input=data, text=True, capture_output=True, timeout=timeout)
     if result.returncode:
@@ -109,14 +113,18 @@ def torrent(name, digest):
     rows = api(name, 'torrents/info')
     matches = [x for x in rows if x['hash'] == digest]
     if len(matches) != 1:
-        raise RuntimeError('Expected unique test torrent missing')
+        raise MissingTestTorrent('Expected unique test torrent missing')
     return matches[0]
 
 
 def wait_complete(name, digest, seconds=45):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
-        item = torrent(name, digest)
+        try:
+            item = torrent(name, digest)
+        except MissingTestTorrent:
+            time.sleep(1)
+            continue
         if item.get('progress') == 1 and item.get('state') in {'stalledUP', 'uploading', 'queuedUP', 'forcedUP'}:
             return item
         if item.get('state') in {'error', 'missingFiles'}:
@@ -179,11 +187,21 @@ def prepare():
                  bytes=len(payload), source=str(source), image_id=seed['Image'],
                  status='prepared', preflight='not yet exercised', seed_verified=False)
     save(state)
-    reply = api(SEED, 'torrents/add', dict(torrents='@/tmp/fm-lab.torrent',
+    api(SEED, 'torrents/add', dict(torrents='@/tmp/fm-lab.torrent',
                 savepath='/data/' + run, skip_checking='false', autoTMM='false'), torrent=True)
-    if reply.strip() != 'Ok.':
-        raise RuntimeError('Seeder rejected test torrent')
-    item = wait_complete(SEED, digest)
+    verify_prepared(state)
+
+
+def verify_prepared(state):
+    if state['status'] != 'prepared':
+        raise RuntimeError('Prepared state required')
+    authenticate(SEED)
+    source = Path(state['source'])
+    if hashlib.sha256(source.read_bytes()).hexdigest() != state['sha256']:
+        raise RuntimeError('Prepared source content differs')
+    # Current qBittorrent can return an empty 200 body. Authoritative state,
+    # not a historical response string, determines whether the add succeeded.
+    item = wait_complete(SEED, state['hash'])
     state.update(status='seeding_before_move', seed_version=api(SEED, 'app/version'),
                  torrent_state_before=item['state'], torrent_progress_before=item['progress'])
     save(state)
@@ -236,10 +254,8 @@ def transfer(state):
         raise RuntimeError('Successful post-move recheck required')
     for name in (SEED, PEER):
         authenticate(name)
-    reply = api(PEER, 'torrents/add', dict(torrents='@/tmp/fm-lab.torrent',
+    api(PEER, 'torrents/add', dict(torrents='@/tmp/fm-lab.torrent',
                 savepath='/data/' + state['run'], skip_checking='false', autoTMM='false'), torrent=True)
-    if reply.strip() != 'Ok.':
-        raise RuntimeError('Peer rejected test torrent')
     seed = container(SEED)
     ip = seed['NetworkSettings']['Networks'][NETWORK]['IPAddress']
     port = api(SEED, 'app/preferences')['listen_port']
@@ -259,14 +275,16 @@ def transfer(state):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['prepare', 'move-component', 'transfer', 'status'])
+    parser.add_argument('action', choices=['prepare', 'verify-prepared', 'move-component', 'transfer', 'status'])
     args = parser.parse_args()
     environment()
     if args.action == 'prepare':
         prepare()
     else:
         state = json.loads((BASE / 'current.json').read_text())
-        if args.action == 'move-component':
+        if args.action == 'verify-prepared':
+            verify_prepared(state)
+        elif args.action == 'move-component':
             component(state)
         elif args.action == 'transfer':
             transfer(state)
