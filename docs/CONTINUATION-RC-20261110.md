@@ -42,3 +42,19 @@ The test client's successful login can return an empty HTTP 200 body. Authentica
 5. Record results and publish stable only once the claimed scope passes. Broad compatibility, production VPN/tracker credit and power-loss tests remain unverified.
 
 Agreed future direction is separately recorded on main in docs/DEVELOPMENT-DIRECTION.md: stable Unraid 7 first, Docker UI plus restricted host helper next, then tested Unraid 8 support.
+
+## Later verified results
+
+The fixed scanner-presence test passed on 2026-11-10 around 21:30 guest time. It held a real Bunker process with SIGSTOP, confirmed movement deferred without a latch or source change, resumed the scanner, and verified successful exit and the actual SHA256 xattr on its isolated 64 MiB test file. This remains a process-presence test, not a mid-native race claim.
+
+Source archive saved to /mnt/disk1/fm-acceptance/guarded/source.tgz from commit 377032426e58fea87da70eeedc98709818df2ce4; gzip -tv reported OK. The test VM has startArray="no", so manual array startup is expected after reboot. A controlled guest reboot was requested and the VM boot splash was observed around 21:35; post-boot verification is pending.
+
+## Reboot result and exact age forecast
+
+The VM completed a controlled reboot. Array manually started under its existing startArray=no policy. Plugin boot/runtime remained 2026.11.10.3; both lab containers returned running, integrity watcher/pipe and profile/launcher remained present, and the 4 GiB Docker persistence was correct. Source restored from the verified archive into /tmp/fm-rc (plain extracted tree, not a git worktree).
+
+Important qualification: btrfs scrub status after reboot reported no stats available, so the existing guard blocked. A fresh real scrub of the 16.38 MiB testcache completed without errors; only then did the installed runner pass all preflight checks again. This proves recovery with manual revalidation, not unattended reboot-to-ready behavior. Document or improve this lifecycle limitation before claiming automatic recovery.
+
+Post-boot guarded run: nothing_eligible, moved_files/bytes=0, skipped protected_content=1, no blockers and no inspection latch. The harness verified the original source SHA256 before calling the installed runner. The real qBittorrent status was progress=1, stalledUP, source still on cache. Private forecast explicitly says too_young with age_ready_at=1794427698.3176904 (2026-11-11T21:08:18.317690+01:00). This is a forecast only: recheck every guard and actual API/file age before starting movement. No timestamp override or protection bypass.
+
+Remaining: genuine age-qualified positive full-runner move plus post-move recheck and peer transfer, then scope-limited release decision. An unattended-reboot claim is still blocked by the scrub-history limitation.
