@@ -30,7 +30,9 @@ lab.command(['docker','update','--restart','unless-stopped',lab.SEED,lab.PEER])
 # Use File Integrity's own settings handler to generate watcher and schedule.
 plugin=Path('/usr/local/emhttp/plugins/dynamix.file.integrity')
 config=Path('/boot/config/plugins/dynamix.file.integrity/dynamix.file.integrity.cfg')
-if config.exists():raise SystemExit('Expected unconfigured lab File Integrity')
+existing=config.read_text() if config.exists() else None
+if existing is not None and not all(line in existing for line in ('service="1"','exclude="system,appdata"','folders="fm-peer,fm-acceptance"')):
+    raise SystemExit('Unreviewed existing lab File Integrity configuration')
 php='''<?php
 $keys=parse_ini_file('/usr/local/emhttp/plugins/dynamix.file.integrity/default.cfg');
 $_POST=array_merge($keys,['service'=>'1','schedule'=>'3','dotm'=>'1','hour'=>'3','min'=>'17','priority'=>'','parity'=>'1','exclude'=>'system,appdata','folders'=>'fm-peer,fm-acceptance','disk1-0'=>'1']);
@@ -39,7 +41,7 @@ $lines=[];
 foreach ($_POST as $k=>$v) {$lines[]=$k.'="'.$v.'"';}
 file_put_contents('/boot/config/plugins/dynamix.file.integrity/dynamix.file.integrity.cfg',implode("\\n",$lines)."\\n");
 ?>'''
-subprocess.run(['php','-d','short_open_tag=1'],input=php,text=True,check=True)
+if existing is None:subprocess.run(['php','-d','short_open_tag=1'],input=php,text=True,check=True)
 config.chmod(0o600)
 lab.authenticate(lab.SEED)
 sys.path.insert(0,'/boot/config/plugins/fejes.mover.monitor/tools')

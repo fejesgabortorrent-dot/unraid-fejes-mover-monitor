@@ -77,12 +77,12 @@ def authenticate(name):
         logs = command(['docker', 'logs', name], secret=True)
         # Docker stores some image startup output on stderr.
         raw = subprocess.run(['docker', 'logs', name], capture_output=True, text=True)
-        match = re.search(r'temporary password[^\n]*?:\s*(\S+)', logs + raw.stderr, re.I)
-        if not match:
+        matches = re.findall(r'temporary password[^\n]*?:\s*(\S+)', logs + raw.stderr, re.I)
+        if not matches:
             raise RuntimeError('Generated temporary credential unavailable; no password changed')
         reply = command(['docker', 'exec', name, 'curl', '-q', '-fsS', '-c', COOKIE,
                          '--data-urlencode', 'username=admin', '--data-urlencode',
-                         'password=' + match[1], URL + 'auth/login'], secret=True)
+                         'password=' + matches[-1], URL + 'auth/login'], secret=True)
         if reply.strip() != 'Ok.':
             raise RuntimeError('Local test authentication rejected')
     # The production adapter invokes curl inside the container. Give that curl
