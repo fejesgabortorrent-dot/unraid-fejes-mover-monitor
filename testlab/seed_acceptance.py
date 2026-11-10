@@ -254,8 +254,11 @@ def transfer(state):
         raise RuntimeError('Successful post-move recheck required')
     for name in (SEED, PEER):
         authenticate(name)
-    api(PEER, 'torrents/add', dict(torrents='@/tmp/fm-lab.torrent',
-                savepath='/data/' + state['run'], skip_checking='false', autoTMM='false'), torrent=True)
+    try:
+        torrent(PEER, state['hash'])
+    except MissingTestTorrent:
+        api(PEER, 'torrents/add', dict(torrents='@/tmp/fm-lab.torrent',
+                    savepath='/data/' + state['run'], skip_checking='false', autoTMM='false'), torrent=True)
     seed = container(SEED)
     ip = seed['NetworkSettings']['Networks'][NETWORK]['IPAddress']
     port = api(SEED, 'app/preferences')['listen_port']
@@ -263,7 +266,19 @@ def transfer(state):
     item = wait_complete(PEER, state['hash'])
     target = Path('/mnt/disk1/fm-peer') / state['run'] / 'seedproof.bin'
     actual = hashlib.sha256(target.read_bytes()).hexdigest()
-    seed_item = torrent(SEED, state['hash'])
+    deadline = time.monotonic() + 10
+    while True:
+        item = torrent(PEER, state['hash'])
+        seed_item = torrent(SEED, state['hash'])
+        if (item.get('downloaded', 0) >= state['bytes'] and
+                seed_item.get('uploaded', 0) >= state['bytes']) or time.monotonic() >= deadline:
+            break
+        time.sleep(1)
+    state.update(peer_hash_matches=actual == state['sha256'],
+                 peer_downloaded_observed=item.get('downloaded'),
+                 seed_uploaded_observed=seed_item.get('uploaded'),
+                 peer_progress_observed=item.get('progress'))
+    save(state)
     if actual != state['sha256'] or item.get('downloaded', 0) < state['bytes'] or seed_item.get('uploaded', 0) < state['bytes']:
         raise RuntimeError('Peer content or byte-count evidence incomplete')
     state.update(status='peer_transfer_verified', seed_verified=True, peer_sha256=actual,
