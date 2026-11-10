@@ -60,3 +60,7 @@ Therefore this result **does not prove** the production eligibility guards, torr
 Keep `Beta=true` and the RC1 designation. The new evidence supports “successful isolated VM installation and native execution component movement”, **not** “fully certified”, “stable”, or “seed protection proven”. The catalog metadata should point to this record; its independent refresh/approval is not established by a repository write.
 
 Related acceptance tracker: [#34](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues/34). Related preflight repair: [#35](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/pull/35).
+
+## Later same-day result — real torrent continuity and peer transfer
+
+The [16 MiB real-torrent component result](SEED-COMPONENT-RESULT-20261110.md) now records a successful real qBittorrent recheck and a complete internal peer transfer after native component movement, with matching SHA-256 and 16,777,216 bytes recorded in both upload/download counters. This supersedes the earlier statement that Docker/test clients were not prepared for this later phase only. The full fresh-candidate/batch/age/integrity path remains unverified; its in-process test boundary is unchanged. This is not a full seed-protection or stable-release certification.
