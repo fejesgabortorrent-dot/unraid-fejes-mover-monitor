@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
+import selective_preview as preview
 
 from selective_profile import DEFAULT, load_profile
 
@@ -28,6 +30,14 @@ class SelectiveProfileTest(unittest.TestCase):
         self.assertEqual(str(profile.source), '/mnt/fast_cache/Media_01')
         self.assertEqual(profile.canonical, '/mnt/user/Media_01')
         self.assertTrue(str(profile.share_config).endswith('/Media_01.cfg'))
+
+    def test_storage_views_resolve_to_one_logical_path(self):
+        for pool,share in [('cache','Filmek'),('fast_cache','Media_01')]:
+            with self.subTest(pool=pool,share=share), patch.object(preview,'POOL_ROOT',Path('/mnt')/pool), patch.object(preview,'CANONICAL','/mnt/user/'+share):
+                expected='/mnt/user/'+share+'/folder/file.bin'
+                for view in (pool,'disk1','disk12','user0','user'):
+                    self.assertEqual(preview.canonical('/mnt/'+view+'/'+share+'/folder/file.bin'),expected)
+                self.assertEqual(preview.canonical('/mnt/'+pool),'/mnt/user')
 
     def test_invalid_profile_fails_closed(self):
         with tempfile.TemporaryDirectory() as directory:
