@@ -30,6 +30,10 @@ Build 2026.10.27.4 retains the shared appearance in Follow Unraid mode, aligns f
 
 The current candidate passed 131 isolated tests, package reproducibility, checksums, PHP syntax, installation lifecycle and targeted JavaScript checks. GitHub CI validates the submitted revision separately. These checks do not establish live reboot persistence or broad hardware compatibility. RC1 remains a prerelease; keep backups and do not infer tracker credit or actual peer upload from continuity checks.
 
+## Real-torrent component evidence — 2026-11-10
+
+The [16 MiB real-torrent component result](SEED-COMPONENT-RESULT-20261110.md) passed: native component movement, real qBittorrent recheck, unchanged logical path, full internal peer download, matching SHA-256 and upload/download byte counts. Eligibility preflight was simulated in-process. Full guarded batch/age/integrity acceptance, tracker credit and guest lifecycle remain open. The test PR is draft/unmerged and the catalog retains Beta/RC1.
+
 ## Verification
 
 CI checks reproducible package/checksums, isolated install/update/rejection/remove,
@@ -45,7 +49,8 @@ missing sizes, deterministic ties and remaining byte-budget handling.
 - Files above the saved byte limit remain in cache. Eight-file and cooldown
   limits may still constrain release rate; RC1 promises no transfer ETA or
   guarantee against cache filling while writes exceed eligible movement.
-- Actual peer upload of moved content, tracker seed credit, reverse movement,
+- Peer upload is verified only in the documented disposable 16 MiB component test.
+  Tracker seed credit, reverse movement,
   physical power-loss recovery, NAS reboot persistence and broad compatibility
   remain unverified. Backup restore acceptance is separate from a successful job.
 - The catalog refreshes independently. GitHub publication and accessible image
