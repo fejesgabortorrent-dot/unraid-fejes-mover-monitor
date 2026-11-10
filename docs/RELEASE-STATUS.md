@@ -10,6 +10,10 @@ larger eligible files first inside the existing ratio-priority groups. Low or
 unknown ratios never exclude an otherwise eligible file. File/byte caps, age,
 cooldown, maintenance and source/target guards are unchanged.
 
+## Disposable Unraid VM evidence — 2026-11-10
+
+See [the dated validation record](UNRAID-VM-VALIDATION-20261110.md) for exact revisions, test environments and remaining gates. Main passed 154 Linux fixture tests; the main package installed in the test VM, and its native execution component moved a 4 MiB test file with matching SHA-256 and metadata. Eligibility preflight was simulated for that component test, so full guarded movement and live seed continuity remain unverified. PR #35 was tested separately and is not part of the installed main revision. The catalog remains Beta/RC1; independent catalog refresh is not yet verified.
+
 ## Current published candidate
 
 Build 2026.10.31.2 preserves the reviewed top-level EMBY directory exclusion during updates and adds the guarded selective-mover profile contract plus the profile settings page. Regression coverage verifies exact-directory boundaries and prevents a promised move date for excluded files. Package lifecycle and 154 isolated Python tests passed on Linux. This build is published on the main branch; NAS installation remains a separate observer-mode-gated action. Movement configuration is still limited to the documented reviewed cache/Filmek setup. General source/share/target setup is not implemented.
