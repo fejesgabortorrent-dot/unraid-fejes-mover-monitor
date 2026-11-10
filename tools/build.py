@@ -5,7 +5,7 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/fix/installable-preflight-rc'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.11.10.2'
+version='2026.11.10.3'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py')]
 
@@ -14,6 +14,8 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.11.10.3 (test release candidate)
+- Use the validated selective profile for scheduled integrity torrent preflight.
 ### 2026.11.10.2 (test release candidate)
 - Normalize physical pool paths without duplicating the configured share name.
 ### 2026.11.10.1 (test release candidate)

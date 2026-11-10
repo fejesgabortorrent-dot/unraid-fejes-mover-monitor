@@ -1,4 +1,4 @@
-# Installable candidate 2026.11.10.2
+# Installable candidate 2026.11.10.3
 
 Status: test candidate; not certified for production.
 
@@ -19,3 +19,9 @@ Candidate update channel is the dedicated fix/installable-preflight-rc branch. T
 ## Follow-up
 
 The preceding 2026.11.10.1 candidate installed successfully on FejesMover-Test, and the guest package check passed. Before full guarded-run acceptance, review found physical pool normalization duplicated the share name. Candidate .2 fixes that mapping and adds a regression test covering cache, custom pool, disk, user0 and user views. The full 168-case Python suite and isolated package check pass. The read-only testlab/live_readiness.py diagnostic refuses other hostnames and reports missing live prerequisites without repairing them.
+
+## Actual VM progress
+
+Candidate 2026.11.10.2 installed successfully. Fresh private 16 MiB torrent prepared with genuine one-day age and inventory observations. The installed runner passed a genuine API-outage test: the isolated fm-qbit container was stopped, the runner deferred with zero movement and no inspection latch, source SHA256 remained intact, and the container was restarted. Full age-qualified movement and reboot acceptance remain pending.
+
+Candidate .3 additionally makes the scheduled integrity preflight use the validated profile container instead of a fixed production container name. 169 Python cases and the isolated package check passed. The configure_protection lab script uses upstream File Integrity settings generation and a completed real cache scrub; its execution is tracked separately from code checks.
