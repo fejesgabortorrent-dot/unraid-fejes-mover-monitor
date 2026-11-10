@@ -66,3 +66,9 @@ The initial add response differed from historical `Ok.`, although the torrent wa
 Use the installed Browser extension, a fresh open-tabs listing and the existing `QEMU (FejesMover-Test) - noVNC` tab. Never use the production NAS terminal. The guest Firefox terminal is visually `http://localhost/webterminal/ttyd/`.
 
 Bulk input can truncate shifted characters. Small lowercase chunks plus explicit Shift+physical-key presses for capitals/colon/underscore were reliable. NoVNC clipboard paste produced stale content; inspect before execution. To cancel a partial command: fresh DOM, open noVNC Extra keys if needed, toggle its Ctrl button, type `c`, untoggle Ctrl. Browser calls sometimes timed out after the guest operation succeeded; inspect before retrying mutations.
+
+## End-of-day handoff — 2026-11-10
+
+The owner requested a final continuation save and stopping work for today, with approximately 19% of the session credit remaining. No new test was run after the successful 16 MiB component/peer result recorded above. The proposed real-preflight/API-failure test was discussed but NOT executed; do not mark it passed.
+
+Resume next time from the unverified full preflight/API-failure gate, after freshly checking the disposable guest. Preserve the proven component results and avoid repeating the successful move on the same saved run. The source archive on the guest data disk was previously verified with gzip exit code 0; it was not recreated or reread during this closing save. Docker/container uptime and current VM state were not freshly inspected at close. No merge, release or production operation was performed during this closing save.
