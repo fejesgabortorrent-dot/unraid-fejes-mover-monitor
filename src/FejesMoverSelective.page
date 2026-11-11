@@ -172,7 +172,7 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <?php endif?>
 <?php if($reason==='unit_not_ready'&&is_array($row['unit_blockers']??null)): foreach(array_slice($row['unit_blockers'],0,5) as $cause): if(!is_array($cause))continue;?>
 <small style="display:block"><?=$e($t('Visszatartó fájl','Blocking file','Blockierende Datei'))?>: <?=$e($cause['file']??'—')?> · <?=$e($skipLabels[$cause['reason']??'']??$t('Bizonytalan állapot','Unverifiable state','Ungeprüfter Zustand'))?></small>
-<?php endforeach; if(count($row['unit_blockers'])>5):?><small>+<?=count($row['unit_blockers'])-5?> <?=$e($t('további akadály','more blockers','weitere Blockaden'))?></small><?php endif; endif?>
+<?php endforeach; if(($row['unit_blocker_count']??count($row['unit_blockers']))>5):?><small>+<?=max(0,(int)($row['unit_blocker_count']??count($row['unit_blockers']))-5)?> <?=$e($t('további akadály','more blockers','weitere Blockaden'))?></small><?php endif; endif?>
 </td></tr>
 <?php endforeach?>
 </tbody></table></div>
