@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Age-filtered native Unraid movement. No global mover invocation.
 
 Production scope is a validated profile -> the array with unchanged user-share
@@ -362,7 +362,7 @@ def run():
         preserve_prior=False
         if PID.exists(): raise ValueError('Mover PID already present')
         report['stage']='preflight_collection'
-        selection,files,current,items,_,_=collect(True)
+        selection,files,current,items,mounts,_=collect(True)
         report.update(age_days=selection['age_days'],candidate_count=len(selection['candidates']),blockers=selection['blockers'],
                       skipped=dict(Counter(x['reason'] for x in selection['skipped'])))
         if selection['blockers']:
@@ -378,7 +378,7 @@ def run():
         report['batch_bytes_limit']=limit
         skips=Counter(report['skipped'])
         selected=set(selection['candidates'])
-        groups=[group for group in unit_groups(files,ROOT) if selected.intersection(group)]
+        groups=[group for group in unit_groups(files,ROOT,items,mounts) if selected.intersection(group)]
         rank={key:i for i,key in enumerate(selection['candidates'])}
         groups.sort(key=lambda group:min(rank.get(key,len(rank)) for key in group))
         for group in groups:
