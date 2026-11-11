@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Pure selection policy; never authorizes or executes a live move.
 
 Inputs must be collected by a trusted host adapter. Files and torrent content
@@ -72,34 +72,44 @@ def prioritize(candidates, torrents, mounts, target=0, sizes=None):
     return sorted(candidates, key=order)
 
 
-def unit_groups(files, root, arrival_window=1800):
-    """Group a top-level folder or nearby root arrivals as one bounded unit.
+def unit_groups(files, root, torrents=None, mounts=None):
+    """Keep folders, exact-name sidecars and shared torrent owners together.
 
-    This is conservative: ambiguous loose files can be grouped together, never
-    split into separately eligible fragments merely to fit a batch.
+    Observation time is not evidence that independent files belong together.
+    Overlapping folder/owner relationships are merged transitively.
     """
     root = absolute_path(root)
-    folders, loose = {}, []
+    parents = {}
+    buckets = {}
+    owners = [host_path(t['content_path'], mounts) for t in (torrents or [])]
+    def find(path):
+        while parents[path] != path:
+            parents[path] = parents[parents[path]]
+            path = parents[path]
+        return path
+    def join(paths):
+        if paths:
+            head = find(paths[0])
+            for path in paths[1:]:
+                parents[find(path)] = head
     for item in files:
         path = absolute_path(item['path'])
-        if path == root or not within(path, root):
-            raise ValueError('Out-of-root unit')
+        if path == root or not within(path, root) or path in parents:
+            raise ValueError('Duplicate or out-of-root unit')
+        parents[path] = path
         relative = path[len(root)+1:]
-        first = timestamp(item.get('first_seen'))
-        if '/' in relative:
-            folders.setdefault(relative.split('/', 1)[0], []).append(path)
-        else:
-            loose.append((first, path))
-    groups = [sorted(paths) for _, paths in sorted(folders.items())]
-    loose.sort()
-    loose_groups = []
-    last_loose = None
-    for first, path in loose:
-        if last_loose is None or first - last_loose > arrival_window:
-            loose_groups.append([])
-        loose_groups[-1].append(path)
-        last_loose = first
-    return groups + loose_groups
+        # A directory remains a conservative unit. At the root, matching stems
+        # preserve video/subtitle sidecars without grouping unrelated arrivals.
+        key = ('folder', relative.split('/', 1)[0]) if '/' in relative else ('stem', relative.rsplit('.', 1)[0])
+        buckets.setdefault(key, []).append(path)
+    for paths in buckets.values():
+        join(paths)
+    for owner in owners:
+        join([path for path in parents if within(path, owner) or within(owner, path)])
+    groups = {}
+    for path in parents:
+        groups.setdefault(find(path), []).append(path)
+    return sorted(sorted(paths) for paths in groups.values())
 
 
 def torrent_owner(path, torrents, mounts):
@@ -192,7 +202,7 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
             else:
                 result['candidates'].append(path)
         selected=set(result['candidates'])
-        for group in unit_groups(files, root):
+        for group in unit_groups(files, root, torrents, mounts):
             if selected.intersection(group) and not selected.issuperset(group):
                 for path in group:
                     if path in selected:
@@ -217,9 +227,12 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
         raise ValueError('Forecast snapshot unavailable')
     reasons={x['path']:x['reason'] for x in diagnostic['skipped']}
     resolved=[(host_path(t['content_path'],mounts),t) for t in torrents]
-    units=unit_groups(files,root)
+    units=unit_groups(files,root,torrents,mounts)
     unit_info={path:(len(group),sum(inventory[key]['signature'][2] for key in group))
                for group in units for path in group}
+    unit_blockers={path:[{'file':key[len(root)+1:], 'reason':reasons[key]} for key in group
+                         if key in reasons and reasons[key]!='unit_not_ready']
+                   for group in units for path in group}
     rows=[]
     for item in files:
         key=item['path'];reason=reasons.get(key,'ready')
@@ -242,6 +255,8 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
         unit_count,unit_bytes=unit_info[key]
         rows.append({'file':key[len(root)+1:],'bytes':size,'age_ready_at':ready,'reason':reason,
                      'torrent_owned':bool(related),'unit_files':unit_count,'unit_bytes':unit_bytes,
+                     'open':item.get('open'), 'stable':item.get('stable'),
+                     'unit_blockers':unit_blockers[key],
                      'ratio':ratio,'ratio_target_met':ratio is not None and target_ratio>0 and ratio>=target_ratio})
     rows.sort(key=lambda r:(r['age_ready_at'] is None,r['age_ready_at'] or 0,r['file']))
     return {'version':1,'observed_at':now,'age_days':days,'rows':rows,
