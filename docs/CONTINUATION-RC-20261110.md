@@ -58,3 +58,15 @@ Important qualification: btrfs scrub status after reboot reported no stats avail
 Post-boot guarded run: nothing_eligible, moved_files/bytes=0, skipped protected_content=1, no blockers and no inspection latch. The harness verified the original source SHA256 before calling the installed runner. The real qBittorrent status was progress=1, stalledUP, source still on cache. Private forecast explicitly says too_young with age_ready_at=1794427698.3176904 (2026-11-11T21:08:18.317690+01:00). This is a forecast only: recheck every guard and actual API/file age before starting movement. No timestamp override or protection bypass.
 
 Remaining: genuine age-qualified positive full-runner move plus post-move recheck and peer transfer, then scope-limited release decision. An unattended-reboot claim is still blocked by the scrub-history limitation.
+
+## Resume checkpoint — 2026-11-11 16:25 CET
+
+Reconnected through the production host's VNC solely to FejesMover-Test. Guest hostname confirmed. Guarded status still seeding_before_move, progress=1, stalledUP, source_on_cache=true. No preparation or timestamp changes performed.
+
+Installed guarded runner re-executed at epoch 1794410721: state=nothing_eligible, moved_files=0, moved_bytes=0, protected_content=1, candidate_count=0, blockers=[], requires_inspection=false, active_file_started=false. Source hash was checked by the harness before the run. Private result saved automatically in the guarded evidence directory. Genuine age readiness remains 2026-11-11 21:08:18 CET; recheck actual eligibility and all guards then.
+
+Added testlab/guarded_transfer.py for the remaining positive acceptance. It requires completed full-runner evidence, source absence, array hash and preserved logical torrent path, then performs a real recheck and isolated peer transfer. It does not move files or bypass age guards. Shared transfer helper now accepts an explicit guarded checkpoint and scope description; existing component defaults remain. This new guarded transfer path has NOT yet run in the VM and must not be claimed as successful.
+
+Before the final move, deliver the latest testlab helpers to the guest (the guest /tmp/fm-rc is an extracted tree, not a git checkout). Preserve both existing current.json files. Run guarded_acceptance.py status and run only with genuine eligibility; after successful full movement, use guarded_transfer.py. Do not run the component mover or re-prepare. No stable release yet.
+
+Validation limitation on this resumed workspace: PHP CLI is no longer installed. The attempted full unittest run did not pass (32 errors, missing PHP and PHP-dependent imports); this is not a new successful full-suite claim. No installed plugin code or package was changed in this checkpoint. New lab files passed Python compilation and whitespace checks.
