@@ -230,9 +230,13 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
     units=unit_groups(files,root,torrents,mounts)
     unit_info={path:(len(group),sum(inventory[key]['signature'][2] for key in group))
                for group in units for path in group}
-    unit_blockers={path:[{'file':key[len(root)+1:], 'reason':reasons[key]} for key in group
-                         if key in reasons and reasons[key]!='unit_not_ready']
-                   for group in units for path in group}
+    unit_blockers={}
+    for group in units:
+        causes=[{'file':key[len(root)+1:], 'reason':reasons[key]} for key in group
+                if key in reasons and reasons[key]!='unit_not_ready']
+        details=(causes[:5],len(causes))
+        for path in group:
+            unit_blockers[path]=details
     rows=[]
     for item in files:
         key=item['path'];reason=reasons.get(key,'ready')
@@ -256,7 +260,8 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
         rows.append({'file':key[len(root)+1:],'bytes':size,'age_ready_at':ready,'reason':reason,
                      'torrent_owned':bool(related),'unit_files':unit_count,'unit_bytes':unit_bytes,
                      'open':item.get('open'), 'stable':item.get('stable'),
-                     'unit_blockers':unit_blockers[key],
+                     'unit_blockers':unit_blockers[key][0] if reason=='unit_not_ready' else [],
+                     'unit_blocker_count':unit_blockers[key][1] if reason=='unit_not_ready' else 0,
                      'ratio':ratio,'ratio_target_met':ratio is not None and target_ratio>0 and ratio>=target_ratio})
     rows.sort(key=lambda r:(r['age_ready_at'] is None,r['age_ready_at'] or 0,r['file']))
     return {'version':1,'observed_at':now,'age_days':days,'rows':rows,
