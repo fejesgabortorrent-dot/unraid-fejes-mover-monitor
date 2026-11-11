@@ -70,3 +70,14 @@ Added testlab/guarded_transfer.py for the remaining positive acceptance. It requ
 Before the final move, deliver the latest testlab helpers to the guest (the guest /tmp/fm-rc is an extracted tree, not a git checkout). Preserve both existing current.json files. Run guarded_acceptance.py status and run only with genuine eligibility; after successful full movement, use guarded_transfer.py. Do not run the component mover or re-prepare. No stable release yet.
 
 Validation limitation on this resumed workspace: PHP CLI is no longer installed. The attempted full unittest run did not pass (32 errors, missing PHP and PHP-dependent imports); this is not a new successful full-suite claim. No installed plugin code or package was changed in this checkpoint. New lab files passed Python compilation and whitespace checks.
+
+
+## Grouping correction candidate — 2026-11-11
+
+Candidate package 2026.11.11.1 fixes unrelated root files being grouped by first observation time. Units now preserve top-level folders, exact-name sidecars and shared torrent content ownership; overlapping relationships merge transitively. Selection, forecasts and the actual batch runner use the same grouping inputs. Open/stability, age, integrity, backup, parity, namespace and batch checks remain enforced.
+
+Synthetic regression: 342 independent root files observed together, seven open; only those seven are skipped and 335 remain candidates. This reproduces the reported pattern without publishing real media names. It is not a claim about current production eligibility. Forecast details include actual blocking group members and separate open/stable observations; all displayed names are escaped.
+
+Validation: full discovery passed (182 tests), seven JavaScript suites passed, package reproducibility/checksums/XML/PHP lint and isolated install/update/rejection/remove passed. PHP CLI and ctype were restored in an isolated temporary test runtime. Existing exclusion test was updated so excluded EMBY metadata no longer blocks an unrelated root movie merely by observation time.
+
+The new package is a tested development candidate, not a stable release. Neither production nor test VM installation has been performed for this new version in this checkpoint. Preserve the genuine aged torrent and perform guest update/readiness/positive move/recheck/peer proof next; unattended reboot readiness remains qualified by the scrub-history limitation.
