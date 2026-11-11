@@ -252,8 +252,8 @@ def component(state):
     print('PASS: real native component move and real qBittorrent recheck after movement; full preflight unverified.')
 
 
-def transfer(state):
-    if state['status'] != 'rechecked_after_move':
+def transfer(state, *, limits=None, expected_status='rechecked_after_move'):
+    if state['status'] != expected_status:
         raise RuntimeError('Successful post-move recheck required')
     for name in (SEED, PEER):
         authenticate(name)
@@ -286,7 +286,7 @@ def transfer(state):
         raise RuntimeError('Peer content or byte-count evidence incomplete')
     state.update(status='peer_transfer_verified', seed_verified=True, peer_sha256=actual,
                  peer_downloaded=item['downloaded'], seed_uploaded=seed_item['uploaded'],
-                 limits='Native component plus real torrent continuity/peer transfer only; full guarded runner, tracker credit and age acceptance unverified.')
+                 limits=limits or 'Native component plus real torrent continuity/peer transfer only; full guarded runner, tracker credit and age acceptance unverified.')
     save(state)
     print('PASS: peer downloaded all test bytes after movement; SHA-256 matched; seeder upload counted.')
 
