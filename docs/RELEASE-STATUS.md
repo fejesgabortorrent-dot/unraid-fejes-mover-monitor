@@ -1,5 +1,22 @@
 # Release Candidate 1 — published build 2026.10.31.2
 
+## Development branch checkpoint — 2026-11-11
+
+Development candidate 2026.11.11.2 is installed on the owner's NAS and isolated
+test VM; this does not replace the published main/catalog build. It corrects
+arrival-time grouping of independent root files and bounds per-row blocker
+details. The final package passed 183 tests, package/lifecycle validation and
+GitHub run 43070988993. The guest's installed runner retained the age guard and
+returned zero movement without an inspection latch before eligibility.
+
+Controlled reboot recovery was verified with manual array startup and a fresh
+real scrub when history was missing. See [the operating procedure](REBOOT-RECOVERY.md).
+Unattended recovery is not claimed. Full guarded positive movement, post-move
+recheck and peer transfer remain pending; do not label this a stable general
+release or equate the earlier component proof with full-runner acceptance.
+
+## Published build context
+
 RC1 is a prerelease for the documented Unraid 7.x documented scope. See
 [RC1 release notes](RC1.md) and [selection/execution rules](SELECTIVE-MOVEMENT.md).
 
