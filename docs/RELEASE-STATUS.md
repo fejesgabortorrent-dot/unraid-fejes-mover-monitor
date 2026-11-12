@@ -11,9 +11,7 @@ returned zero movement without an inspection latch before eligibility.
 
 Controlled reboot recovery was verified with manual array startup and a fresh
 real scrub when history was missing. See [the operating procedure](REBOOT-RECOVERY.md).
-Unattended recovery is not claimed. Full guarded positive movement, post-move
-recheck and peer transfer remain pending; do not label this a stable general
-release or equate the earlier component proof with full-runner acceptance.
+Unattended recovery is not claimed. Full guarded positive movement, post-move recheck and isolated peer transfer passed on 2026-11-12; see [the acceptance record](ACCEPTANCE-20261112.md). This evidence supports the documented Unraid 7 scope; it does not establish broad compatibility or unattended reboot readiness.
 
 ## Published build context
 
