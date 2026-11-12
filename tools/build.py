@@ -14,7 +14,10 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
-### 2026.11.11.2 (test release candidate)
+### 2026.11.11.2 (stable for documented Unraid 7 scope)
+- Full guarded movement, destination SHA-256, source absence, torrent recheck and isolated peer transfer passed on 2026-11-12.
+- After reboot, missing scrub history requires a fresh successful scrub; unattended recovery is not claimed.
+- Earlier candidate notes below describe historical validation status.
 - Bound blocker details to five per waiting row; excluded or directly blocked rows do not repeat group causes.
 ### 2026.11.11.1 (test release candidate)
 - Keep independent root files separate; preserve folder, exact-name sidecar and torrent-owner units.
