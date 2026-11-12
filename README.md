@@ -1,140 +1,100 @@
 # Fejes Mover Monitor
 
-## 🇭🇺 Magyar · 🇺🇸 English (US) · 🇩🇪 Deutsch
+**Stable 2026.11.11.2 · Unraid 7.x · Magyar / English (US) / Deutsch**
 
-**Three interface languages · Három kezelőfelületi nyelv · Drei Oberflächensprachen**
+Monitor Mover activity and cache capacity, inspect waiting content, and optionally use guarded age-filtered cache-to-array movement in the documented reviewed setup.
 
-[![Támogasd a fejlesztést PayPalon](https://img.shields.io/badge/PayPal-T%C3%A1mogasd%20a%20fejleszt%C3%A9st-0070BA?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/FejesG)
+[Stable release](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.11.2) · [Acceptance evidence](docs/ACCEPTANCE-20261112.md) · [Movement guide](docs/SELECTIVE-MOVEMENT.md) · [Reboot recovery](docs/REBOOT-RECOVERY.md)
 
-*Önkéntes támogatás · Optional support · Freiwillige Unterstützung*
+## Magyar
 
-Mover dashboard and file monitor for Unraid 7.x with Hungarian, US English and German interfaces.
+Mover-állapot, cache-foglaltság és várakozási okok egy felületen. Az alapértelmezett Observer mód csak megfigyel. A Haladó mód a dokumentált környezetben korhatáros, torrentenként védett natív mozgatást kínál, céloldali SHA-256- és metaadat-ellenőrzéssel. A telepítés nem indít mozgatást és nem hoz létre ütemezést.
 
-**2026.10.27.4 · Release Candidate 1 (RC1) · Unraid 7.x**
+## English
 
-Historical owner-test evidence does not certify stable-release readiness. See [current evidence and limits](docs/RELEASE-STATUS.md).
+The default Observer mode reads status. Advanced mode adds optional native movement with torrent age, open-file and maintenance guards, whole-unit selection, and destination checksum/metadata verification. Waiting dates describe age eligibility, not a promised transfer start or completion.
 
-[Current manifest](fejes.mover.monitor.plg) · [Selective movement and recovery](docs/SELECTIVE-MOVEMENT.md) · [Evidence and limits](docs/RELEASE-STATUS.md)
+## Deutsch
 
-**Installation environment:** The monitoring interface targets Unraid 7.x (manifest minimum 7.0.0). Selective movement currently requires a pool named `cache`, a `Filmek` share configured cache-to-array, the existing `Filmek_Mover_Threshold` User Scripts automation, a `binhex-qbittorrentvpn` qBittorrent container, and torrent paths bound through `/mnt/user`. These are compatibility constraints of this candidate, not settings to publish from an owner NAS. Other pools, shares and clients must remain in Observer mode until a validated local setup flow exists. Unraid 8 compatibility is unverified.
+Observer ist der Standard und zeigt den Status an. Der optionale Advanced-Modus bietet im dokumentierten Umfeld altersabhängiges natives Verschieben mit Torrent-, Datei- und Wartungsschutz sowie SHA-256- und Metadatenprüfung. Die Installation startet keinen Transfer und erstellt keinen Zeitplan.
 
-Initial mode is **Observer**. Choose **Demo / Observer / Advanced** at `/Tools/FejesMoverSetup`. Installation and mode changes never start movement or install a schedule. Advanced/cache mode includes authenticated, opt-in selective movement with a torrent-only age threshold for the existing `Filmek` share and reviewed threshold automation. The app is listed in the owner's Community Applications search; listing is not broad hardware certification.
+## Current gallery
 
-**Magyar:** Az új szelektív mozgató kihagyja a félkész, aktív, megnyitott vagy megváltozott fájlokat. A torrenthez tartozó fájlokra 1 / 7 / 14 / 30 napos korhatár érvényes; a cache-ben igazolt első megfigyelés is számít. A más tartalom két stabil megfigyelés és a teljes együtt tartozó egység ellenőrzése után válhat alkalmassá. A natív Unraid-mozgatót használja, a célon SHA-256-ot és metaadatokat ellenőriz. Az automatikus bekötés külön, mentéssel történik; telepítéskor nem változik a meglévő ütemezés.
+English interface crops captured on 2026-11-12. These are actual interface views with point-in-time status and saved settings; values are examples, not recommended defaults or transfer-performance evidence. Private file lists and logs are excluded. The surrounding Unraid theme can differ.
 
-The current RC1 interface adds aligned navigation, in-place Back to top, report summaries, accessible help and unsaved-setting feedback. A shared optional PayPal support strip offers coffee (2 EUR), beer (5 EUR), pizza (10 EUR) and a custom amount; every feature remains free. Payment requires separate confirmation on PayPal.
+### Mover activity and cache capacity
 
-The current RC1 interface adds aligned navigation, in-place Back to top, report summaries, accessible help and unsaved-setting feedback. A shared optional PayPal support strip offers coffee (2 EUR), beer (5 EUR), pizza (10 EUR) and a custom amount; every feature remains free. Payment requires separate confirmation on PayPal.
+![Mover activity and cache capacity](docs/images/store-en-monitor-20261112.png)
 
-The selective page includes dismissible help bubbles, an in-app user guide and project history. Help works with touch, keyboard and Escape without submitting settings.
+### Waiting content and guarded actions
 
-Raised / flat cards, consistent Back / Forward / Home navigation, and bidirectional queue sorting are available in Hungarian, English and German. Display preferences and sorting never alter movement rules or schedules.
+![Selective movement overview and help](docs/images/store-en-selective-20261112.png)
 
-## Screenshots / Képernyőképek
+### Existing automation settings
 
-**English interface previews with simulated data — not a live NAS or transfer-test evidence.** Rendered from the current plugin pages in a standalone dark preview wrapper; the surrounding Unraid theme can differ. The monitor footer still contains some Hungarian text. Current test evidence and limitations are recorded in the release status.
+![Free-space threshold and retry interval](docs/images/store-en-settings-20261112.png)
 
-**Helyi demó, szimulált adatokkal.** A képek nem az élő NAS-ról készültek.
+### Demo, Observer and Advanced modes
 
-### Mover Monitor / Figyelő
-
-![Mover Monitor — English simulated preview](docs/images/store-en-monitor-20261024.jpg)
-
-### Dashboard card / Dashboard-kártya
-
-![Dashboard card — English simulated preview](docs/images/store-en-dashboard-20261024.jpg)
-
-### Settings / Beállítások
-
-![Settings — English simulated preview](docs/images/store-en-settings-20261024.jpg)
-
-### Selective movement / Szelektív mozgatás
-
-![Selective movement — English simulated preview](docs/images/store-en-selective-20261024.jpg)
-
-To refresh the gallery after a design change, run `tools/export_store_preview.py` with PHP and Bash on PATH, serve the exported HTML on loopback, and capture the pages in a browser. Inspect every image for private information and rendering errors. Use new dated filenames and update both this gallery and the `<Screenshot>` entries in `plugins/fejes-mover-monitor.xml`; Community Applications may take time to refresh its index. Screenshot-only updates do not require a plugin reinstall.
+![Operating modes and compatibility limits](docs/images/store-en-setup-20261112.png)
 
 ## Features
 
-- Larger eligible files are selected first within each ratio-priority group, so small sidecar files do not consume every file slot before media. The 8-file and configured byte caps still apply; protected files remain excluded. This execution order is separate from table sorting.
+- Mover process status, cache capacity, open-file observations and recent Mover-related logs.
+- Hungarian, US English and German interfaces; appearance palettes, raised/flat cards, keyboard navigation and help.
+- Waiting-file search, status/video filters, sorting, age eligibility and concrete blocking reasons.
+- Independent root files are not grouped solely by arrival time; folder, sidecar and torrent relationships remain protected.
+- Torrent age options: 1 / 7 / 14 / 30 days. Other content requires two stable observations and a complete-unit check.
+- Optional ratio priority orders already eligible content; low or unknown ratios do not bypass or extend age protection.
+- Larger eligible files first within each ratio-priority group; at most eight files and the configured 16 / 32 / 64 / 128 GiB batch limit.
+- Fresh backup, parity, scrub, mount, integrity, open-file and cooldown checks; unavailable torrent information safely defers movement.
+- Bounded blocker details keep large waiting lists manageable.
+- Authenticated optional manual actions and backed-up integration with reviewed existing automation.
 
-- Optional share-ratio priority (0 disables it, target up to 100): already eligible files whose torrents meet the target go first. Low or unknown ratios never withhold a file. Shared content uses the lowest known owner ratio; missing owner values remain unknown. Ratio is not a tracker seed-time exemption and never bypasses age, activity or safety guards.
-- Explicit batch-size selection for larger media: 16 / 32 / 64 / 128 GiB, still at most 8 files. Existing installations keep 16 GiB until an authenticated settings save. No schedule or live configuration is changed by installation.
+## Compatibility and limits
 
-- Appearance selector in the mode banner: Follow Unraid (default), White, Black, Gray or Azure. Explicit palettes affect plugin surfaces only; the Unraid shell stays unchanged. The browser remembers the selection locally; blocked browser storage falls back to Follow Unraid.
+Monitoring targets Unraid 7.x, minimum 7.0.0, one configured pool at a time. Unmounted pools remain unavailable.
 
-- Selective page organized around summary cards and the file queue, with local filename/path search, status and video-only filters, expandable full paths, folded settings and a separate confirmed manual-action section. Filters only change the display, never the execution scope.
+Selective movement is limited to the reviewed setup: a pool named `cache`, `Filmek` share configured cache-to-array, existing `Filmek_Mover_Threshold` User Scripts automation, `binhex-qbittorrentvpn`, and torrent paths through `/mnt/user`. Other configurations should use Observer until their setup is validated. Unraid 8 and a Docker edition are future work.
 
-- Private waiting table on the selective page: per-file size, earliest age eligibility, live countdown and blockers. Use Read-only check for a fresh snapshot; ordinary page refreshes do not scan storage or query torrents. Dates are age eligibility only, not guaranteed movement start/finish times. Active/incomplete/open content and files above the fixed batch limit have no promised date. Cache and torrent activity can change after observation.
+Installation and mode changes create no schedule and start no transfer. A native multi-file batch is not atomic across crashes. Files exceeding the saved byte limit remain in cache.
 
-- Dashboard tile with Mover process status and cache usage.
-- Tools page showing open files belonging to the Mover process tree.
-- Recent Mover-related syslog lines, escaped before display.
-- Polling only while the page is visible, with timeouts and stale-data notices.
-- Optional settings page for an existing `Filmek_Mover_Threshold` User Scripts automation.
-- Optional native movement with torrent-only age threshold and whole-unit selection; each file is sent as exact input to the native mover, never a global Mover invocation. A native multi-file move is not atomic across crashes.
-- Per-content torrent exclusions, fresh maintenance/open-file checks, SHA-256 and metadata verification.
-- Authenticated manual start and explicit, backed-up integration with an existing schedule.
+After reboot, missing btrfs scrub history can block movement until a fresh real scrub completes successfully. Follow [reboot recovery](docs/REBOOT-RECOVERY.md); unattended reboot-to-ready is not claimed.
 
-## Requirements and limits
+## Validation
 
-- Unraid 7.0+ and its bundled PHP 8; the original local version was used on Unraid 7.3.3.
-- Observe one configured Unraid pool at a time using mode/pool setup. The default is `cache`; unmounted pools remain unavailable. The optional legacy script editor remains cache-only.
-- Use the 🌐 language selector on the dashboard, monitor or settings page: **Magyar / English (US) / Deutsch**. The choice is stored in a browser cookie for one year and shared by these pages. Hungarian is the default and the fallback for invalid selections. Switching language reloads the page and discards unsaved form edits; it never submits settings. Unraid menu names remain the static labels Mover Monitor / Mover Settings. Logs, filenames and existing script contents retain their original text.
-- Mover activity is inferred from `/var/run/mover.pid` and `/proc`. Custom Mover implementations may not be detected.
-- File positions are observations, not verified transfer progress. No transfer ETA or total progress is claimed.
-- The cache-to-array diagram is illustrative. Actual movement direction is controlled by each share's Unraid settings.
-- The optional threshold panel requires the pre-existing script at `/boot/config/plugins/user.scripts/scripts/Filmek_Mover_Threshold/script`. It is not distributed here. Without it, monitoring still works and settings explain that the optional automation is unavailable.
-- The settings panel changes only `KUSZOB_GIB` and `UJRA_PROBALKOZAS_MP`, after CSRF, version, range, lock and shell-syntax checks. It saves a backup first. The legacy UI interprets `UJRA_PROBALKOZAS_MP` as minutes; check your script's semantics before using this panel with a different script.
-- Installation never creates a schedule or starts movement. The optional selective executor has backup/parity/scrub/mount/integrity/cooldown guards. It supports **cache/Filmek → Array** with user-share torrent bindings. Observer monitoring remains available for other configured pools.
-- Selection uses the newest of mtime, verified first observation and torrent completion. Old-looking files may need the full new observation window. A batch is limited to 8 files and a configurable 16 / 32 / 64 / 128 GiB (default 16 GiB); files larger than the selected limit are skipped.
+The candidate passed 183 automated cases, seven JavaScript suites, reproducible package/checksum checks and isolated lifecycle validation. The isolated Unraid VM passed full guarded movement of a genuinely aged 16 MiB torrent, source absence and destination SHA-256 verification, unchanged logical path, recheck and complete second-client download with matched SHA-256 and counted seeder upload.
 
-## RC1 installation
+This does not certify public tracker credit, production VPN behavior, physical power-loss recovery or broad hardware compatibility. See [dated evidence](docs/ACCEPTANCE-20261112.md).
 
-See the [RC1 release notes](docs/RC1.md), then read [the selective movement guide](docs/SELECTIVE-MOVEMENT.md), verify checksums, and keep a backup. RC1 remains a prerelease. Transfer verification does not establish peer upload, tracker credit or reboot persistence.
+## Installation
 
-In Unraid, open **Plugins → Install Plugin**, then enter:
+Read the [movement guide](docs/SELECTIVE-MOVEMENT.md) and retain a backup. Find **Fejes Mover Monitor** in Community Applications, or use **Plugins → Install Plugin**:
 
 ```
-https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg
+https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v2026.11.11.2/fejes.mover.monitor.plg
 ```
 
-The manifest contains the runtime pages. It does not rely on files from the author's NAS. The installer checks PHP syntax before activating them.
+Manifest SHA-256: `8d410471cc3f7ad5b8726d2b818f7fce6a5143baa4d10a94d7491868fd50a8f4`.
 
-Open **Tools → Mover figyelő** or the dashboard tile. Plugin updates use the manifest URL above.
+Open **Tools → Mover figyelő** or the dashboard card. The self-contained manifest supplies the runtime. Start in Observer mode and review the compatibility limits before Advanced mode.
 
-## Uninstall
+## Removal and support
 
-Remove `fejes.mover.monitor` through Unraid's Plugins page. Owned runtime pages are removed; settings, inventories, helpers, external wiring and backups are retained. UI uninstall does **not** disable separately wired automation. Follow the selective guide's restoration procedure first if you also want that disabled.
+Remove the plugin through Unraid's Plugins page. Configuration, evidence, backups and separately wired automation are retained. To disable that automation too, follow the movement guide's restoration procedure first.
 
-## Privacy and support
-
-No telemetry, credentials, server logs or user files are shipped in this repository. Live file paths and syslog excerpts are shown only inside the authenticated Unraid interface. Redact personal filenames before posting screenshots.
-
-Report problems at [GitHub Issues](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues). Include your Unraid version, pool name and reproduction steps. Do not attach credentials or full private logs.
+[GitHub Issues](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues): include Unraid version and reproduction steps. Redact filenames; do not post credentials or full private logs. No telemetry or private NAS files are distributed with this repository.
 
 ## Build
 
-```
+```sh
 python3 tools/build.py
 python3 tools/check.py
 sha256sum -c SHA256SUMS
 ```
 
-This rebuilds the self-contained `.plg` manifest and checksums from `src/`. Before publishing changes, run PHP lint on all page files, validate the XML, and test install/update/remove on an appropriate Unraid system.
-
-The verified owner baseline is stored as self-contained trilingual PHP source. The compiler preserves those pages verbatim instead of wrapping their language branches a second time. Tests execute the resulting pages in all three languages.
-
-## License
-
-MIT. Copyright 2026 FejesNAS contributors.
-
-## Release readiness
-
-See [release status and remaining acceptance tests](docs/RELEASE-STATUS.md). Earlier packaging and testing notes describe the previous archive-based prototype; this candidate uses the self-contained manifest and `src/` files.
-
 ## Optional support
 
-Fejes Mover Monitor is free and open source. If you find it useful, you can [support FejesNAS development via PayPal](https://paypal.me/FejesG). Support is voluntary and does not unlock features or guarantee support or development timelines.
+Free and open source under the MIT license. [Support development via PayPal](https://paypal.me/FejesG): coffee 2 EUR, beer 5 EUR, pizza 10 EUR or another amount. Amounts stay in EUR in every interface language. Support is voluntary and unlocks no features.
 
-A Fejes Mover Monitor ingyenes és nyílt forráskódú. Ha hasznosnak találod, [támogathatod a FejesNAS fejlesztéseit PayPalon](https://paypal.me/FejesG). A támogatás önkéntes.
+A támogatás önkéntes, minden funkció ingyenes. Die Unterstützung ist freiwillig; alle Funktionen bleiben kostenlos.
