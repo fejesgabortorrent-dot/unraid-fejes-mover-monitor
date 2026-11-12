@@ -58,7 +58,7 @@ def canonical(path):
     if match:
         return '/mnt/user' + (match[1] or '')
     if path == str(POOL_ROOT) or path.startswith(str(POOL_ROOT) + '/'):
-        return CANONICAL + path[len(str(POOL_ROOT)):]
+        return '/mnt/user' + path[len(str(POOL_ROOT)):]
     if path == '/mnt/user' or path.startswith('/mnt/user/'):
         return path
     raise ValueError('Unrecognized host path namespace')

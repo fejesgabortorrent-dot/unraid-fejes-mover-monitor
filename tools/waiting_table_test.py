@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 from selection_policy import waiting_table,REQUIRED_GUARDS
 
 class WaitingTable(unittest.TestCase):
@@ -39,5 +39,30 @@ class WaitingTable(unittest.TestCase):
     def test_invalid_torrent_state_does_not_publish_a_countdown(self):
         with self.assertRaises(ValueError):
             self.table([dict(content_path='/data/example.mkv',progress=1,state='unknown')])
+
+class BlockerDetails(WaitingTable):
+    def test_group_names_actual_blocker(self):
+        video=dict(self.item,path=self.root+'/Movie/video.mkv')
+        poster=dict(self.item,path=self.root+'/Movie/poster.jpg',open=True)
+        inventory={x['path']:{'signature':[1,2,123,0,0]} for x in [video,poster]}
+        table=waiting_table([video,poster],self.torrents,self.mounts,inventory,self.guards,days=7,now=self.now,root=self.root)
+        rows={r['file']:r for r in table['rows']}
+        self.assertEqual(rows['Movie/video.mkv']['reason'],'unit_not_ready')
+        self.assertEqual(rows['Movie/video.mkv']['unit_blockers'],[{'file':'Movie/poster.jpg','reason':'busy_or_unverified'}])
+        self.assertTrue(rows['Movie/poster.jpg']['open'])
+        self.assertTrue(rows['Movie/poster.jpg']['stable'])
+
+    def test_large_group_details_are_bounded(self):
+        import json
+        files=[dict(self.item,path=self.root+'/Large/file-'+str(i)+'.mkv',open=i<1000) for i in range(1100)]
+        inventory={x['path']:{'signature':[1,2,123,0,0]} for x in files}
+        table=waiting_table(files,self.torrents,self.mounts,inventory,self.guards,days=7,now=self.now,root=self.root)
+        self.assertLess(len(json.dumps(table)),1_000_000)
+        for row in table['rows']:
+            if row['reason']=='unit_not_ready':
+                self.assertEqual(len(row['unit_blockers']),5)
+                self.assertEqual(row['unit_blocker_count'],1000)
+            else:
+                self.assertEqual(row['unit_blockers'],[])
 
 if __name__=='__main__':unittest.main()

@@ -2,6 +2,9 @@
 
 See [release status and acceptance limits](RELEASE-STATUS.md). This is an RC1 prerelease.
 
+For the development candidate's manual post-reboot health revalidation, see
+[reboot recovery and the scrub-history limitation](REBOOT-RECOVERY.md).
+
 Default installation is Observer and creates no schedule. Selective execution is
 an opt-in Advanced/cache feature for `/mnt/cache/Filmek` → the array only.
 

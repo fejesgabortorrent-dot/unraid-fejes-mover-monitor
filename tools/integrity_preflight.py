@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 from torrent_preflight import assess, read_snapshot
+from selective_profile import load_profile
 
 TOKEN = "/usr/local/emhttp/plugins/dynamix.file.integrity/scripts/bunker -Vqj "
 MARKER = "# This is an auto-generated file, do not change manually!"
@@ -66,11 +67,16 @@ def prepare_script(source, config, protected_paths, is_dir):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--container", default="binhex-qbittorrentvpn")
+    parser.add_argument("--container", default=None)
     parser.add_argument("--config", default="/boot/config/plugins/dynamix.file.integrity/dynamix.file.integrity.cfg")
     parser.add_argument("--script", default="/boot/config/plugins/dynamix.file.integrity/integrity-check.sh")
     parser.add_argument("--check-only", action="store_true")
     args = parser.parse_args(argv)
+    if args.container is None:
+        try:args.container=load_profile().torrent_container
+        except ValueError:
+            print("File Integrity deferred: invalid selective profile.")
+            return 20
     if not args.container or args.container.startswith("-"):
         parser.error("invalid container name")
     try:

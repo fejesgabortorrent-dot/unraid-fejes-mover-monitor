@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 from selection_policy import plan, waiting_table, REQUIRED_GUARDS
 
 class DirectoryExclusion(unittest.TestCase):
@@ -10,8 +10,8 @@ class DirectoryExclusion(unittest.TestCase):
         mounts=[dict(Type='bind',Source=root,Destination='/data')]
         torrents=[dict(content_path='/data/unrelated',progress=1,state='stalledUP',completion_on=now-10*86400,upspeed=0,dlspeed=0)]
         result=plan(files,torrents,mounts,guards,days=1,now=now,observed_at=now,root=root)
-        self.assertEqual(result['candidates'],[root+'/'+n for n in names[2:4]])
-        self.assertEqual([x['reason'] for x in result['skipped']],['excluded_directory']*2+['unit_not_ready'])
+        self.assertEqual(result['candidates'],[root+'/'+n for n in names[2:]])
+        self.assertEqual([x['reason'] for x in result['skipped']],['excluded_directory']*2)
         inventory={x['path']:{'signature':[1,2,10,0,0]} for x in files}
         rows=waiting_table(files,torrents,mounts,inventory,guards,days=1,now=now,root=root)['rows']
         excluded=[x for x in rows if x['reason']=='excluded_directory']

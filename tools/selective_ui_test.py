@@ -96,6 +96,21 @@ class SelectiveInterface(unittest.TestCase):
             self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;.mkv',result['html'])
             self.assertNotIn('<script>alert(1)</script>.mkv',result['html'])
 
+    def test_concrete_blocker_is_escaped_and_stability_is_distinct(self):
+        forecast={'version':1,'age_days':7,'observed_at':2_000_000_000,'total_bytes':2,
+                  'rows':[{'file':'video.mkv','bytes':1,'reason':'unit_not_ready',
+                           'unit_blockers':[{'file':'<img src=x>.srt','reason':'busy_or_unverified'}]},
+                          {'file':'fresh.mkv','bytes':1,'reason':'busy_or_unverified','open':False,'stable':False},
+                          {'file':'open.mkv','bytes':1,'reason':'busy_or_unverified','open':True,'stable':True}]}
+        for lang in ('hu','en','de'):
+            result=self.render(lang=lang,forecast=forecast)
+            self.assertIn('&lt;img src=x&gt;.srt',result['html'])
+            self.assertNotIn('<img src=x>.srt',result['html'])
+            self.assertFalse(result['calls'])
+        html=self.render(lang='en',forecast=forecast)['html']
+        self.assertIn('Currently open',html)
+        self.assertIn('Two matching observations not yet verified',html)
+
     def test_changed_age_ignores_old_forecast(self):
         result=self.render(lang='en',forecast={'version':1,'age_days':14,'rows':[]})
         self.assertIn('No current observation for this age setting',result['html'])

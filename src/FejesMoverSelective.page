@@ -70,7 +70,7 @@ if(!is_array($forecast)||($forecast['version']??null)!==1||($forecast['age_days'
 $skipLabels=[
  'too_young'=>$t('Még túl fiatal','Too young','Noch zu jung'),
  'protected_content'=>$t('Félkész vagy aktív torrenttartalom','Incomplete or active torrent content','Unvollständiger oder aktiver Torrent-Inhalt'),
- 'busy_or_unverified'=>$t('Megnyitott vagy megváltozott fájl','Open or changed file','Geöffnete oder veränderte Datei'),
+ 'busy_or_unverified'=>$t('Nyitott fájl vagy még nem igazolt stabilitás','Open file or stability not yet verified','Offene Datei oder Stabilität noch nicht bestätigt'),
  'unsupported_file'=>$t('Nem támogatott fájltípus vagy többes hivatkozás','Unsupported file type or hard link','Nicht unterstützter Dateityp oder Hardlink'),
  'batch_size_limit'=>$t('Egy kör méretkorlátja','Batch size limit','Größenlimit pro Lauf'),
  'file_exceeds_batch_limit'=>$t(''.$batchGiB.' GiB-nál nagyobb fájl: ezzel a korláttal később sem mozgatható','File larger than '.$batchGiB.' GiB: cannot move under this limit','Datei größer als '.$batchGiB.' GiB: mit diesem Limit nicht verschiebbar'),
@@ -166,7 +166,14 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <td style="padding:9px;white-space:nowrap"><?php $ratio=$row['ratio']??null;echo $e(is_numeric($ratio)&&is_finite((float)$ratio)&&(float)$ratio>=0?number_format((float)$ratio,2):'—');if(($row['ratio_target_met']??false)===true):?><small> · <?=$e($t('Cél elérve','Target met','Ziel erreicht'))?></small><?php endif?></td>
 <td style="padding:9px;white-space:nowrap"><?php if(is_numeric($ready)):?><time data-fms-time="<?=$e($ready)?>"><?=$e(date('Y-m-d H:i:s',(int)$ready))?></time><?php else:?>—<?php endif?></td>
 <td style="padding:9px;white-space:nowrap" <?=is_numeric($ready)?'data-fms-countdown="'.$e($ready).'"':''?>><?=$e(is_numeric($ready)?$t('Számítás…','Calculating…','Berechnung…'):$t('Nem becsülhető','Cannot estimate','Nicht schätzbar'))?></td>
-<td style="padding:9px"><?=$e($reason==='ready'?$t('Előzetesen alkalmas; a teljes egységet és a védelmeket újra ellenőrzi','Preliminarily eligible; full unit and guards will be rechecked','Vorläufig geeignet; gesamte Einheit und Schutzbedingungen werden erneut geprüft'):($skipLabels[$reason]??$t('Bizonytalan állapot','Unverifiable state','Ungeprüfter Zustand')))?></td></tr>
+<td style="padding:9px"><?=$e($reason==='ready'?$t('Előzetesen alkalmas; a teljes egységet és a védelmeket újra ellenőrzi','Preliminarily eligible; full unit and guards will be rechecked','Vorläufig geeignet; gesamte Einheit und Schutzbedingungen werden erneut geprüft'):($skipLabels[$reason]??$t('Bizonytalan állapot','Unverifiable state','Ungeprüfter Zustand')))?>
+<?php if($reason==='busy_or_unverified'):?>
+<small> · <?=$e(($row['open']??null)===true?$t('Jelenleg megnyitva','Currently open','Derzeit geöffnet'):(($row['stable']??null)!==true?$t('Két egyező állapotfelmérés még nincs igazolva','Two matching observations not yet verified','Zwei übereinstimmende Erfassungen noch nicht bestätigt'):$t('Az előző felmérés részletei nem állnak rendelkezésre','Previous observation details unavailable','Details der vorherigen Erfassung fehlen')))?></small>
+<?php endif?>
+<?php if($reason==='unit_not_ready'&&is_array($row['unit_blockers']??null)): foreach(array_slice($row['unit_blockers'],0,5) as $cause): if(!is_array($cause))continue;?>
+<small style="display:block"><?=$e($t('Visszatartó fájl','Blocking file','Blockierende Datei'))?>: <?=$e($cause['file']??'—')?> · <?=$e($skipLabels[$cause['reason']??'']??$t('Bizonytalan állapot','Unverifiable state','Ungeprüfter Zustand'))?></small>
+<?php endforeach; if(($row['unit_blocker_count']??count($row['unit_blockers']))>5):?><small>+<?=max(0,(int)($row['unit_blocker_count']??count($row['unit_blockers']))-5)?> <?=$e($t('további akadály','more blockers','weitere Blockaden'))?></small><?php endif; endif?>
+</td></tr>
 <?php endforeach?>
 </tbody></table></div>
 <?php else:?><p><?=$e($t('Még nincs aktuális felmérés ehhez a korhatárhoz. Nyomd meg a Friss állapot lekérése gombot: ez nem mozgat fájlt.','No current observation for this age setting. Press Refresh status; it does not move files.','Keine aktuelle Erfassung für dieses Alter. Status aktualisieren drücken; dabei werden keine Dateien verschoben.'))?></p><?php endif?>

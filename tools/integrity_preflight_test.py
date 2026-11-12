@@ -4,6 +4,7 @@ import pathlib
 import subprocess
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import integrity_preflight as guard
@@ -60,6 +61,14 @@ class IntegrityTest(unittest.TestCase):
         expr = r"/\/mnt\/disk[0-9]+\/.*" + mask + r"\//d"
         result = subprocess.run(["sed", "-r", expr], input=data, text=True, capture_output=True, check=True)
         self.assertEqual(result.stdout, "/mnt/disk3/Media/Other/episode.mkv\n")
+
+    def test_configured_profile_selects_client_and_invalid_profile_defers(self):
+        with patch.object(guard,'load_profile',return_value=SimpleNamespace(torrent_container='fm-qbit')), patch.object(guard,'read_snapshot',side_effect=ValueError('unavailable')) as snapshot, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(guard.main(['--check-only']),20)
+            snapshot.assert_called_once_with('fm-qbit',5)
+        with patch.object(guard,'load_profile',side_effect=ValueError('invalid')), patch.object(guard,'read_snapshot') as snapshot, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(guard.main(['--check-only']),20)
+            snapshot.assert_not_called()
 
     def test_api_failure_does_not_start_bash(self):
         with patch.object(guard, "read_snapshot", side_effect=ValueError("PRIVATE")), patch.object(guard.subprocess, "run") as run:
