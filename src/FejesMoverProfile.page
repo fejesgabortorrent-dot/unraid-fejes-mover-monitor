@@ -36,6 +36,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
  }catch(Throwable $e){$error=$e->getMessage();}
 }
 ?>
+<?=$runtime['versionBadge']?>
 <main id="fmc-profile" style="max-width:900px;margin:24px auto;padding:0 16px;font:inherit">
 <a href="/Tools/FejesMover" style="display:inline-block;margin:12px 0;padding:8px 12px;border:1px solid #ef7d00;border-radius:3px;color:#ef9b4c;text-decoration:none">← <?=$esc($text['back'])?></a>
 <h1><?=$esc($text['title'])?></h1><p><?=$esc($text['intro'])?></p><p style="padding:14px;border-left:3px solid #64b99b;background:#8881"><?=$esc($text['note'])?></p>
