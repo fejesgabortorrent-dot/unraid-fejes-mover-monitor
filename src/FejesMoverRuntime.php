@@ -46,7 +46,17 @@ return (static function ($configWrite) {
         'observer'=>$t('Megfigyelő','Observer','Beobachter'),
         'advanced'=>$t('Haladó','Advanced','Erweitert'),
     ][$mode];
+    // Read only the installed local manifest header; never query a catalog or network.
+    $manifestHeader = @file_get_contents('/boot/config/plugins/fejes.mover.monitor.plg', false, null, 0, 4096);
+    $installedVersion = null;
+    if (is_string($manifestHeader) && preg_match('/<PLUGIN\\b[^>]*\\bversion="([0-9]{4}\\.[0-9]{2}\\.[0-9]{2}(?:\\.[0-9]+)?)"/', $manifestHeader, $versionMatch)) {
+        $installedVersion = $versionMatch[1];
+    }
+    $versionLabel = $t('Telepített verzió','Installed version','Installierte Version');
+    $versionText = $installedVersion !== null ? 'v'.$installedVersion : $t('Verzió nem elérhető','Version unavailable','Version nicht verfügbar');
+    $versionBadge = '<span class="fmc-version" title="'.$esc($versionLabel).'" aria-label="'.$esc($versionLabel.': '.$versionText).'" style="float:right;display:inline-block;margin:0 0 8px 12px;padding:3px 8px;border:1px solid #8888;border-radius:6px;font-size:12px;white-space:nowrap">'.$esc($versionText).'</span>';
     $banner = '<div class="fmc-mode" style="margin:12px 16px;padding:12px;border:1px solid #8885;border-left:3px solid #ef7d00;border-radius:3px">';
+    $banner .= $versionBadge;
     $banner .= '<strong>'.$esc($t('Mód: ','Mode: ','Modus: ').$modeText).'</strong> · ';
     $banner .= $mode === 'demo'
         ? $esc($t('Szimulált adatok. Nincs élő megfigyelés vagy scriptmentés.','Simulated data. No live monitoring or script saves.','Simulierte Daten. Keine Live-Überwachung oder Skriptspeicherung.'))
@@ -259,5 +269,5 @@ HTML;
         'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
         'hash'=>hash('sha256',$raw === false ? '' : $raw),'lock'=>$lock,
         'token'=>is_array($token) ? ($token['csrf_token'] ?? '') : '',
-        't'=>$t,'esc'=>$esc,'banner'=>$banner,'summary'=>$summary,'reportFault'=>$reportFault];
+        't'=>$t,'esc'=>$esc,'versionBadge'=>$versionBadge,'installedVersion'=>$installedVersion,'banner'=>$banner,'summary'=>$summary,'reportFault'=>$reportFault];
 })(!empty($fmcConfigWrite));
