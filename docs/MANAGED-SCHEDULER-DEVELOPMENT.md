@@ -14,6 +14,9 @@ Implemented: Hungarian/English/German CSRF-protected settings page, exclusive-lo
 configuration writes, private backups, disable-first cron updates, install-time
 restoration and removal of only the plugin-owned cron entry. The configure
 command installs the opted-in schedule; preview-cron remains read-only.
+The monitor verifies the exact active managed cron entry and displays the saved
+interval; disabled, invalid, missing and duplicate active entries are distinguished
+from a confirmed schedule. Demo mode does not inspect managed automation.
 
 Not yet complete: legacy schedule migration and install/update/remove/reboot VM
 acceptance. Existing cache/Btrfs and File Integrity requirements remain in force.

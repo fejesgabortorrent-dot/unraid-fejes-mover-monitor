@@ -263,8 +263,34 @@ HTML;
         $summary='<section class="fm-summary'.$summaryClass.'" aria-label="'.$esc($t('Mozgatási jelentés','Movement report','Verschiebebericht')).'"><div class="fm-summary-title"><span class="fm-summary-icon" aria-hidden="true">'.($isDeferred?'⏸':'●').'</span><strong>'.$esc($headline).'</strong></div>'.($explain!==''?'<p class="fm-summary-explain">'.$esc($explain).'</p>':'').'<p>'.$esc($detail).'</p><details class="fm-hover-help"><summary aria-label="'.$esc($t('Állapotsúgó','Status help','Statushilfe')).'">ⓘ</summary><div>'.$esc($tip).'</div></details> <a href="/Tools/FejesMoverSelective">'.$esc($t('Részletek és várólista →','Details and queue →','Details und Warteliste →')).'</a></section>';
     }
 
+    // A saved preference is not proof that cron is active. Observe both.
+    $schedule = ['source'=>'legacy','state'=>'unknown','interval'=>null];
+    $automationPath = '/boot/config/plugins/fejes.mover.monitor/automation.json';
+    if ($mode !== 'demo' && (file_exists($automationPath) || is_link($automationPath))) {
+        $schedule['source'] = 'managed';
+        $automation = is_link($automationPath) ? null : json_decode(@file_get_contents($automationPath) ?: 'null', true);
+        $profile = json_decode(@file_get_contents('/boot/config/plugins/fejes.mover.monitor/selective-profile.json') ?: 'null', true);
+        $scope = is_array($profile) ? array_intersect_key($profile, array_flip(['pool','share','torrent_container'])) : null;
+        $scheduleValid = is_array($automation) && ($automation['version'] ?? null) === 1 &&
+            is_bool($automation['enabled'] ?? null) && is_array($scope) && count($scope) === 3 &&
+            is_array($automation['scope'] ?? null) && $automation['scope'] == $scope &&
+            in_array($automation['interval_minutes'] ?? null, [5,10,15,30], true) &&
+            is_int($automation['threshold_gib'] ?? null) && $automation['threshold_gib'] >= 1 && $automation['threshold_gib'] <= 1048576 &&
+            is_int($automation['cooldown_minutes'] ?? null) && $automation['cooldown_minutes'] >= 1 && $automation['cooldown_minutes'] <= 10080;
+        if ($scheduleValid) {
+            $schedule['interval'] = $automation['interval_minutes'];
+            if (!$automation['enabled']) $schedule['state'] = 'disabled';
+            elseif ($mode === 'advanced' && $pool === $scope['pool']) {
+                $activeCron = @file_get_contents('/etc/cron.d/root');
+                $expected = '*/'.$schedule['interval'].' * * * * /usr/bin/python3 /boot/config/plugins/fejes.mover.monitor/tools/managed_schedule.py tick >/dev/null 2>&1';
+                $jobs = is_string($activeCron) ? array_values(array_filter(array_map('trim', explode("\n", $activeCron)), static fn($line) => $line !== '' && $line[0] !== '#' && str_contains($line, '/managed_schedule.py'))) : [];
+                if ($jobs === [$expected]) $schedule['state'] = 'scheduled';
+            }
+        }
+    }
+
     $token = @parse_ini_file('/var/local/emhttp/var.ini');
-    return ['mode'=>$mode,'pool'=>$pool,'path'=>'/mnt/'.$pool,'mounted'=>$mounted,'pools'=>$pools,
+    return ['schedule'=>$schedule,'mode'=>$mode,'pool'=>$pool,'path'=>'/mnt/'.$pool,'mounted'=>$mounted,'pools'=>$pools,
         'error'=>$error,'lockError'=>$lockError,'readError'=>$readError,'configInvalid'=>!$valid,
         'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
         'hash'=>hash('sha256',$raw === false ? '' : $raw),'lock'=>$lock,
