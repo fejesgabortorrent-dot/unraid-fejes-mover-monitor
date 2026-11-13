@@ -2537,6 +2537,7 @@ from torrent_preflight import assess, read_snapshot
 from wire_integrity_cron import ORIGINAL, REPLACEMENT, rewrite_cron
 from wire_mover_gate import rewrite_launcher
 from selective_profile import load_profile
+from managed_schedule import load as load_automation
 
 ROOT = Path('/boot/config/plugins/dynamix.file.integrity')
 PROFILE = load_profile()
@@ -2560,14 +2561,21 @@ def dry_run(container=None, include_items=False):
         checks.append({'key': key, 'state': state, 'detail': detail})
     threshold = wait = None
     try:
-        if LAUNCHER.is_symlink():
-            raise ValueError('Symlink')
-        source = LAUNCHER.read_text()
-        rewrite_launcher(source)  # Reject drift; known guards only.
+        automation = load_automation(profile=PROFILE)
+        if automation is not None:
+            if not automation['enabled']:
+                raise ValueError('Managed automation disabled')
+            threshold = automation['threshold_gib']
+            wait = automation['cooldown_minutes']
+        else:
+            if LAUNCHER.is_symlink():
+                raise ValueError('Symlink')
+            source = LAUNCHER.read_text()
+            rewrite_launcher(source)
+            threshold = int(re.search(r'^KUSZOB_GIB=([0-9]+)$', source, re.M)[1])
+            wait = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
         if not SHARE.is_dir():
             raise ValueError('Required share unavailable')
-        threshold = int(re.search(r'^KUSZOB_GIB=([0-9]+)$', source, re.M)[1])
-        wait = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
         add('launcher', 'pass')
     except (IndexError, *ERRORS):
         add('launcher', 'unknown')
@@ -3494,6 +3502,7 @@ from selection_policy import plan, age_days, within, waiting_table, ratio_target
 from torrent_preflight import read_snapshot, host_path, assess
 from fejes_service import dry_run
 from selective_profile import load_profile
+from managed_schedule import load as load_automation
 
 BASE = Path('/boot/config/plugins/fejes.mover.monitor')
 CONFIG = BASE/'selective.json'
@@ -3630,13 +3639,19 @@ def guards(owned=False):
     result={key:checks.get(key,'unknown') for key in ('backup','parity','mover','cooldown','capacity')}
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
-    launcher=PROFILE.launcher.read_text()
-    wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
-    if len(wait)!=1: raise ValueError('Cooldown unavailable')
+    automation=load_automation(profile=PROFILE)
+    if automation is not None:
+        if not automation['enabled']:raise ValueError('Managed automation disabled')
+        wait_minutes=automation['cooldown_minutes']
+    else:
+        launcher=PROFILE.launcher.read_text()
+        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
+        if len(wait)!=1: raise ValueError('Cooldown unavailable')
+        wait_minutes=int(wait[0])
     if not owned and ATTEMPT.exists():
         last=ATTEMPT.read_text().strip()
         if not last.isdigit() or int(last)>time.time(): raise ValueError('Invalid selective timestamp')
-        if time.time()-int(last)<int(wait[0])*60: result['cooldown']='wait'
+        if time.time()-int(last)<wait_minutes*60: result['cooldown']='wait'
     scrub=subprocess.check_output(['btrfs','scrub','status',str(POOL_ROOT)],text=True,timeout=10)
     if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub active or unhealthy')
@@ -4056,6 +4071,73 @@ if __name__=='__main__':
     except (OSError,ValueError,subprocess.SubprocessError):
         print('Dispatch not activated: required state could not be verified.');raise SystemExit(20)
 ]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.13.1/managed_schedule.py"><INLINE><![CDATA[#!/usr/bin/env python3
+"""Opt-in scheduler settings and guarded tick; never enable on installation."""
+import json
+from pathlib import Path
+from selective_profile import load_profile
+
+CONFIG = Path('/boot/config/plugins/fejes.mover.monitor/automation.json')
+RUNTIME = Path('/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php')
+
+
+def load(path=None, profile=None):
+    path = CONFIG if path is None else Path(path)
+    if path.is_symlink():
+        raise ValueError('Symlink automation settings')
+    if not path.exists():
+        return None
+    data = json.loads(path.read_text())
+    if not isinstance(data, dict) or type(data.get('version')) is not int or data['version'] != 1:
+        raise ValueError('Unknown automation settings')
+    if type(data.get('enabled')) is not bool:
+        raise ValueError('Explicit automation choice required')
+    profile = profile or load_profile()
+    expected = {k:getattr(profile,k) for k in ('pool','share','torrent_container')}
+    if data.get('scope') != expected:
+        raise ValueError('Automation scope changed; configure again')
+    for key, low, high in (('threshold_gib',1,1048576),('cooldown_minutes',1,10080)):
+        if type(data.get(key)) is not int or not low <= data[key] <= high:
+            raise ValueError('Invalid '+key)
+    if type(data.get('interval_minutes')) is not int or data['interval_minutes'] not in (5,10,15,30):
+        raise ValueError('Invalid schedule interval')
+    return data
+
+
+def cron_text(settings):
+    """Render only this plugin's cron entry. Caller must validate via load()."""
+    if settings is None or not settings['enabled']:
+        return ''
+    interval = settings['interval_minutes']
+    if type(interval) is not int or interval not in (5,10,15,30):
+        raise ValueError('Invalid schedule interval')
+    return (f'*/{interval} * * * * /usr/bin/python3 '
+            '/boot/config/plugins/fejes.mover.monitor/tools/managed_schedule.py tick '
+            '>/dev/null 2>&1\n')
+
+
+def tick():
+    # The executor rereads settings under its config lock. This early check is
+    # not a substitute for any movement guard or an authorization to move.
+    settings = load()
+    if settings is None or not settings['enabled'] or not RUNTIME.is_file():
+        return {'state':'deferred','reason':'managed_automation_disabled'}
+    import selective_mover
+    return selective_mover.run()
+
+
+if __name__ == '__main__':
+    import argparse
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action',choices=['tick','preview-cron'])
+    args=parser.parse_args()
+    try:
+        if args.action=='tick':print(json.dumps(tick()))
+        else:print(cron_text(load()),end='')
+    except (OSError,ValueError,TypeError,KeyError):
+        print(json.dumps({'state':'deferred','reason':'automation_settings_unverified'}))
+        raise SystemExit(20)
+]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
 src=/tmp/fejes-mover-monitor-2026.11.13.1
@@ -4064,7 +4146,7 @@ test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }
 tools=/boot/config/plugins/fejes.mover.monitor/tools
 command -v python3 >/dev/null || exit 1
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py; do
+for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py; do
   python3 -c 'import sys; compile(open(sys.argv[1], "rb").read(), sys.argv[1], "exec")' "$src/$name"
 done
 for name in FejesMover.Dashboard.page FejesMover.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
@@ -4072,7 +4154,7 @@ for name in FejesMover.Dashboard.page FejesMover.page FejesMoverProfile.page Fej
  done
 install -d -m 0755 "$dst"
 install -d -m 0700 "$tools"
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py; do
+for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py; do
   if [[ -f "$tools/$name" ]] && ! cmp -s "$src/$name" "$tools/$name"; then
     backup=$(mktemp "$tools/$name.before-XXXXXXXX")
     cp -p -- "$tools/$name" "$backup"

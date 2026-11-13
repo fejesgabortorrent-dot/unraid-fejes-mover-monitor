@@ -7,7 +7,7 @@ BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
 version='2026.11.13.1'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
-helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py')]
+helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py','managed_schedule.py')]
 
 def cdata(s):
     return '<![CDATA['+s.replace(']]>',']]]]><![CDATA[>')+']]>'
