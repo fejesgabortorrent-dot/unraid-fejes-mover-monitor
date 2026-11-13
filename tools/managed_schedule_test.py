@@ -54,4 +54,33 @@ class ManagedSchedule(unittest.TestCase):
         with patch.object(scheduler,'load',return_value=self.data),patch.object(scheduler,'RUNTIME',self.path),patch('selective_mover.run',return_value={'state':'deferred','blockers':['parity']}) as run:
             self.assertEqual(scheduler.tick()['blockers'],['parity']);run.assert_called_once_with()
 
+class ScheduleLifecycle(ManagedSchedule):
+    def configure_here(self, fail=False):
+        import contextlib
+        import subprocess
+        with contextlib.ExitStack() as stack:
+            for key,value in [('CONFIG',self.path),('CRON',self.path.parent/'managed.cron'),('LOCK',self.path.parent/'lock')]:
+                stack.enter_context(patch.object(scheduler,key,value))
+            stack.enter_context(patch.object(scheduler,'load_profile',return_value=DEFAULT))
+            refresh=stack.enter_context(patch.object(scheduler,'refresh_cron',side_effect=subprocess.CalledProcessError(1,'update_cron') if fail else None))
+            (self.path.parent/'settings.json').write_text(json.dumps(dict(version=1,mode='advanced',pool='cache')))
+            return scheduler.configure(self.data)
+    def test_enable_saves_valid_config_and_exact_cron(self):
+        self.assertTrue(self.configure_here()['enabled'])
+        self.assertTrue(scheduler.load(self.path,DEFAULT)['enabled'])
+        self.assertEqual((self.path.parent/'managed.cron').read_text(),scheduler.cron_text(self.data))
+    def test_disable_removes_own_schedule(self):
+        self.configure_here();self.data['enabled']=False;self.configure_here()
+        self.assertEqual((self.path.parent/'managed.cron').read_text(),'')
+        self.assertFalse(scheduler.load(self.path,DEFAULT)['enabled'])
+    def test_refresh_failure_leaves_execution_disabled(self):
+        import subprocess
+        with self.assertRaises(subprocess.CalledProcessError):self.configure_here(True)
+        self.assertFalse(scheduler.load(self.path,DEFAULT)['enabled'])
+    def test_configuration_backup_is_private(self):
+        self.configure_here()
+        backups=list((self.path.parent/'backups').glob('*.json'))
+        self.assertEqual(len(backups),1)
+        self.assertEqual(backups[0].stat().st_mode & 0o777,0o600)
+
 if __name__=='__main__':unittest.main()

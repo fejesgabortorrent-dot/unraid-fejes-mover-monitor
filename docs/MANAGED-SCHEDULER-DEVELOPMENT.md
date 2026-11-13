@@ -10,8 +10,12 @@ The dry-run and executor can now read threshold and cooldown from this managed
 configuration without a User Scripts launcher. Existing advanced-mode, capacity,
 backup, parity, scrub, integrity, torrent and native file verification remain.
 
-Not yet complete: authenticated UI, atomic configuration and cron lifecycle,
-legacy schedule migration, install/update/remove/reboot VM acceptance. The cron
-preview prints a proposed entry only; no command in this branch installs it.
+Implemented: Hungarian/English/German CSRF-protected settings page, exclusive-lock
+configuration writes, private backups, disable-first cron updates, install-time
+restoration and removal of only the plugin-owned cron entry. The configure
+command installs the opted-in schedule; preview-cron remains read-only.
+
+Not yet complete: legacy schedule migration and install/update/remove/reboot VM
+acceptance. Existing cache/Btrfs and File Integrity requirements remain in force.
 No claim of unattended general compatibility is made. Keep this branch out of
 the stable update channel until these gates pass.

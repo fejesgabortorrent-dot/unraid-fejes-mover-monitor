@@ -188,12 +188,20 @@ done
 for name in {' '.join(f.name for f in files)}; do
   install -m 0644 "$src/$name" "$dst/$name"
  done
+# Restore only previously configured opt-in scheduling; absent settings stay off.
+if command -v update_cron >/dev/null; then
+  python3 "$tools/managed_schedule.py" sync
+fi
 printf '%s\\n' 'Fejes Mover Monitor installed. Open Tools / Mover figyelo.'
 '''
 parts.append('<FILE Run="/bin/bash"><INLINE>'+cdata(script)+'</INLINE></FILE>')
 remove=f'''#!/bin/bash
 set -euo pipefail
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
+# Disable this plugin's own cron entry before removing its runtime.
+if command -v update_cron >/dev/null; then
+  python3 /boot/config/plugins/fejes.mover.monitor/tools/managed_schedule.py remove-cron
+fi
 # Keep shared helpers and external schedule wiring intact.
 # Remove only runtime files owned by this plugin. Preserve settings and backups.
 for name in {' '.join(f.name for f in files)}; do
