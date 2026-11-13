@@ -121,7 +121,7 @@ class DispatchSafety(unittest.TestCase):
         with self.assertRaises(ValueError): prepare(guarded+'\n# unexpected drift\n')
 
 class BatchReporting(unittest.TestCase):
-    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False,inspection_on_lock=False,larger_first=False,integrity_after=None,paths=None,retained_after=None):
+    def run_batch(self,sizes,retained=False,limit=mover.MAX_BYTES,io_error=False,inspection_on_lock=False,larger_first=False,integrity_after=None,paths=None,retained_after=None,continuity_error=False):
         from contextlib import ExitStack
         with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
             root=Path(folder)
@@ -150,7 +150,7 @@ class BatchReporting(unittest.TestCase):
             stack.enter_context(patch.object(mover,'destinations',return_value=[]))
             stack.enter_context(patch.object(mover.subprocess,'run',return_value=type('Result',(),{'returncode':1})()))
             stack.enter_context(patch.object(mover,'collect',return_value=({'age_days':7,'max_bytes':limit,'candidates':candidates,'blockers':[],'skipped':[]},files,inventory,[],[],{})))
-            stack.enter_context(patch.object(mover,'torrent_snapshot',return_value=([],[])))
+            stack.enter_context(patch.object(mover,'torrent_snapshot',side_effect=ValueError('snapshot unavailable') if continuity_error else None,return_value=([],[])))
             def execute_fixture(key,expected,days,before_native):
                 if integrity_after is not None and execute.call_count>integrity_after:
                     raise mover.IntegrityBusy('Integrity hashing active')
@@ -185,8 +185,17 @@ class BatchReporting(unittest.TestCase):
         self.assertEqual(report['moved_files'],0)
         self.assertEqual(calls,1);self.assertFalse(attempt)
 
-    def test_integrity_race_after_partial_batch_keeps_inspection(self):
+    def test_integrity_race_after_verified_file_defers_and_preserves_evidence(self):
         report,calls,attempt=self.run_batch([1,1],integrity_after=1)
+        self.assertEqual(report['state'],'deferred')
+        self.assertFalse(report['requires_inspection'])
+        self.assertEqual(report['moved_files'],1)
+        self.assertTrue(all(report['torrent_continuity'].values()))
+        self.assertNotIn('active_file',report)
+        self.assertEqual(calls,2);self.assertTrue(attempt)
+
+    def test_integrity_race_with_unavailable_continuity_keeps_inspection(self):
+        report,calls,attempt=self.run_batch([1,1],integrity_after=1,continuity_error=True)
         self.assertEqual(report['state'],'error')
         self.assertTrue(report['requires_inspection'])
         self.assertEqual(report['moved_files'],1)

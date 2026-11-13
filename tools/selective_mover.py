@@ -445,16 +445,37 @@ def run():
         if report['moved_files']: atomic_json(ATTEMPT,int(time.time()))
         log(f'finished; verified files={report["moved_files"]}, bytes={report["moved_bytes"]}')
     except IntegrityBusy:
-        # Raised only by fresh_candidate guards, before the native invocation.
-        # Earlier completed files still require conservative batch inspection.
-        if report['moved_files'] or report['requires_inspection']:
+        # No native invocation is pending. Already verified files do not turn a
+        # maintenance race into an ambiguous move. Keep every other failure sticky.
+        try:
+            if report['requires_inspection'] or report['active_file_started']:
+                raise RuntimeError('Native outcome requires inspection')
+            evidence=report['verified_files']
+            if (len(evidence)!=report['moved_files'] or
+                    sum(row['bytes'] for row in evidence)!=report['moved_bytes']):
+                raise RuntimeError('Verified movement evidence incomplete')
+            if report['moved_files']:
+                final,_=torrent_snapshot()
+                pre={x['hash']:x for x in items};post={x['hash']:x for x in final}
+                continuity={
+                    'same_torrents':pre.keys()==post.keys(),
+                    'completed_still_complete':all(h in post and post[h]['progress']==1 for h,x in pre.items() if x['progress']==1),
+                    'completed_in_seed_states':all(h in post and post[h]['state'] in {'uploading','stalledUP','queuedUP','forcedUP','stoppedUP','pausedUP'} for h,x in pre.items() if x['progress']==1),
+                    'paths_unchanged':all(h in post and post[h]['content_path']==x['content_path'] for h,x in pre.items())}
+                report['torrent_continuity']=continuity
+                if not all(continuity.values()):
+                    raise RuntimeError('Torrent continuity changed during maintenance deferral')
+                atomic_json(ATTEMPT,int(time.time()))
+            report.update(state='deferred',blockers=['integrity'],
+                          reason='integrity_hashing_active',
+                          active_file_started=False,requires_inspection=False)
+            for field in ('active_file','active_signature','active_sha256'):report.pop(field,None)
+            report['skipped']=dict(locals().get('skips',report['skipped']))
+        except ERRORS:
             record_failure(report, locals().get('key'))
             report.update(state='error',error_code='required_state_unverified',
-                          error='Integrity scanning began during a partial batch; inspect before another run.',
+                          error='Maintenance deferral could not be verified; inspect before another run.',
                           requires_inspection=True)
-        else:
-            report.update(state='deferred',blockers=['integrity'],
-                          active_file_started=False,requires_inspection=False)
     except BlockingIOError:
         record_failure(report, locals().get('key'))
         # Lock contention before launch is different from EAGAIN during file I/O.
