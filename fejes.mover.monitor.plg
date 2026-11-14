@@ -3006,7 +3006,7 @@ SETTINGS_LOCK = '/var/run/fejes-mover-settings.lock'
 GUARD = Path('/boot/config/plugins/fejes.mover.monitor/tools/torrent_preflight.py')
 BASE_HASH = '111a0e8afd56149f3fc9ab153f1e6c5f726bf84e3e0f2dbf6becd62e871df9e3'
 START = '[[ -d "$POOL" ]]'
-STAMP = '''printf '%s\\n' "$MOST" > "$ALLAPOT"'''
+STAMP = '''printf '%s\n' "$MOST" > "$ALLAPOT"'''
 LOCK_BLOCK = '''# BEGIN FEJES MOVER LOCK v1
 exec 9>/var/run/fejes-mover-launch.lock
 if ! flock -n 9; then
