@@ -5,7 +5,7 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/fix/installable-preflight-rc'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.11.14.1'
+version='2026.11.14.2'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
 helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py','managed_schedule.py')]
 
@@ -14,6 +14,8 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.11.14.2 (managed scheduler install recovery)
+- Keep plugin installation available when optional cron restoration is deferred; leave automated movement guarded.
 ### 2026.11.14.1 (managed scheduler development candidate)
 - Add an opt-in plugin-managed schedule with validated profile binding and fail-closed settings.
 - Add the multilingual automation page and exact active-schedule status; keep the stable channel unchanged.
@@ -193,8 +195,14 @@ for name in {' '.join(f.name for f in files)}; do
   install -m 0644 "$src/$name" "$dst/$name"
  done
 # Restore only previously configured opt-in scheduling; absent settings stay off.
+# Restore only previously configured opt-in scheduling; absent settings stay off.
 if command -v update_cron >/dev/null; then
-  python3 "$tools/managed_schedule.py" sync
+  # Schedule restoration is best-effort during plugin installation. A failed
+  # refresh must not roll back the monitoring UI; the executor remains guarded
+  # by the saved opt-in settings and the next explicit save can retry it.
+  if ! python3 "$tools/managed_schedule.py" sync; then
+    printf '%s\\n' 'WARNING: managed schedule sync was deferred; no automated move was enabled.' >&2
+  fi
 fi
 printf '%s\\n' 'Fejes Mover Monitor installed. Open Tools / Mover figyelo.'
 '''
