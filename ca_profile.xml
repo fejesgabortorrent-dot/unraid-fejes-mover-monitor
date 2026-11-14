@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CommunityApplications>
-  <Profile>FejesNAS utilities for Unraid 7. Fejes Mover Monitor offers Hungarian, US English and German Mover/cache monitoring, waiting-file explanations and optional guarded native movement in the documented reviewed setup. Observer is the default; installation starts no movement and creates no schedule. Candidate build 2026.11.14.3 includes managed-scheduler recovery and reboot acceptance on an isolated Unraid 7.3.4 VM. The previous stable build includes verified full-runner movement and isolated peer-transfer evidence. Reboot recovery and compatibility limits are documented on GitHub.</Profile>
+  <Profile>FejesNAS utilities for Unraid 7. Fejes Mover Monitor offers Hungarian, US English and German Mover/cache monitoring, waiting-file explanations and optional guarded native movement in the documented reviewed setup. Observer is the default; installation starts no movement and creates no schedule. Stable build 2026.11.14.3 includes managed-scheduler recovery acceptance on an isolated Unraid 7.3.4 VM. The previous build includes verified full-runner movement and isolated peer-transfer evidence. Reboot recovery and compatibility limits are documented on GitHub.</Profile>
   <Icon>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/icon.svg</Icon>
   <WebPage>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor</WebPage>
   <DonateLink>https://paypal.me/FejesG</DonateLink>
