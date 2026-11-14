@@ -2,7 +2,7 @@
 <Plugin>
   <Name>Fejes Mover Monitor</Name>
   <PluginAuthor>FejesNAS</PluginAuthor>
-  <PluginURL>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/fix/installable-preflight-rc/fejes.mover.monitor.plg</PluginURL>
+  <PluginURL>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg</PluginURL>
   <Support>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues</Support>
   <Project>https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor</Project>
   <Icon>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/icon.svg</Icon>
@@ -10,7 +10,7 @@
   <Screenshot>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/docs/images/store-en-selective-20261112.png</Screenshot>
   <Screenshot>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/docs/images/store-en-settings-20261112.png</Screenshot>
   <Screenshot>https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/docs/images/store-en-setup-20261112.png</Screenshot>
-  <Overview>Stable build 2026.11.11.2 for the documented Unraid 7.x scope. Hungarian, US English and German Mover dashboard and open-file monitor. Observer mode is the default. Advanced mode provides opt-in age-filtered native movement with torrent protection and SHA-256 verification. Selective movement is limited to the documented reviewed local setup; other configurations should use Observer mode. Installation does not create a schedule or start movement. In an isolated Unraid 7 VM, a 16 MiB torrent passed the full guarded move, recheck and peer transfer with matching SHA-256. After reboot, missing scrub history may require a fresh scrub before movement. Public tracker credit, power-loss recovery, broad compatibility and Unraid 8 are not verified. Details: https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/blob/main/docs/ACCEPTANCE-20261112.md</Overview>
+  <Overview>Stable build 2026.11.14.3 for the documented Unraid 7.x scope. Hungarian, US English and German Mover dashboard and open-file monitor. Observer mode is the default. Advanced mode provides opt-in age-filtered native movement with torrent protection and SHA-256 verification. Selective movement is limited to the documented reviewed local setup; other configurations should use Observer mode. Installation does not create a schedule or start movement. In an isolated Unraid 7 VM, a 16 MiB torrent passed the full guarded move, recheck and peer transfer with matching SHA-256. Managed scheduling is opt-in and the installer leaves automation disabled unless valid settings were explicitly saved. After reboot, missing scrub history may require a fresh scrub before movement. Public tracker credit, power-loss recovery, broad compatibility and Unraid 8 are not verified. Details: https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/blob/main/docs/ACCEPTANCE-20261112.md</Overview>
   <Beta>false</Beta>
   <MinVer>7.0.0</MinVer>
   <Category>Tools:Utilities</Category>

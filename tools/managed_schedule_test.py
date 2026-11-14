@@ -22,6 +22,11 @@ class ManagedSchedule(unittest.TestCase):
         self.assertEqual(scheduler.cron_text(self.load()),'')
     def test_valid_schedule_contains_only_fixed_command(self):
         self.assertEqual(scheduler.cron_text(self.load()),'*/15 * * * * /usr/bin/python3 /boot/config/plugins/fejes.mover.monitor/tools/managed_schedule.py tick >/dev/null 2>&1\n')
+    def test_cron_refresh_uses_bash_for_unraid_script(self):
+        import subprocess
+        with patch.object(scheduler.subprocess,'run') as run:
+            scheduler.refresh_cron()
+        run.assert_called_once_with(['bash','/usr/local/sbin/update_cron'],check=True,timeout=15,capture_output=True)
     def test_managed_threshold_does_not_require_legacy_script(self):
         import fejes_service as service
         with patch.object(service,'load_automation',return_value=self.data),patch.object(service,'SHARE',self.path.parent),patch.object(service,'LAUNCHER',self.path.parent/'no-user-script'),patch.object(service,'status',return_value={'cache':'available','cache_free_bytes':100*1024**3,'torrent':'no_torrent_blocker'}):

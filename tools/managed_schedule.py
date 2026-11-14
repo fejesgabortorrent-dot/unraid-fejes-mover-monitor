@@ -79,7 +79,10 @@ def atomic_write(path, text):
 
 
 def refresh_cron():
-    subprocess.run(['/usr/local/sbin/update_cron'],check=True,timeout=15,capture_output=True)
+    # Some Unraid releases ship update_cron with CRLF line endings. Direct
+    # exec then fails with ENOEXEC; invoking the known Bash script through its
+    # interpreter works across those releases.
+    subprocess.run(['bash','/usr/local/sbin/update_cron'],check=True,timeout=15,capture_output=True)
 
 
 def sync(remove=False):

@@ -1,4 +1,21 @@
-# Release Candidate 1 — published build 2026.10.31.2
+# Release status — candidate 2026.11.14.3
+
+## Scheduler fix and VM acceptance — 2026-11-14
+
+Candidate 2026.11.14.2 installed and survived a reboot on disposable Unraid
+7.3.4; the guest returned on br0 and its Tools UI loaded. The managed-schedule
+save then exposed an Unraid compatibility issue: `/usr/local/sbin/update_cron`
+has CRLF line endings, so Python direct execution raises `ENOEXEC` even though
+the interactive shell can run it. The failed save kept `automation.json`
+disabled; the temporary schedule file was cleared and the Unraid cron table
+verified to contain no managed tick. Candidate 2026.11.14.3 invokes the helper
+through Bash. The enabled-save, threshold deferral and disable lifecycle still
+need a fresh VM check on that build before release publication.
+
+The manifest and Community Applications wrapper now target `main`; a
+main-branch workflow publishes versioned release assets after the isolated CI
+job passes. The stable `v2026.11.11.2` release remains unchanged until the
+candidate's remaining checks pass.
 
 ## Development branch checkpoint — 2026-11-11
 
