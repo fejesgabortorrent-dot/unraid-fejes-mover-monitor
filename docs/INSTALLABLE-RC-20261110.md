@@ -14,7 +14,7 @@ Validation on 2026-11-10:
 
 Outstanding gates: install this exact candidate in FejesMover-Test; genuine guarded-run age/integrity/API-failure acceptance; VM lifecycle/reboot checks. Prior real torrent peer-transfer evidence applies only to the documented component test, not to this candidate's full guarded runner. Do not reboot the lab before deliberately correcting its Docker persistence configuration; the last checkpoint used a manually mounted 4 GiB image while docker.cfg retained disabled/default settings.
 
-Candidate update channel is the dedicated fix/installable-preflight-rc branch. The Community Applications main listing has not been changed by this candidate.
+The validated release manifest and Community Applications wrapper use the main branch as their update channel. Development candidates should be installed by immutable commit URL and must not redirect updates to a stale feature branch. Community Applications metadata updates only when the validated change reaches main; catalog refresh timing is independent.
 
 ## Follow-up
 

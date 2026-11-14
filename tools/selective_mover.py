@@ -25,6 +25,7 @@ from selection_policy import plan, age_days, within, waiting_table, ratio_target
 from torrent_preflight import read_snapshot, host_path, assess
 from fejes_service import dry_run
 from selective_profile import load_profile
+from managed_schedule import load as load_automation
 
 BASE = Path('/boot/config/plugins/fejes.mover.monitor')
 CONFIG = BASE/'selective.json'
@@ -161,13 +162,19 @@ def guards(owned=False):
     result={key:checks.get(key,'unknown') for key in ('backup','parity','mover','cooldown','capacity')}
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
-    launcher=PROFILE.launcher.read_text()
-    wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
-    if len(wait)!=1: raise ValueError('Cooldown unavailable')
+    automation=load_automation(profile=PROFILE)
+    if automation is not None:
+        if not automation['enabled']:raise ValueError('Managed automation disabled')
+        wait_minutes=automation['cooldown_minutes']
+    else:
+        launcher=PROFILE.launcher.read_text()
+        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
+        if len(wait)!=1: raise ValueError('Cooldown unavailable')
+        wait_minutes=int(wait[0])
     if not owned and ATTEMPT.exists():
         last=ATTEMPT.read_text().strip()
         if not last.isdigit() or int(last)>time.time(): raise ValueError('Invalid selective timestamp')
-        if time.time()-int(last)<int(wait[0])*60: result['cooldown']='wait'
+        if time.time()-int(last)<wait_minutes*60: result['cooldown']='wait'
     scrub=subprocess.check_output(['btrfs','scrub','status',str(POOL_ROOT)],text=True,timeout=10)
     if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub active or unhealthy')

@@ -64,7 +64,7 @@ with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
     assert script('').returncode == 0, 'Clean install failed'
     installed = {p.name: p.read_bytes() for p in destination.iterdir()}
     helper_bytes={p.name:p.read_bytes() for p in helper_destination.iterdir()}
-    assert len(helper_bytes)==12
+    assert len(helper_bytes)==13
     assert (root/'docs'/'SELECTIVE-PROFILE.md').is_file()
     if sys.platform!='win32':
         assert all((p.stat().st_mode & 0o777)==0o700 for p in helper_destination.iterdir())

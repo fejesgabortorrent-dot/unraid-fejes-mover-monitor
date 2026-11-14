@@ -1,0 +1,52 @@
+Menu="Utilities"
+Title="Mover · Automatika"
+Icon="fa-clock-o"
+---
+<?php
+$fmcConfigWrite=false;
+$runtime=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
+$esc=$runtime['esc'];
+$lang=$_COOKIE['fejes_mover_lang']??'hu';
+$t=static fn($hu,$en,$de)=>($lang==='en'?$en:($lang==='de'?$de:$hu));
+$base='/boot/config/plugins/fejes.mover.monitor/';
+$profile=json_decode(@file_get_contents($base.'selective-profile.json')?:'null',true);
+$data=json_decode(@file_get_contents($base.'automation.json')?:'null',true);
+$message='';$error='';
+if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
+ try{
+  $token=$runtime['token']??'';
+  if(!is_string($_POST['fmc_csrf']??null)||$token===''||!hash_equals($token,$_POST['fmc_csrf']))throw new RuntimeException('CSRF');
+  if($runtime['lockError']||$runtime['readError'])throw new RuntimeException('Configuration unavailable');
+  if(!is_array($profile))throw new RuntimeException('Save an explicit profile first');
+  $new=['version'=>1,'enabled'=>($_POST['enabled']??'')==='1','scope'=>array_intersect_key($profile,array_flip(['pool','share','torrent_container']))];
+  foreach(['threshold_gib','cooldown_minutes','interval_minutes'] as $key){
+   $v=$_POST[$key]??null;if(!is_string($v)||!ctype_digit($v))throw new RuntimeException('Invalid value');$new[$key]=(int)$v;
+  }
+  // The helper acquires the exclusive lock and revalidates the current scope.
+  if(is_resource($runtime['lock'])){flock($runtime['lock'],LOCK_UN);fclose($runtime['lock']);}
+  $proc=proc_open(['/usr/bin/python3',$base.'tools/managed_schedule.py','configure'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
+  if(!is_resource($proc))throw new RuntimeException('Save unavailable');
+  fwrite($pipes[0],json_encode($new,JSON_THROW_ON_ERROR));fclose($pipes[0]);
+  $out=stream_get_contents($pipes[1]);fclose($pipes[1]);stream_get_contents($pipes[2]);fclose($pipes[2]);
+  $code=proc_close($proc);$result=json_decode($out,true);
+  if($code!==0||($result['saved']??false)!==true)throw new RuntimeException('Save failed; inspect automation state');
+  $data=$new;$message=$t('Beállítások mentve.','Settings saved.','Einstellungen gespeichert.');
+ }catch(Throwable $e){$error=$t('Nem sikerült menteni. Ellenőrizd a profilt, a Haladó módot és az automatika állapotát.','Save failed. Check the profile, Advanced mode and automation state.','Speichern fehlgeschlagen. Profil, erweiterten Modus und Automationsstatus prüfen.');}
+}
+?>
+<?=$runtime['banner']?>
+<main style="max-width:850px;margin:24px auto;padding:20px">
+<h1><?=$esc($t('Saját automatika','Managed automation','Eigene Automation'))?></h1>
+<p><?=$esc($t('A megadott időközönként újraellenőrzi a mozgatás feltételeit. A mentés nem indít azonnali mozgatást.','Rechecks movement guards at the selected interval. Saving does not start movement immediately.','Prüft die Schutzbedingungen im gewählten Intervall. Speichern startet keine sofortige Bewegung.'))?></p>
+<p><a href="/Tools/FejesMoverProfile"><?=$esc($t('Profil beállítása','Configure profile','Profil einstellen'))?></a> · <a href="/Tools/FejesMoverSetup"><?=$esc($t('Mód és pool','Mode and pool','Modus und Pool'))?></a></p>
+<?php if($message):?><p role="status"><?=$esc($message)?></p><?php endif?>
+<?php if($error):?><p role="alert"><?=$esc($error)?></p><?php endif?>
+<form method="post">
+<input type="hidden" name="fmc_csrf" value="<?=$esc($runtime['token']??'')?>">
+<p><label><input type="checkbox" name="enabled" value="1" <?=($data['enabled']??false)===true?'checked':''?>> <?=$esc($t('Automatikus mozgatás engedélyezése','Enable automatic movement','Automatische Bewegung aktivieren'))?></label></p>
+<?php foreach(['threshold_gib'=>[$t('Szabadhely-küszöb (GiB)','Free space threshold (GiB)','Freier Speicher: Schwelle (GiB)'),300,1048576],'cooldown_minutes'=>[$t('Két kör között (perc)','Between batches (minutes)','Zwischen Durchläufen (Minuten)'),60,10080]] as $key=>$v):?>
+<p><label><?=$esc($v[0])?><br><input type="number" name="<?=$key?>" min="1" max="<?=$v[2]?>" required value="<?=$esc($data[$key]??$v[1])?>"></label></p>
+<?php endforeach?>
+<p><label><?=$esc($t('Ellenőrzés időköze (perc)','Check interval (minutes)','Prüfintervall (Minuten)'))?> <select name="interval_minutes"><?php foreach([5,10,15,30] as $n):?><option value="<?=$n?>" <?=($data['interval_minutes']??15)===$n?'selected':''?>><?=$n?></option><?php endforeach?></select></label></p>
+<button type="submit"><?=$esc($t('Mentés','Save','Speichern'))?></button>
+</form></main>

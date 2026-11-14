@@ -15,6 +15,7 @@ from torrent_preflight import assess, read_snapshot
 from wire_integrity_cron import ORIGINAL, REPLACEMENT, rewrite_cron
 from wire_mover_gate import rewrite_launcher
 from selective_profile import load_profile
+from managed_schedule import load as load_automation
 
 ROOT = Path('/boot/config/plugins/dynamix.file.integrity')
 PROFILE = load_profile()
@@ -38,14 +39,21 @@ def dry_run(container=None, include_items=False):
         checks.append({'key': key, 'state': state, 'detail': detail})
     threshold = wait = None
     try:
-        if LAUNCHER.is_symlink():
-            raise ValueError('Symlink')
-        source = LAUNCHER.read_text()
-        rewrite_launcher(source)  # Reject drift; known guards only.
+        automation = load_automation(profile=PROFILE)
+        if automation is not None:
+            if not automation['enabled']:
+                raise ValueError('Managed automation disabled')
+            threshold = automation['threshold_gib']
+            wait = automation['cooldown_minutes']
+        else:
+            if LAUNCHER.is_symlink():
+                raise ValueError('Symlink')
+            source = LAUNCHER.read_text()
+            rewrite_launcher(source)
+            threshold = int(re.search(r'^KUSZOB_GIB=([0-9]+)$', source, re.M)[1])
+            wait = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
         if not SHARE.is_dir():
             raise ValueError('Required share unavailable')
-        threshold = int(re.search(r'^KUSZOB_GIB=([0-9]+)$', source, re.M)[1])
-        wait = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
         add('launcher', 'pass')
     except (IndexError, *ERRORS):
         add('launcher', 'unknown')

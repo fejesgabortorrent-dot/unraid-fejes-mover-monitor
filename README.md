@@ -1,10 +1,10 @@
 # Fejes Mover Monitor
 
-**Stable 2026.11.11.2 · Unraid 7.x · Magyar / English (US) / Deutsch**
+**Candidate 2026.11.14.3 · Unraid 7.x · Magyar / English (US) / Deutsch**
 
 Monitor Mover activity and cache capacity, inspect waiting content, and optionally use guarded age-filtered cache-to-array movement in the documented reviewed setup.
 
-[Stable release](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.11.2) · [Acceptance evidence](docs/ACCEPTANCE-20261112.md) · [Movement guide](docs/SELECTIVE-MOVEMENT.md) · [Reboot recovery](docs/REBOOT-RECOVERY.md)
+[Previous stable release](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.11.2) · [Acceptance evidence](docs/ACCEPTANCE-20261112.md) · [Movement guide](docs/SELECTIVE-MOVEMENT.md) · [Reboot recovery](docs/REBOOT-RECOVERY.md)
 
 ## Magyar
 
@@ -63,7 +63,7 @@ After reboot, missing btrfs scrub history can block movement until a fresh real 
 
 ## Validation
 
-The candidate passed 183 automated cases, seven JavaScript suites, reproducible package/checksum checks and isolated lifecycle validation. The isolated Unraid VM passed full guarded movement of a genuinely aged 16 MiB torrent, source absence and destination SHA-256 verification, unchanged logical path, recheck and complete second-client download with matched SHA-256 and counted seeder upload.
+The previous stable build passed 183 automated cases, seven JavaScript suites, reproducible package/checksum checks and isolated lifecycle validation. The isolated Unraid VM passed full guarded movement of a genuinely aged 16 MiB torrent, source absence and destination SHA-256 verification, unchanged logical path, recheck and complete second-client download with matched SHA-256 and counted seeder upload. Candidate 2026.11.14.3 additionally fixes managed-scheduler cron refresh on the disposable Unraid 7.3.4 VM; candidate release remains gated on PR validation.
 
 This does not certify public tracker credit, production VPN behavior, physical power-loss recovery or broad hardware compatibility. See [dated evidence](docs/ACCEPTANCE-20261112.md).
 
@@ -72,10 +72,10 @@ This does not certify public tracker credit, production VPN behavior, physical p
 Read the [movement guide](docs/SELECTIVE-MOVEMENT.md) and retain a backup. Find **Fejes Mover Monitor** in Community Applications, or use **Plugins → Install Plugin**:
 
 ```
-https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v2026.11.11.2/fejes.mover.monitor.plg
+https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v2026.11.14.3/fejes.mover.monitor.plg
 ```
 
-Manifest SHA-256: `8d410471cc3f7ad5b8726d2b818f7fce6a5143baa4d10a94d7491868fd50a8f4`.
+The final manifest SHA-256 will be listed in the release assets after the main-branch validation workflow publishes this version.
 
 Open **Tools → Mover figyelő** or the dashboard card. The self-contained manifest supplies the runtime. Start in Observer mode and review the compatibility limits before Advanced mode.
 
