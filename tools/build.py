@@ -195,7 +195,6 @@ for name in {' '.join(f.name for f in files)}; do
   install -m 0644 "$src/$name" "$dst/$name"
  done
 # Restore only previously configured opt-in scheduling; absent settings stay off.
-# Restore only previously configured opt-in scheduling; absent settings stay off.
 if command -v update_cron >/dev/null; then
   # Schedule restoration is best-effort during plugin installation. A failed
   # refresh must not roll back the monitoring UI; the executor remains guarded
