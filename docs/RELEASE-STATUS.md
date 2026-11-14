@@ -1,21 +1,25 @@
-# Release status — candidate 2026.11.14.3
+# Release status — stable 2026.11.14.3
 
 ## Scheduler fix and VM acceptance — 2026-11-14
 
 Candidate 2026.11.14.2 installed and survived a reboot on disposable Unraid
 7.3.4; the guest returned on br0 and its Tools UI loaded. The managed-schedule
-save then exposed an Unraid compatibility issue: `/usr/local/sbin/update_cron`
-has CRLF line endings, so Python direct execution raises `ENOEXEC` even though
-the interactive shell can run it. The failed save kept `automation.json`
-disabled; the temporary schedule file was cleared and the Unraid cron table
-verified to contain no managed tick. Candidate 2026.11.14.3 invokes the helper
-through Bash. The enabled-save, threshold deferral and disable lifecycle still
-need a fresh VM check on that build before release publication.
+save exposed an Unraid compatibility issue: `/usr/local/sbin/update_cron` has
+CRLF line endings, so direct execution raises `ENOEXEC`. Version 2026.11.14.3
+invokes the helper through Bash.
 
-The manifest and Community Applications wrapper now target `main`; a
-main-branch workflow publishes versioned release assets after the isolated CI
-job passes. The stable `v2026.11.11.2` release remains unchanged until the
-candidate's remaining checks pass.
+The .14.3 build was installed on the disposable Unraid 7.3.4 VM. The Plugins
+and Tools pages reported the expected version. Saving an enabled 30-minute
+schedule succeeded and the monitor reported it connected. A read-only start
+probe made no file changes; it showed 7.4 GiB free against the configured 1 GiB
+threshold, while torrent protection was unavailable, so it did not claim an
+actionable start decision. The schedule was then disabled and the settings page
+confirmed the saved disabled state.
+
+GitHub Actions run #137 passed isolated validation and release publication.
+GitHub release v2026.11.14.3 is stable and includes the plugin manifest, source
+ZIP, and checksum assets. The Community Applications profile points at main;
+gallery refresh is managed independently by the catalog.
 
 ## Development branch checkpoint — 2026-11-11
 
