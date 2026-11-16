@@ -345,6 +345,29 @@ def execute_file(key,expected,days,before_native=None):
     return {'state':'moved','bytes':after.st_size,'sha256':checksum,'destination':str(target)}
 
 
+def safe_pre_native_partial_deferral(report, moved_in_unit, outcome):
+    """Only a verified, pre-native skip may defer the rest of a partly moved unit.
+
+    The completed native moves remain subject to the final torrent-continuity
+    check; any native intent or ambiguous result must retain the inspection latch.
+    """
+    if outcome.get('state') != 'skipped' or outcome.get('reason') not in {
+            'fresh_conditions_changed', 'source_or_destination_changed', 'open_file'}:
+        return False
+    if report.get('active_file_started') is not False:
+        return False
+    evidence = report.get('verified_files')
+    if not isinstance(evidence, list) or not isinstance(moved_in_unit, int) or moved_in_unit < 1:
+        return False
+    if len(evidence) != report.get('moved_files'):
+        return False
+    if any(not isinstance(row, dict) or type(row.get('bytes')) is not int or
+           row['bytes'] < 0 or not row.get('sha256') or not row.get('destination')
+           for row in evidence):
+        return False
+    return sum(row['bytes'] for row in evidence) == report.get('moved_bytes')
+
+
 def run():
     report={'version':2,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':f'{PROFILE.pool}/{PROFILE.share} -> Array; selected files only',
@@ -428,11 +451,24 @@ def run():
                     log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
                 elif outcome['state']=='skipped':
                     reason=outcome['reason']
+                    if report['active_file_started'] and moved_in_unit:
+                        # After an earlier verified move, ambiguous native
+                        # intent for this file must retain inspection.
+                        raise RuntimeError('Native outcome requires inspection')
+                    if moved_in_unit and not safe_pre_native_partial_deferral(report,moved_in_unit,outcome):
+                        raise RuntimeError('Unit partially moved; inspect before another run')
+                    # Preserve the historical no-files-moved behavior for a
+                    # retained source with no destination and no prior move.
                     report['active_file_started']=False
                     for field in ('active_file','active_signature','active_sha256'):report.pop(field,None)
                     skips[reason if len(group)==1 else 'unit_changed']+=len(group)-moved_in_unit
                     if moved_in_unit:
-                        raise RuntimeError('Unit partially moved; inspect before another run')
+                        # Do not claim the unit is complete. Preserve verified
+                        # transfers and re-evaluate remaining files on a later run.
+                        skips['partial_unit_pre_native_deferred']+=1
+                        log('partially moved unit deferred before native intent; final torrent verification required')
+                    report['skipped']=dict(skips)
+                    atomic_json(LAST,report)
                     break
                 else:raise RuntimeError('Unrecognized native outcome')
                 report['active_file_started']=False
