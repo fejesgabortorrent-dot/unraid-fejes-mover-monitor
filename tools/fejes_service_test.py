@@ -12,6 +12,27 @@ import wire_integrity_cron as wire
 
 
 class ServiceTest(unittest.TestCase):
+    def test_read_only_cooldown_uses_legacy_seconds(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            launch=root/'launcher.sh'
+            stamp=root/'last_attempt'
+            launch.write_text('KUSZOB_GIB=150\\nUJRA_PROBALKOZAS_MP=360\\n')
+            stamp.write_text('500')
+            report={'cache':'available','cache_free_bytes':100*1024**3,
+                    'torrent':'no_torrent_blocker'}
+            with patch.object(service,'LAUNCHER',launch), \
+                 patch.object(service,'ATTEMPT',stamp), \
+                 patch.object(service,'load_automation',return_value=None), \
+                 patch.object(service,'rewrite_launcher'), \
+                 patch.object(service,'SHARE',root), \
+                 patch.object(service,'status',return_value=report), \
+                 patch.object(service.time,'time',return_value=1000):
+                data=service.dry_run()
+            cd=next(x for x in data['dry_run']['checks'] if x['key']=='cooldown')
+            self.assertEqual(cd['state'],'pass')
+            self.assertEqual(cd['detail']['remaining_seconds'],0)
+
     def test_capacity_estimate_and_missing_bytes(self):
         self.assertEqual(service.capacity([{'amount_left': 40}, {'amount_left': 30}], 100, 20)['pressure'], 'ok')
         self.assertEqual(service.capacity([{'amount_left': 90}], 100, 20)['pressure'], 'warning')
