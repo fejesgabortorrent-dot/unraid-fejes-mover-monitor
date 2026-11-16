@@ -73,10 +73,12 @@ def prioritize(candidates, torrents, mounts, target=0, sizes=None):
 
 
 def unit_groups(files, root, torrents=None, mounts=None):
-    """Keep folders, exact-name sidecars and shared torrent owners together.
+    """Keep exact-name companions and overlapping torrent owners together.
 
-    Observation time is not evidence that independent files belong together.
-    Overlapping folder/owner relationships are merged transitively.
+    Independent media stems in one folder can move as separate units. Unknown
+    directory-level companions keep the entire directory conservative. Torrent
+    owner overlap is still merged transitively and cannot be split by filenames.
+    Observation time never establishes ownership.
     """
     root = absolute_path(root)
     parents = {}
@@ -98,12 +100,29 @@ def unit_groups(files, root, torrents=None, mounts=None):
             raise ValueError('Duplicate or out-of-root unit')
         parents[path] = path
         relative = path[len(root)+1:]
-        # A directory remains a conservative unit. At the root, matching stems
-        # preserve video/subtitle sidecars without grouping unrelated arrivals.
-        key = ('folder', relative.split('/', 1)[0]) if '/' in relative else ('stem', relative.rsplit('.', 1)[0])
+        # Match video/subtitle/metadata companions by exact basename, including
+        # nested folders. Only known media/sidecar extensions may split a folder.
+        # An unknown or directory-wide file retains the conservative folder unit.
+        directory, _, name = relative.rpartition('/')
+        stem, sep, extension = name.rpartition('.')
+        known = {'mkv', 'mp4', 'avi', 'mov', 'm4v', 'ts', 'wmv',
+                 'srt', 'ass', 'ssa', 'sub', 'idx', 'vtt',
+                 'nfo', 'bif', 'jpg', 'jpeg', 'png', 'webp'}
+        generic = {'poster', 'folder', 'fanart', 'banner', 'backdrop',
+                   'clearart', 'clearlogo', 'landscape', 'thumb'}
+        if not sep or extension.lower() not in known or stem.lower() in generic:
+            key = ('directory-wide', directory)
+        else:
+            key = ('stem', directory, stem)
         buckets.setdefault(key, []).append(path)
     for paths in buckets.values():
         join(paths)
+    # Never detach an unknown/generic companion from the folder it describes.
+    for key, paths in buckets.items():
+        if key[0] == 'directory-wide':
+            directory = key[1]
+            join([p for p in parents
+                  if p[len(root)+1:].rpartition('/')[0] == directory])
     for owner in owners:
         join([path for path in parents if within(path, owner) or within(owner, path)])
     groups = {}
