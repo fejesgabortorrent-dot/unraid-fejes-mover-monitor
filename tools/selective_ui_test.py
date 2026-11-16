@@ -151,7 +151,7 @@ class SelectiveInterface(unittest.TestCase):
     def test_larger_batch_is_explicit_and_saved_without_movement(self):
         result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='7',ratio_target='1',batch_gib='32'))
         self.assertEqual(result['config']['batch_gib'],32)
-        self.assertIn('8 fájl / 32 GiB',result['html'])
+        self.assertIn('32 GiB',result['html'])
         self.assertFalse(result['calls'])
         for value in ['0','-1','256','32.0',[]]:
             result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='7',batch_gib=value))

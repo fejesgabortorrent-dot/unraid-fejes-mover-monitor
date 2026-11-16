@@ -45,8 +45,8 @@ English interface crops captured on 2026-11-12. These are actual interface views
 - Waiting-file search, status/video filters, sorting, age eligibility and concrete blocking reasons.
 - Independent root files are not grouped solely by arrival time; folder, sidecar and torrent relationships remain protected.
 - Torrent age options: 1 / 7 / 14 / 30 days. Other content requires two stable observations and a complete-unit check.
-- Optional ratio priority orders already eligible content; low or unknown ratios do not bypass or extend age protection.
-- Larger eligible files first within each ratio-priority group; at most eight files and the configured 16 / 32 / 64 / 128 GiB batch limit.
+- A nonzero ratio target is mandatory for every owning torrent; low or unknown ratios defer the unit.
+- Whole eligible units are considered under the configured 16 / 32 / 64 / 128 GiB batch limit; oversized units wait.
 - Fresh backup, parity, scrub, mount, integrity, open-file and cooldown checks; unavailable torrent information safely defers movement.
 - Bounded blocker details keep large waiting lists manageable.
 - Authenticated optional manual actions and backed-up integration with reviewed existing automation.

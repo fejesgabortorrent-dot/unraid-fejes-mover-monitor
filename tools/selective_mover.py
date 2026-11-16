@@ -262,6 +262,7 @@ def fresh_candidate(key,expected,days,owned=True):
     item=dict(path=key,regular=True,symlink=False,nlink=info.st_nlink,open=key in opened,
               stable=True,mtime=info.st_mtime,first_seen=expected['first_seen'])
     settings=read_json(CONFIG,{'version':1,'age_days':7})
+    if settings.get('version')!=1: raise ValueError('Unknown configuration')
     target=ratio_target(settings.get('ratio_target',0))
     selection=plan([item],items,mounts,protection,days=days,now=now,observed_at=now,root=ROOT,target_ratio=target)
     return path,selection['candidates']==[key]

@@ -92,6 +92,17 @@ class NativeSafety(unittest.TestCase):
             self.assertEqual(mover.execute_file('/unused',{},7)['reason'],'existing_array_copy')
             native.assert_not_called()
 
+    def test_fresh_candidate_rechecks_ratio_before_native_move(self):
+        from types import SimpleNamespace
+        now=2_000_000_000
+        key='/mnt/user/Filmek/video.mkv'
+        torrent=dict(content_path='/data/video.mkv',ratio=0.5,progress=1,state='stalledUP',completion_on=now-3*86400,upspeed=0,dlspeed=0)
+        mounts=[dict(Type='bind',Source='/mnt/user/Filmek',Destination='/data')]
+        info=SimpleNamespace(st_nlink=1,st_mtime=now-3*86400)
+        with patch.object(mover,'valid_file',return_value=info),patch.object(mover,'signature',return_value=[1]),patch.object(mover.inventory_adapter,'open_paths',return_value=set()),patch.object(mover,'torrent_snapshot',return_value=([torrent],mounts)),patch.object(mover,'guards',return_value={k:'pass' for k in REQUIRED_GUARDS}),patch.object(mover,'read_json',return_value={'version':1,'ratio_target':1}),patch.object(mover.time,'time',return_value=now):
+            path,eligible=mover.fresh_candidate(key,{'signature':[1],'first_seen':now-3*86400},1)
+            self.assertFalse(eligible)
+
     def test_reject_symlink_hardlink_and_native_path_ambiguity(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder)
