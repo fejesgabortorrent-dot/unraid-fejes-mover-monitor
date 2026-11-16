@@ -139,6 +139,27 @@ def torrent_snapshot():
     return items,converted
 
 
+def cooldown_duration_seconds(automation, launcher_text):
+    """Legacy launcher is seconds; managed automation is explicitly minutes."""
+    if automation is not None:
+        if not automation['enabled']:
+            raise ValueError('Managed automation disabled')
+        value=automation['cooldown_minutes']
+        if type(value) is not int:
+            raise ValueError('Managed cooldown invalid')
+        seconds=value*60
+    else:
+        if not isinstance(launcher_text,str):
+            raise ValueError('Launcher configuration missing')
+        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher_text,re.M)
+        if len(wait)!=1:
+            raise ValueError('Cooldown unavailable')
+        seconds=int(wait[0])
+    if not 0 <= seconds <= 86400:
+        raise ValueError('Cooldown duration invalid')
+    return seconds
+
+
 def guards(owned=False):
     prior=read_json(LAST,{})
     if prior.get('requires_inspection') or (not owned and needs_inspection(prior)):
@@ -163,18 +184,11 @@ def guards(owned=False):
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
     automation=load_automation(profile=PROFILE)
-    if automation is not None:
-        if not automation['enabled']:raise ValueError('Managed automation disabled')
-        wait_minutes=automation['cooldown_minutes']
-    else:
-        launcher=PROFILE.launcher.read_text()
-        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
-        if len(wait)!=1: raise ValueError('Cooldown unavailable')
-        wait_minutes=int(wait[0])
+    wait_seconds=cooldown_duration_seconds(automation, PROFILE.launcher.read_text() if automation is None else None)
     if not owned and ATTEMPT.exists():
         last=ATTEMPT.read_text().strip()
         if not last.isdigit() or int(last)>time.time(): raise ValueError('Invalid selective timestamp')
-        if time.time()-int(last)<wait_minutes*60: result['cooldown']='wait'
+        if time.time()-int(last)<wait_seconds: result['cooldown']='wait'
     scrub=subprocess.check_output(['btrfs','scrub','status',str(POOL_ROOT)],text=True,timeout=10)
     if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub active or unhealthy')
@@ -345,6 +359,29 @@ def execute_file(key,expected,days,before_native=None):
     return {'state':'moved','bytes':after.st_size,'sha256':checksum,'destination':str(target)}
 
 
+def safe_pre_native_partial_deferral(report, moved_in_unit, outcome):
+    """Only a verified, pre-native skip may defer the rest of a partly moved unit.
+
+    The completed native moves remain subject to the final torrent-continuity
+    check; any native intent or ambiguous result must retain the inspection latch.
+    """
+    if outcome.get('state') != 'skipped' or outcome.get('reason') not in {
+            'fresh_conditions_changed', 'source_or_destination_changed', 'open_file'}:
+        return False
+    if report.get('active_file_started') is not False:
+        return False
+    evidence = report.get('verified_files')
+    if not isinstance(evidence, list) or not isinstance(moved_in_unit, int) or moved_in_unit < 1:
+        return False
+    if len(evidence) != report.get('moved_files'):
+        return False
+    if any(not isinstance(row, dict) or type(row.get('bytes')) is not int or
+           row['bytes'] < 0 or not row.get('sha256') or not row.get('destination')
+           for row in evidence):
+        return False
+    return sum(row['bytes'] for row in evidence) == report.get('moved_bytes')
+
+
 def run():
     report={'version':2,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':f'{PROFILE.pool}/{PROFILE.share} -> Array; selected files only',
@@ -428,11 +465,24 @@ def run():
                     log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
                 elif outcome['state']=='skipped':
                     reason=outcome['reason']
+                    if report['active_file_started'] and moved_in_unit:
+                        # After an earlier verified move, ambiguous native
+                        # intent for this file must retain inspection.
+                        raise RuntimeError('Native outcome requires inspection')
+                    if moved_in_unit and not safe_pre_native_partial_deferral(report,moved_in_unit,outcome):
+                        raise RuntimeError('Unit partially moved; inspect before another run')
+                    # Preserve the historical no-files-moved behavior for a
+                    # retained source with no destination and no prior move.
                     report['active_file_started']=False
                     for field in ('active_file','active_signature','active_sha256'):report.pop(field,None)
                     skips[reason if len(group)==1 else 'unit_changed']+=len(group)-moved_in_unit
                     if moved_in_unit:
-                        raise RuntimeError('Unit partially moved; inspect before another run')
+                        # Do not claim the unit is complete. Preserve verified
+                        # transfers and re-evaluate remaining files on a later run.
+                        skips['partial_unit_pre_native_deferred']+=1
+                        log('partially moved unit deferred before native intent; final torrent verification required')
+                    report['skipped']=dict(skips)
+                    atomic_json(LAST,report)
                     break
                 else:raise RuntimeError('Unrecognized native outcome')
                 report['active_file_started']=False

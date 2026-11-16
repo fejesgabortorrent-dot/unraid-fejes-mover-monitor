@@ -1,6 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.11.14.3" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
+<PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="2026.11.16.5" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main/fejes.mover.monitor.plg" support="https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/issues">
 <CHANGES>
+### 2026.11.16.5 (development candidate)
+- Group independent media and matching companions while preserving torrent ownership and conservative unknown-file handling.
+- Isolated Unraid and seed-continuity acceptance pending.
+### 2026.11.16.4 (read-only preview cooldown correction)
+- Align Fejes service dry-run legacy cooldown with seconds-based Mover logic.
+- Preserve separate legacy and selective Mover attempt timestamps.
+- Add dry-run regression coverage.
+
+### 2026.11.16.3 (legacy cooldown unit correction)
+- Correct UJRA_PROBALKOZAS_MP handling: legacy launcher values are seconds, not minutes.
+- Managed automation cooldown_minutes remains in minutes; reject missing or invalid values.
+- Include regression checks for both configurations.
+
+### 2026.11.16.2 (manual verified inspection recovery)
+- Add explicit inspect/recover CLI with destination SHA256, torrent file inventory and seed-state verification.
+- Require matching report digest and operator confirmation; back up locked evidence on disk5 before release.
+- Never start movement or modify content during recovery; preserve historic continuity uncertainty.
+### 2026.11.16.1 (partial unit safety update)
+- Defer verified partial units only after a known pre-native skip and final torrent continuity validation.
+- Keep native-intent ambiguity and existing inspection latches protected.
 ### 2026.11.14.3 (managed scheduler cron refresh compatibility)
 - Run Unraid's cron refresh helper through Bash so CRLF shebangs do not defer the managed schedule.
 - Use the main branch as the plugin update channel.
@@ -64,7 +84,7 @@
 - Document the supported owner-tested scope and remaining acceptance limits.
 - Older experimental beta notes are retained in Git history.
 </CHANGES>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMover.Dashboard.page"><INLINE><![CDATA[﻿Menu="Dashboard:0"
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMover.Dashboard.page"><INLINE><![CDATA[﻿Menu="Dashboard:0"
 ---
 <?php
 $fmCookie=$_COOKIE['fejes_mover_lang']??'hu';
@@ -167,7 +187,7 @@ HTML;
 
 <?php } ?>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMover.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Monitor"
 Icon="fa-exchange"
 Tag="cogs"
@@ -482,7 +502,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMoverAutomation.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMoverAutomation.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover · Automatika"
 Icon="fa-clock-o"
 ---
@@ -652,7 +672,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMoverProfile.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMoverProfile.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover · Profil"
 Icon="fa-id-card"
 Tag="cogs"
@@ -814,7 +834,7 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMoverProtection.page"><INLINE><![CDATA[Menu="Utilities"
 Title="FejesMover védelem"
 Icon="fa-shield"
 Tag="cogs"
@@ -1177,7 +1197,7 @@ $fpGiB=static fn($v)=>is_numeric($v)?number_format((float)$v/1073741824,1,',',' 
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMoverRuntime.php"><INLINE><![CDATA[<?php
 // Shared, fail-closed runtime configuration. No settings or automation writes here.
 return (static function ($configWrite) {
     $language = $_COOKIE['fejes_mover_lang'] ?? 'hu';
@@ -1477,7 +1497,7 @@ HTML;
         't'=>$t,'esc'=>$esc,'versionBadge'=>$versionBadge,'installedVersion'=>$installedVersion,'banner'=>$banner,'summary'=>$summary,'reportFault'=>$reportFault];
 })(!empty($fmcConfigWrite));
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMoverSelective.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMoverSelective.page"><INLINE><![CDATA[Menu="Utilities"
 
 Title="Mover · Selective"
 
@@ -1706,7 +1726,7 @@ const freshLabel=<?=json_encode($t('Kijelzés frissítve. A felmérés időpontj
 let busy=false;setInterval(async()=>{if(document.hidden||busy)return;busy=true;const c=new AbortController(),timer=setTimeout(()=>c.abort(),8000);try{const response=await fetch(location.pathname,{cache:'no-store',credentials:'same-origin',signal:c.signal});if(!response.ok)throw Error();const doc=new DOMParser().parseFromString(await response.text(),'text/html');const part=doc.getElementById('fms-last'),current=document.getElementById('fms-last'),nextRun=doc.getElementById('fms-run'),oldRun=document.getElementById('fms-run');if(!part||!current||!nextRun||!oldRun)throw Error('Missing selective status');current.replaceWith(part);for(const selector of ['[data-fms-status-card]','[data-fms-space-card]']){const next=doc.querySelector(selector),old=document.querySelector(selector);if(next&&old)old.replaceWith(next);}oldRun.disabled=nextRun.disabled;const status=document.getElementById('fms-refresh-state');if(status&&status.textContent!==freshLabel)status.textContent=freshLabel;tick();}catch{const status=document.getElementById('fms-refresh-state');if(status&&status.textContent!==staleLabel)status.textContent=staleLabel;const run=document.getElementById('fms-run');if(run)run.disabled=true;}finally{clearTimeout(timer);busy=false;}},5000);
 })();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMoverSettings.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover Settings"
 Icon="fa-sliders"
 Tag="cogs"
@@ -2003,7 +2023,7 @@ const labels=<?=json_encode([$fmc['t']('Elmentett értékek változatlanok.','Sa
 function update(){const invalid=fields.some(e=>!e.checkValidity());status.textContent=invalid?labels[2]:fields.some((e,i)=>e.value!==saved[i])?labels[1]+fields.map((e,i)=>saved[i]+' → '+e.value+' '+(e.name==='KUSZOB_GIB'?'GiB':'min')).join(' · '):labels[0];status.style.color=invalid?'#ed916e':'';}form.addEventListener('input',update);form.addEventListener('change',update);update();})();
 </script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/FejesMoverSetup.page"><INLINE><![CDATA[Menu="Utilities"
 Title="Mover · Mód és pool"
 Icon="fa-sliders"
 Tag="cogs"
@@ -2204,7 +2224,7 @@ echo $fmc['banner'];
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Read-only, conservative qBittorrent gate for an external Mover launcher."""
 import argparse
 import json
@@ -2320,7 +2340,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/torrent_capacity_guard.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/torrent_capacity_guard.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Fail-closed torrent pause/resume policy for cache pressure.
 
 This module deliberately contains no credentials, shell calls, or live API
@@ -2398,7 +2418,7 @@ def apply(adapter, decision):
         changed.append(torrent_hash)
     return tuple(changed)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/qbit_capacity_adapter.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/qbit_capacity_adapter.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Small qBittorrent pause/resume adapter with injected transport.
 
 The adapter never stores credentials and never logs response bodies. The
@@ -2441,7 +2461,7 @@ class QbitCapacityAdapter:
     def resume(self, torrent_hash):
         self._change("/api/v2/torrents/resume", torrent_hash)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/integrity_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Run an existing generated Bunker schedule with live torrent exclusions."""
 import argparse
 import pathlib
@@ -2549,7 +2569,7 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/wire_integrity_cron.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Route the existing File Integrity cron job through its reviewed preflight."""
 import argparse
 import datetime
@@ -2657,7 +2677,7 @@ if __name__ == "__main__":
               "errno=" + str(getattr(exc, "errno", None)))
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/fejes_service.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Shared read-only diagnostics and an opt-in guarded legacy Mover launcher."""
 import argparse
 import fcntl
@@ -2696,21 +2716,21 @@ def dry_run(container=None, include_items=False):
     checks = []
     def add(key, state, detail=''):
         checks.append({'key': key, 'state': state, 'detail': detail})
-    threshold = wait = None
+    threshold = wait_seconds = None
     try:
         automation = load_automation(profile=PROFILE)
         if automation is not None:
             if not automation['enabled']:
                 raise ValueError('Managed automation disabled')
             threshold = automation['threshold_gib']
-            wait = automation['cooldown_minutes']
+            wait_seconds = automation['cooldown_minutes'] * 60
         else:
             if LAUNCHER.is_symlink():
                 raise ValueError('Symlink')
             source = LAUNCHER.read_text()
             rewrite_launcher(source)
             threshold = int(re.search(r'^KUSZOB_GIB=([0-9]+)$', source, re.M)[1])
-            wait = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
+            wait_seconds = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
         if not SHARE.is_dir():
             raise ValueError('Required share unavailable')
         add('launcher', 'pass')
@@ -2748,13 +2768,13 @@ def dry_run(container=None, include_items=False):
         add('parity', 'unknown')
     add('mover', 'wait' if MOVER_PID.exists() else 'pass')
     try:
-        if wait is None:
-            raise ValueError('Retry interval unknown')
+        if type(wait_seconds) is not int or not 0 <= wait_seconds <= 86400:
+            raise ValueError('Retry interval invalid')
         if ATTEMPT.exists():
             raw = ATTEMPT.read_text().strip()
             if not raw.isdigit():
                 raise ValueError('Invalid timestamp')
-            remaining = max(0, int(raw)+wait*60-int(time.time()))
+            remaining = max(0, int(raw)+wait_seconds-int(time.time()))
             add('cooldown', 'wait' if remaining else 'pass', {'remaining_seconds': remaining})
         else:
             add('cooldown', 'pass', {'remaining_seconds': 0})
@@ -2896,7 +2916,7 @@ def main(argv=None):
 if __name__ == '__main__':
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/wire_mover_gate.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Add an opt-in torrent gate to the reviewed legacy threshold script."""
 import argparse
 import datetime
@@ -3034,7 +3054,7 @@ if __name__ == '__main__':
         print('Mover wiring did not complete:', type(exc).__name__)
         sys.exit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/selection_policy.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/selection_policy.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Pure selection policy; never authorizes or executes a live move.
 
 Inputs must be collected by a trusted host adapter. Files and torrent content
@@ -3109,10 +3129,12 @@ def prioritize(candidates, torrents, mounts, target=0, sizes=None):
 
 
 def unit_groups(files, root, torrents=None, mounts=None):
-    """Keep folders, exact-name sidecars and shared torrent owners together.
+    """Keep exact-name companions and overlapping torrent owners together.
 
-    Observation time is not evidence that independent files belong together.
-    Overlapping folder/owner relationships are merged transitively.
+    Independent media stems in one folder can move as separate units. Unknown
+    directory-level companions keep the entire directory conservative. Torrent
+    owner overlap is still merged transitively and cannot be split by filenames.
+    Observation time never establishes ownership.
     """
     root = absolute_path(root)
     parents = {}
@@ -3134,12 +3156,44 @@ def unit_groups(files, root, torrents=None, mounts=None):
             raise ValueError('Duplicate or out-of-root unit')
         parents[path] = path
         relative = path[len(root)+1:]
-        # A directory remains a conservative unit. At the root, matching stems
-        # preserve video/subtitle sidecars without grouping unrelated arrivals.
-        key = ('folder', relative.split('/', 1)[0]) if '/' in relative else ('stem', relative.rsplit('.', 1)[0])
+        # Match video/subtitle/metadata companions by exact basename, including
+        # nested folders. Only known media/sidecar extensions may split a folder.
+        # An unknown or directory-wide file retains the conservative folder unit.
+        directory, _, name = relative.rpartition('/')
+        stem, sep, extension = name.rpartition('.')
+        known = {'mkv', 'mp4', 'avi', 'mov', 'm4v', 'ts', 'wmv',
+                 'srt', 'ass', 'ssa', 'sub', 'idx', 'vtt',
+                 'nfo', 'bif', 'jpg', 'jpeg', 'png', 'webp'}
+        generic = {'poster', 'folder', 'fanart', 'banner', 'backdrop',
+                   'clearart', 'clearlogo', 'landscape', 'thumb'}
+        if relative == 'EMBY':
+            key = ('excluded', path)
+        elif not sep or extension.lower() not in known or stem.lower() in generic:
+            key = ('directory-wide', directory)
+        else:
+            key = ('stem', directory, stem)
         buckets.setdefault(key, []).append(path)
     for paths in buckets.values():
         join(paths)
+    # Language/forced suffixes on sidecars still belong to the media stem.
+    # If several media names match, merge all of them conservatively.
+    media_ext = {'mkv', 'mp4', 'avi', 'mov', 'm4v', 'ts', 'wmv'}
+    sidecar_ext = {'srt', 'ass', 'ssa', 'sub', 'idx', 'vtt', 'nfo', 'bif', 'jpg', 'jpeg', 'png', 'webp'}
+    for path in parents:
+        directory, _, name = path.rpartition('/')
+        stem, sep, ext = name.rpartition('.')
+        if sep and ext.lower() in sidecar_ext:
+            related = [other for other in parents
+                       if other.rpartition('/')[0] == directory
+                       and other.rpartition('/')[2].rpartition('.')[2].lower() in media_ext
+                       and stem.startswith(other.rpartition('/')[2].rpartition('.')[0] + '.')]
+            join([path] + related)
+    # Never detach an unknown/generic companion from the folder it describes.
+    for key, paths in buckets.items():
+        if key[0] == 'directory-wide':
+            directory = key[1]
+            join([p for p in parents
+                  if p[len(root)+1:].rpartition('/')[0] == directory])
     for owner in owners:
         join([path for path in parents if within(path, owner) or within(owner, path)])
     groups = {}
@@ -3334,7 +3388,7 @@ if __name__ == '__main__':
     import sys
     sys.exit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/selective_profile.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/selective_profile.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Validated profile for the opt-in selective mover.
 
 The owner-tested profile remains the safe default, but paths and the torrent
@@ -3416,7 +3470,7 @@ def load_profile(path=PROFILE_PATH):
     }
     return SelectiveProfile(**values)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/selective_preview.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/selective_preview.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Live inventory and read-only selection preview. No movement entry point."""
 import argparse
 import fcntl
@@ -3612,7 +3666,7 @@ def main():
 if __name__ == '__main__':
     raise SystemExit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/selective_mover.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/selective_mover.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Age-filtered native Unraid movement. No global mover invocation.
 
 Production scope is a validated profile -> the array with unchanged user-share
@@ -3753,6 +3807,27 @@ def torrent_snapshot():
     return items,converted
 
 
+def cooldown_duration_seconds(automation, launcher_text):
+    """Legacy launcher is seconds; managed automation is explicitly minutes."""
+    if automation is not None:
+        if not automation['enabled']:
+            raise ValueError('Managed automation disabled')
+        value=automation['cooldown_minutes']
+        if type(value) is not int:
+            raise ValueError('Managed cooldown invalid')
+        seconds=value*60
+    else:
+        if not isinstance(launcher_text,str):
+            raise ValueError('Launcher configuration missing')
+        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher_text,re.M)
+        if len(wait)!=1:
+            raise ValueError('Cooldown unavailable')
+        seconds=int(wait[0])
+    if not 0 <= seconds <= 86400:
+        raise ValueError('Cooldown duration invalid')
+    return seconds
+
+
 def guards(owned=False):
     prior=read_json(LAST,{})
     if prior.get('requires_inspection') or (not owned and needs_inspection(prior)):
@@ -3777,18 +3852,11 @@ def guards(owned=False):
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
     automation=load_automation(profile=PROFILE)
-    if automation is not None:
-        if not automation['enabled']:raise ValueError('Managed automation disabled')
-        wait_minutes=automation['cooldown_minutes']
-    else:
-        launcher=PROFILE.launcher.read_text()
-        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
-        if len(wait)!=1: raise ValueError('Cooldown unavailable')
-        wait_minutes=int(wait[0])
+    wait_seconds=cooldown_duration_seconds(automation, PROFILE.launcher.read_text() if automation is None else None)
     if not owned and ATTEMPT.exists():
         last=ATTEMPT.read_text().strip()
         if not last.isdigit() or int(last)>time.time(): raise ValueError('Invalid selective timestamp')
-        if time.time()-int(last)<wait_minutes*60: result['cooldown']='wait'
+        if time.time()-int(last)<wait_seconds: result['cooldown']='wait'
     scrub=subprocess.check_output(['btrfs','scrub','status',str(POOL_ROOT)],text=True,timeout=10)
     if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub active or unhealthy')
@@ -3959,6 +4027,29 @@ def execute_file(key,expected,days,before_native=None):
     return {'state':'moved','bytes':after.st_size,'sha256':checksum,'destination':str(target)}
 
 
+def safe_pre_native_partial_deferral(report, moved_in_unit, outcome):
+    """Only a verified, pre-native skip may defer the rest of a partly moved unit.
+
+    The completed native moves remain subject to the final torrent-continuity
+    check; any native intent or ambiguous result must retain the inspection latch.
+    """
+    if outcome.get('state') != 'skipped' or outcome.get('reason') not in {
+            'fresh_conditions_changed', 'source_or_destination_changed', 'open_file'}:
+        return False
+    if report.get('active_file_started') is not False:
+        return False
+    evidence = report.get('verified_files')
+    if not isinstance(evidence, list) or not isinstance(moved_in_unit, int) or moved_in_unit < 1:
+        return False
+    if len(evidence) != report.get('moved_files'):
+        return False
+    if any(not isinstance(row, dict) or type(row.get('bytes')) is not int or
+           row['bytes'] < 0 or not row.get('sha256') or not row.get('destination')
+           for row in evidence):
+        return False
+    return sum(row['bytes'] for row in evidence) == report.get('moved_bytes')
+
+
 def run():
     report={'version':2,'state':'checking','started':time.time(),'moved_files':0,'moved_bytes':0,
             'skipped':{},'scope':f'{PROFILE.pool}/{PROFILE.share} -> Array; selected files only',
@@ -4042,11 +4133,24 @@ def run():
                     log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
                 elif outcome['state']=='skipped':
                     reason=outcome['reason']
+                    if report['active_file_started'] and moved_in_unit:
+                        # After an earlier verified move, ambiguous native
+                        # intent for this file must retain inspection.
+                        raise RuntimeError('Native outcome requires inspection')
+                    if moved_in_unit and not safe_pre_native_partial_deferral(report,moved_in_unit,outcome):
+                        raise RuntimeError('Unit partially moved; inspect before another run')
+                    # Preserve the historical no-files-moved behavior for a
+                    # retained source with no destination and no prior move.
                     report['active_file_started']=False
                     for field in ('active_file','active_signature','active_sha256'):report.pop(field,None)
                     skips[reason if len(group)==1 else 'unit_changed']+=len(group)-moved_in_unit
                     if moved_in_unit:
-                        raise RuntimeError('Unit partially moved; inspect before another run')
+                        # Do not claim the unit is complete. Preserve verified
+                        # transfers and re-evaluate remaining files on a later run.
+                        skips['partial_unit_pre_native_deferred']+=1
+                        log('partially moved unit deferred before native intent; final torrent verification required')
+                    report['skipped']=dict(skips)
+                    atomic_json(LAST,report)
                     break
                 else:raise RuntimeError('Unrecognized native outcome')
                 report['active_file_started']=False
@@ -4151,7 +4255,7 @@ def main():
 
 if __name__=='__main__': raise SystemExit(main())
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/wire_selective.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/wire_selective.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Reviewed opt-in dispatch; default is check-only, never starts movement."""
 import argparse
 import datetime
@@ -4208,7 +4312,7 @@ if __name__=='__main__':
     except (OSError,ValueError,subprocess.SubprocessError):
         print('Dispatch not activated: required state could not be verified.');raise SystemExit(20)
 ]]></INLINE></FILE>
-<FILE Name="/tmp/fejes-mover-monitor-2026.11.14.3/managed_schedule.py"><INLINE><![CDATA[#!/usr/bin/env python3
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/managed_schedule.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Opt-in scheduler settings and guarded tick; never enable on installation."""
 import json
 import os
@@ -4338,15 +4442,322 @@ if __name__ == '__main__':
         print(json.dumps({'saved':False,'state':'deferred','reason':'automation_settings_unverified'}))
         raise SystemExit(20)
 ]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.16.5/selective_recovery.py"><INLINE><![CDATA[#!/usr/bin/env python3
+"""Explicit, evidence-backed recovery of a latched selective Mover report.
+
+inspect: read-only feasibility check, never clears the latch.
+recover --approve SHA256 --confirm: writes a verified HDD backup before atomically
+marking the already verified movement as deferred. No media files are moved,
+modified, deleted, or rechecked through qBittorrent's mutating API.
+"""
+import argparse
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import subprocess
+import time
+from urllib.parse import quote
+import posixpath
+
+from selective_preview import atomic_json
+from torrent_preflight import host_path, SEED_STATES
+import selective_mover as mover
+
+BACKUP_DIR = Path('/mnt/disk5/biztonsagi_mentesek/fejes-mover-recovery')
+LOCKS = ('fejes-mover-launch.lock', 'fejes-integrity-cron.lock',
+         'fejes-selective-inventory.lock')
+CONFIRM = 'I_UNDERSTAND_RECOVERY'
+VALID_SHA = re.compile(r'^[0-9a-f]{64}$')
+
+
+def validate_report(report):
+    """Pure gate: never accept historical native intent or absent ledger evidence."""
+    if not isinstance(report, dict) or report.get('version') != 2:
+        raise ValueError('Unsupported report version')
+    if (report.get('state') != 'error' or report.get('requires_inspection') is not True
+            or report.get('active_file_started') is not False
+            or report.get('stage') != 'file_preflight'
+            or report.get('error_code') != 'required_state_unverified'):
+        raise ValueError('Report is not an eligible pre-native inspection latch')
+    rows = report.get('verified_files')
+    count = report.get('moved_files')
+    total = report.get('moved_bytes')
+    if not isinstance(rows, list) or type(count) is not int or count < 1 or len(rows) != count:
+        raise ValueError('Incomplete moved-file ledger')
+    if type(total) is not int or total <= 0:
+        raise ValueError('Invalid moved-byte total')
+    if report.get('active_sha256'):
+        raise ValueError('Unresolved native intent checksum')
+    if report.get('scope') != f'{mover.PROFILE.pool}/{mover.PROFILE.share} -> Array; selected files only':
+        raise ValueError('Movement scope differs from installed profile')
+    seen = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError('Invalid evidence entry')
+        src, dst = row.get('source'), row.get('destination')
+        digest, size = row.get('sha256'), row.get('bytes')
+        if (not isinstance(src, str) or not src.startswith(mover.ROOT + '/')
+                or not isinstance(dst, str) or not re.fullmatch(r'/mnt/disk[1-9][0-9]*/.+', dst)
+                or type(size) is not int or size <= 0
+                or not isinstance(digest, str) or not VALID_SHA.fullmatch(digest)
+                or src in seen):
+            raise ValueError('Incomplete or ambiguous moved-file evidence')
+        seen.add(src)
+        relative = src.removeprefix(mover.ROOT + '/')
+        if dst.split('/', 3)[-1] != mover.PROFILE.share + '/' + relative:
+            raise ValueError('Destination differs from original user-share path')
+        signature = row.get('source_signature')
+        if (not isinstance(signature, list) or len(signature) != 5
+                or any(type(v) is not int for v in signature)
+                or signature[2] != size):
+            raise ValueError('Missing original physical signature')
+    if sum(r['bytes'] for r in rows) != total:
+        raise ValueError('Moved-byte evidence mismatch')
+    return rows
+
+
+def current_torrent_evidence(rows):
+    """Read-only qBittorrent audit for each original torrent file in touched units."""
+    items, mounts = mover.torrent_snapshot()
+    mounted = {m.get('Destination'): m.get('Source') for m in mounts if m.get('Type') == 'bind'}
+    if not any(source == mover.ROOT and dest == '/data' for dest, source in mounted.items()):
+        raise ValueError('Torrent data binding differs from approved user share')
+    touched = []
+    for t in items:
+        if not isinstance(t, dict) or not isinstance(t.get('hash'), str):
+            raise ValueError('Invalid torrent identity')
+        path = host_path(t.get('content_path'), mounts)
+        for row in rows:
+            src = row['source']
+            if src == path or src.startswith(path.rstrip('/') + '/'):
+                touched.append(t)
+                break
+    if not touched:
+        raise ValueError('No matching qBittorrent torrent for verified media')
+    seen = set()
+    verified = 0
+    for t in touched:
+        h = t['hash']
+        if h in seen or not re.fullmatch(r'[0-9a-fA-F]{40}', h):
+            raise ValueError('Duplicate or invalid torrent identifier')
+        seen.add(h)
+        if t.get('progress') != 1 or t.get('state') not in SEED_STATES:
+            raise ValueError('Affected torrent is not complete and seed-capable')
+        save = t.get('save_path')
+        if not isinstance(save, str):
+            raise ValueError('Torrent save path unavailable')
+        url = 'http://127.0.0.1:8080/api/v2/torrents/files?hash=' + quote(h, safe='')
+        proc = subprocess.run(['docker','exec',mover.PROFILE.torrent_container,
+                               'curl','--fail','--silent','--show-error',
+                               '--connect-timeout','10','--max-time','15',url],
+                              capture_output=True,text=True,timeout=22,check=True)
+        data = json.loads(proc.stdout)
+        if not isinstance(data,list) or not data:
+            raise ValueError('Torrent file list unavailable')
+        for file in data:
+            name = file.get('name')
+            size = file.get('size')
+            if (not isinstance(name,str) or name.startswith('/') or
+                    '..' in name.split('/') or type(size) is not int or size < 0 or
+                    file.get('progress') != 1):
+                raise ValueError('Torrent file metadata invalid or incomplete')
+            mapped = host_path(posixpath.join(save,name),mounts)
+            if not mapped.startswith(mover.ROOT + '/'):
+                raise ValueError('Torrent file escapes validated share')
+            p = Path(mapped)
+            if p.is_symlink() or not p.is_file() or p.stat().st_size != size:
+                raise ValueError('Torrent file absent, linked or wrong size')
+            verified += 1
+    # A second snapshot detects changing membership, identity, state or paths.
+    post, post_mounts = mover.torrent_snapshot()
+    if mounts != post_mounts:
+        raise ValueError('Torrent mount binding changed during inspection')
+    def snapshot(items):
+        return {t['hash']: (t.get('progress'),t.get('state'),
+                            t.get('content_path'),t.get('save_path')) for t in items}
+    if snapshot(items) != snapshot(post):
+        raise ValueError('Torrent membership or state changed during inspection')
+    return {'matched_torrents':len(touched),'verified_torrent_files':verified,
+            'torrent_membership_stable':True}
+
+
+def check_media(rows):
+    disks = set(mover.array_disks())
+    checked = 0
+    for row in rows:
+        src = Path(row['source'])
+        relative = src.relative_to(mover.ROOT)
+        physical_src = mover.SOURCE / relative
+        dst = Path(row['destination'])
+        if dst.parent == dst or not any(dst.is_relative_to(d) for d in disks):
+            raise ValueError('Destination disk is not a healthy array member')
+        if physical_src.exists() or physical_src.is_symlink():
+            raise ValueError('Verified source still exists on cache')
+        if src.is_symlink() or not src.is_file():
+            raise ValueError('User-share path unavailable or linked')
+        if any(part.is_symlink() for part in (dst,*dst.parents) if part != Path('/')):
+            raise ValueError('Destination contains symbolic links')
+        info = dst.lstat()
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size != row['bytes']:
+            raise ValueError('Destination file type or size changed')
+        target_list = mover.destinations(physical_src)
+        if target_list != [dst]:
+            raise ValueError('Missing or duplicate array destination')
+        if mover.sha256(dst) != row['sha256'] or mover.sha256(src) != row['sha256']:
+            raise ValueError('Destination or user-share SHA256 mismatch')
+        checked += 1
+    return checked
+
+
+def storage_quiet():
+    if mover.PID.exists() or Path('/var/run/fejes-selective-last-attempt.lock').exists():
+        raise ValueError('Mover activity cannot be excluded')
+    scrub = subprocess.check_output(['btrfs','scrub','status',str(mover.POOL_ROOT)],
+                                    timeout=12,text=True)
+    if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
+        raise ValueError('Cache scrub unfinished or unhealthy')
+    stats = subprocess.check_output(['btrfs','device','stats',str(mover.POOL_ROOT)],
+                                    timeout=12,text=True)
+    if not stats.strip() or any(not s.split()[-1].isdigit() or int(s.split()[-1]) for s in stats.splitlines()):
+        raise ValueError('Cache device statistics unavailable or unhealthy')
+    for node in Path('/proc').glob('[0-9]*/cmdline'):
+        try:
+            parts = node.read_bytes().split(b'\0')
+        except (OSError,PermissionError):
+            raise ValueError('Cannot establish maintenance process state')
+        if any(p.endswith(b'/bunker') for p in parts):
+            raise ValueError('Integrity scan in progress')
+
+
+def read_report():
+    if mover.LAST.is_symlink():
+        raise ValueError('Symlink report prohibited')
+    raw = mover.LAST.read_bytes()
+    if not raw:
+        raise ValueError('Empty prior report')
+    return raw, hashlib.sha256(raw).hexdigest(),json.loads(raw)
+
+
+def inspect_locked():
+    storage_quiet()
+    raw, digest, report = read_report()
+    rows = validate_report(report)
+    checked = check_media(rows)
+    torrents = current_torrent_evidence(rows)
+    if hashlib.sha256(mover.LAST.read_bytes()).hexdigest() != digest:
+        raise ValueError('Prior report changed during inspection')
+    return raw, digest, report, {'checked_destinations':checked,**torrents}
+
+
+def backup_locked(raw, digest):
+    if not Path('/mnt/disk5').is_mount():
+        raise ValueError('Physical backup disk5 is not mounted')
+    if BACKUP_DIR.is_symlink():
+        raise ValueError('Recovery backup directory is a symlink')
+    BACKUP_DIR.mkdir(parents=True,exist_ok=True,mode=0o700)
+    if BACKUP_DIR.is_symlink():
+        raise ValueError('Recovery backup path changed')
+    path = BACKUP_DIR / ('selective-before-recovery-' + digest[:16] + '.json')
+    fd = os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    try:
+        with os.fdopen(fd,'wb') as out:
+            out.write(raw)
+            out.flush()
+            os.fsync(out.fileno())
+    except BaseException:
+        raise
+    if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+        raise ValueError('Backup readback mismatch')
+    dirfd = os.open(BACKUP_DIR,os.O_RDONLY|os.O_DIRECTORY)
+    try: os.fsync(dirfd)
+    finally: os.close(dirfd)
+    return path
+
+
+def run(action, approval=None, confirm=None):
+    locks=[]
+    try:
+        for name in LOCKS:
+            lock=open('/var/run/'+name,'a')
+            locks.append(lock)
+            fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        lock=open('/var/run/fejes-mover-config.lock','a')
+        locks.append(lock)
+        fcntl.flock(lock,fcntl.LOCK_SH|fcntl.LOCK_NB)
+        raw,digest,prior,checks=inspect_locked()
+        if action == 'inspect':
+            return {'eligible':True,'requires_explicit_approval':True,
+                    'report_sha256':digest,**checks}
+        if (not isinstance(approval,str) or approval != digest or
+                confirm != CONFIRM):
+            raise ValueError('Explicit matching approval token required')
+        # Reinspect under the same coordination locks; do not act on stale results.
+        raw2,digest2,prior2,checks2=inspect_locked()
+        if digest2 != digest or checks2 != checks or raw2 != raw:
+            raise ValueError('Evidence changed before recovery')
+        backup=backup_locked(raw,digest)
+        if hashlib.sha256(mover.LAST.read_bytes()).hexdigest() != digest:
+            raise ValueError('Report changed before atomic update')
+        # Cooldown before unlocking: failed recoveries may only cause a longer wait.
+        mover.atomic_json(mover.ATTEMPT,int(time.time()))
+        record=dict(prior2)
+        record.update(state='deferred',reason='manually_verified_inspection_recovery',
+                      requires_inspection=False,active_file_started=False)
+        record.pop('error_code',None)
+        record.pop('error',None)
+        for key in ('active_file','active_signature','active_sha256'):
+            record.pop(key,None)
+        record['recovery']={'version':1,'prior_sha256':digest,'checked_at':time.time(),
+                            'checked_destinations':checks['checked_destinations'],
+                            'matched_torrents':checks['matched_torrents'],
+                            'verified_torrent_files':checks['verified_torrent_files'],
+                            'historical_torrent_continuity':'not_available',
+                            'operator_approved':True}
+        mover.atomic_json(mover.LAST,record)
+        if mover.needs_inspection(mover.read_json(mover.LAST,{})):
+            raise ValueError('Post-recovery latch state could not be verified')
+        return {'recovered':True,'prior_sha256':digest,
+                'backup':str(backup),'new_state':'deferred',
+                'future_movement_started':False,**checks}
+    finally:
+        for lock in reversed(locks):
+            lock.close()
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action',choices=['inspect','recover'])
+    parser.add_argument('--approve',default=None,help='Exact SHA256 from a successful inspect')
+    parser.add_argument('--confirm',default=None,help='Explicit risk acknowledgement')
+    args=parser.parse_args()
+    try:
+        output=run(args.action,args.approve,args.confirm)
+        print(json.dumps(output,sort_keys=True))
+        return 0
+    except (OSError,ValueError,TypeError,KeyError,RuntimeError,
+            subprocess.SubprocessError,json.JSONDecodeError):
+        # No private torrent names, arguments, source paths or exception traces in UI.
+        print(json.dumps({'eligible':False,'recovered':False,
+                          'error':'Safety evidence unavailable or inconsistent; inspection latch unchanged'}))
+        return 20
+
+
+if __name__=='__main__':
+    raise SystemExit(main())
+]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.11.14.3
+src=/tmp/fejes-mover-monitor-2026.11.16.5
 dst=/usr/local/emhttp/plugins/fejes.mover.monitor
 test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }
 tools=/boot/config/plugins/fejes.mover.monitor/tools
 command -v python3 >/dev/null || exit 1
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py; do
+for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py; do
   python3 -c 'import sys; compile(open(sys.argv[1], "rb").read(), sys.argv[1], "exec")' "$src/$name"
 done
 for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
@@ -4354,7 +4765,7 @@ for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page 
  done
 install -d -m 0755 "$dst"
 install -d -m 0700 "$tools"
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py; do
+for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py; do
   if [[ -f "$tools/$name" ]] && ! cmp -s "$src/$name" "$tools/$name"; then
     backup=$(mktemp "$tools/$name.before-XXXXXXXX")
     cp -p -- "$tools/$name" "$backup"
