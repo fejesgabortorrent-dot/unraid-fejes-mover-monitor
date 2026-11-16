@@ -225,6 +225,21 @@ class BatchReporting(unittest.TestCase):
         self.assertEqual(report['moved_files'],11)
         self.assertEqual(report['state'],'completed')
 
+    def test_large_unit_over_byte_budget_never_starts(self):
+        paths=[f'/mnt/user/Filmek/Season/{i:02}.bin' for i in range(11)]
+        result,calls,_=self.run_batch([2]*11,limit=20,paths=paths)
+        self.assertEqual(calls,0)
+        self.assertEqual(result['moved_files'],0)
+        self.assertEqual(result['skipped'],{'unit_size_limit':11})
+
+    def test_interrupted_large_unit_requires_inspection(self):
+        paths=[f'/mnt/user/Filmek/Season/{i:02}.bin' for i in range(11)]
+        result,calls,_=self.run_batch([1]*11,paths=paths,retained_after=5)
+        self.assertEqual(calls,6)
+        self.assertEqual(result['moved_files'],5)
+        self.assertEqual(result['state'],'error')
+        self.assertTrue(result['requires_inspection'])
+
     def test_folder_over_byte_cap_is_not_split(self):
         gib=1024**3
         paths=['/mnt/user/Filmek/Movie/a.bin','/mnt/user/Filmek/Movie/b.bin']
