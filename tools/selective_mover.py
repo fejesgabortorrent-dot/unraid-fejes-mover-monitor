@@ -139,6 +139,27 @@ def torrent_snapshot():
     return items,converted
 
 
+def cooldown_duration_seconds(automation, launcher_text):
+    """Legacy launcher is seconds; managed automation is explicitly minutes."""
+    if automation is not None:
+        if not automation['enabled']:
+            raise ValueError('Managed automation disabled')
+        value=automation['cooldown_minutes']
+        if type(value) is not int:
+            raise ValueError('Managed cooldown invalid')
+        seconds=value*60
+    else:
+        if not isinstance(launcher_text,str):
+            raise ValueError('Launcher configuration missing')
+        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher_text,re.M)
+        if len(wait)!=1:
+            raise ValueError('Cooldown unavailable')
+        seconds=int(wait[0])
+    if not 0 <= seconds <= 86400:
+        raise ValueError('Cooldown duration invalid')
+    return seconds
+
+
 def guards(owned=False):
     prior=read_json(LAST,{})
     if prior.get('requires_inspection') or (not owned and needs_inspection(prior)):
@@ -163,18 +184,11 @@ def guards(owned=False):
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
     automation=load_automation(profile=PROFILE)
-    if automation is not None:
-        if not automation['enabled']:raise ValueError('Managed automation disabled')
-        wait_minutes=automation['cooldown_minutes']
-    else:
-        launcher=PROFILE.launcher.read_text()
-        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
-        if len(wait)!=1: raise ValueError('Cooldown unavailable')
-        wait_minutes=int(wait[0])
+    wait_seconds=cooldown_duration_seconds(automation, PROFILE.launcher.read_text() if automation is None else None)
     if not owned and ATTEMPT.exists():
         last=ATTEMPT.read_text().strip()
         if not last.isdigit() or int(last)>time.time(): raise ValueError('Invalid selective timestamp')
-        if time.time()-int(last)<wait_minutes*60: result['cooldown']='wait'
+        if time.time()-int(last)<wait_seconds: result['cooldown']='wait'
     scrub=subprocess.check_output(['btrfs','scrub','status',str(POOL_ROOT)],text=True,timeout=10)
     if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub active or unhealthy')

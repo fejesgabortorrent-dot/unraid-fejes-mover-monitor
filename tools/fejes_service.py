@@ -37,21 +37,21 @@ def dry_run(container=None, include_items=False):
     checks = []
     def add(key, state, detail=''):
         checks.append({'key': key, 'state': state, 'detail': detail})
-    threshold = wait = None
+    threshold = wait_seconds = None
     try:
         automation = load_automation(profile=PROFILE)
         if automation is not None:
             if not automation['enabled']:
                 raise ValueError('Managed automation disabled')
             threshold = automation['threshold_gib']
-            wait = automation['cooldown_minutes']
+            wait_seconds = automation['cooldown_minutes'] * 60
         else:
             if LAUNCHER.is_symlink():
                 raise ValueError('Symlink')
             source = LAUNCHER.read_text()
             rewrite_launcher(source)
             threshold = int(re.search(r'^KUSZOB_GIB=([0-9]+)$', source, re.M)[1])
-            wait = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
+            wait_seconds = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
         if not SHARE.is_dir():
             raise ValueError('Required share unavailable')
         add('launcher', 'pass')
@@ -89,13 +89,13 @@ def dry_run(container=None, include_items=False):
         add('parity', 'unknown')
     add('mover', 'wait' if MOVER_PID.exists() else 'pass')
     try:
-        if wait is None:
-            raise ValueError('Retry interval unknown')
+        if type(wait_seconds) is not int or not 0 <= wait_seconds <= 86400:
+            raise ValueError('Retry interval invalid')
         if ATTEMPT.exists():
             raw = ATTEMPT.read_text().strip()
             if not raw.isdigit():
                 raise ValueError('Invalid timestamp')
-            remaining = max(0, int(raw)+wait*60-int(time.time()))
+            remaining = max(0, int(raw)+wait_seconds-int(time.time()))
             add('cooldown', 'wait' if remaining else 'pass', {'remaining_seconds': remaining})
         else:
             add('cooldown', 'pass', {'remaining_seconds': 0})
