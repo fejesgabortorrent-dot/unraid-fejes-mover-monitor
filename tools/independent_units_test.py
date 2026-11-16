@@ -2,7 +2,7 @@
 """Regression coverage for independent Mover files and conservative ownership.
 
 These are pure unit tests; no Unraid move or Docker operation is performed.
-The independent-file expectation is intentionally red until grouping is fixed.
+Cases cover the reviewed grouping change without executing native movement.
 """
 import sys
 import unittest
@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from selection_policy import unit_groups
 
 ROOT = '/mnt/cache/Filmek'
+MOUNTS = [{'Type': 'bind', 'Source': '/mnt/cache', 'Destination': '/mnt/cache'}]
 
 
 def f(relative):
@@ -35,7 +36,7 @@ class IndependentUnitGroupingTests(unittest.TestCase):
         files = [f('Series/Season01/Episode01.mkv'),
                  f('Series/Season01/Episode02.mkv')]
         torrents = [{'content_path': ROOT + '/Series/Season01'}]
-        groups = unit_groups(files, ROOT, torrents, [])
+        groups = unit_groups(files, ROOT, torrents, MOUNTS)
         self.assertEqual(sorted(map(len, groups)), [2])
 
     def test_nested_owner_relationship_keeps_files_atomic(self):
@@ -44,6 +45,24 @@ class IndependentUnitGroupingTests(unittest.TestCase):
         torrents = [{'content_path': ROOT + '/Shows/Season01'},
                     {'content_path': ROOT + '/Shows/Season01/A.mkv'}]
         groups = unit_groups(files, ROOT, torrents, [])
+        self.assertEqual(sorted(map(len, groups)), [3])
+
+    def test_generic_poster_preserves_whole_directory(self):
+        files = [f('FilmA/FilmA.mkv'), f('FilmA/Trailer.mkv'),
+                 f('FilmA/poster.jpg')]
+        groups = unit_groups(files, ROOT, [], [])
+        self.assertEqual(sorted(map(len, groups)), [3])
+
+    def test_episode_sidecar_without_merging_another_episode(self):
+        files = [f('Shows/S01/E01.mkv'), f('Shows/S01/E01.srt'),
+                 f('Shows/S01/E02.mkv')]
+        groups = unit_groups(files, ROOT, [], [])
+        self.assertEqual(sorted(map(len, groups)), [1, 2])
+
+    def test_unknown_file_preserves_directory(self):
+        files = [f('Show/S01/E01.mkv'), f('Show/S01/E02.mkv'),
+                 f('Show/S01/custom.unknown')]
+        groups = unit_groups(files, ROOT, [], [])
         self.assertEqual(sorted(map(len, groups)), [3])
 
     def test_out_of_root_file_rejected(self):
