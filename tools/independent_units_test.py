@@ -44,7 +44,7 @@ class IndependentUnitGroupingTests(unittest.TestCase):
                  f('Shows/Season01/C.mkv')]
         torrents = [{'content_path': ROOT + '/Shows/Season01'},
                     {'content_path': ROOT + '/Shows/Season01/A.mkv'}]
-        groups = unit_groups(files, ROOT, torrents, [])
+        groups = unit_groups(files, ROOT, torrents, MOUNTS)
         self.assertEqual(sorted(map(len, groups)), [3])
 
     def test_generic_poster_preserves_whole_directory(self):
