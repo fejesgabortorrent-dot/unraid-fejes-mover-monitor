@@ -4410,60 +4410,7 @@ BACKUP_DIR = Path('/mnt/disk5/biztonsagi_mentesek/fejes-mover-recovery')
 LOCKS = ('fejes-mover-launch.lock', 'fejes-integrity-cron.lock',
          'fejes-selective-inventory.lock')
 CONFIRM = 'I_UNDERSTAND_RECOVERY'
-VALID_SHA = re.compile(r'^[0-9a-f]{64}<INLINE><![CDATA[#!/bin/bash
-set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.11.16.2
-dst=/usr/local/emhttp/plugins/fejes.mover.monitor
-test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
-php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }
-tools=/boot/config/plugins/fejes.mover.monitor/tools
-command -v python3 >/dev/null || exit 1
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py; do
-  python3 -c 'import sys; compile(open(sys.argv[1], "rb").read(), sys.argv[1], "exec")' "$src/$name"
-done
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
-  php -l "$src/$name" >/dev/null
- done
-install -d -m 0755 "$dst"
-install -d -m 0700 "$tools"
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py; do
-  if [[ -f "$tools/$name" ]] && ! cmp -s "$src/$name" "$tools/$name"; then
-    backup=$(mktemp "$tools/$name.before-XXXXXXXX")
-    cp -p -- "$tools/$name" "$backup"
-  fi
-  install -m 0700 "$src/$name" "$tools/$name"
-done
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
-  install -m 0644 "$src/$name" "$dst/$name"
- done
-# Restore only previously configured opt-in scheduling; absent settings stay off.
-if command -v update_cron >/dev/null; then
-  # Schedule restoration is best-effort during plugin installation. A failed
-  # refresh must not roll back the monitoring UI; the executor remains guarded
-  # by the saved opt-in settings and the next explicit save can retry it.
-  if ! python3 "$tools/managed_schedule.py" sync; then
-    printf '%s\n' 'WARNING: managed schedule sync was deferred; no automated move was enabled.' >&2
-  fi
-fi
-printf '%s\n' 'Fejes Mover Monitor installed. Open Tools / Mover figyelo.'
-]]></INLINE></FILE>
-<FILE Run="/bin/bash" Method="remove"><INLINE><![CDATA[#!/bin/bash
-set -euo pipefail
-dst=/usr/local/emhttp/plugins/fejes.mover.monitor
-# Disable this plugin's own cron entry before removing its runtime.
-if command -v update_cron >/dev/null; then
-  python3 /boot/config/plugins/fejes.mover.monitor/tools/managed_schedule.py remove-cron
-fi
-# Keep shared helpers and external schedule wiring intact.
-# Remove only runtime files owned by this plugin. Preserve settings and backups.
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
-  rm -f -- "$dst/$name"
-done
-rmdir "$dst" 2>/dev/null || true
-printf '%s\n' 'Fejes Mover Monitor removed; local configuration and backups preserved.'
-]]></INLINE></FILE>
-</PLUGIN>
-)
+VALID_SHA = re.compile(r'^[0-9a-f]{64}$')
 
 
 def validate_report(report):
@@ -4610,60 +4557,7 @@ def storage_quiet():
         raise ValueError('Mover activity cannot be excluded')
     scrub = subprocess.check_output(['btrfs','scrub','status',str(mover.POOL_ROOT)],
                                     timeout=12,text=True)
-    if not re.search(r'^Status:\s+finished<INLINE><![CDATA[#!/bin/bash
-set -euo pipefail
-src=/tmp/fejes-mover-monitor-2026.11.16.2
-dst=/usr/local/emhttp/plugins/fejes.mover.monitor
-test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config || { echo 'Requires Unraid 7.x WebGUI and boot configuration.' >&2; exit 1; }
-php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }
-tools=/boot/config/plugins/fejes.mover.monitor/tools
-command -v python3 >/dev/null || exit 1
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py; do
-  python3 -c 'import sys; compile(open(sys.argv[1], "rb").read(), sys.argv[1], "exec")' "$src/$name"
-done
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
-  php -l "$src/$name" >/dev/null
- done
-install -d -m 0755 "$dst"
-install -d -m 0700 "$tools"
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py; do
-  if [[ -f "$tools/$name" ]] && ! cmp -s "$src/$name" "$tools/$name"; then
-    backup=$(mktemp "$tools/$name.before-XXXXXXXX")
-    cp -p -- "$tools/$name" "$backup"
-  fi
-  install -m 0700 "$src/$name" "$tools/$name"
-done
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
-  install -m 0644 "$src/$name" "$dst/$name"
- done
-# Restore only previously configured opt-in scheduling; absent settings stay off.
-if command -v update_cron >/dev/null; then
-  # Schedule restoration is best-effort during plugin installation. A failed
-  # refresh must not roll back the monitoring UI; the executor remains guarded
-  # by the saved opt-in settings and the next explicit save can retry it.
-  if ! python3 "$tools/managed_schedule.py" sync; then
-    printf '%s\n' 'WARNING: managed schedule sync was deferred; no automated move was enabled.' >&2
-  fi
-fi
-printf '%s\n' 'Fejes Mover Monitor installed. Open Tools / Mover figyelo.'
-]]></INLINE></FILE>
-<FILE Run="/bin/bash" Method="remove"><INLINE><![CDATA[#!/bin/bash
-set -euo pipefail
-dst=/usr/local/emhttp/plugins/fejes.mover.monitor
-# Disable this plugin's own cron entry before removing its runtime.
-if command -v update_cron >/dev/null; then
-  python3 /boot/config/plugins/fejes.mover.monitor/tools/managed_schedule.py remove-cron
-fi
-# Keep shared helpers and external schedule wiring intact.
-# Remove only runtime files owned by this plugin. Preserve settings and backups.
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
-  rm -f -- "$dst/$name"
-done
-rmdir "$dst" 2>/dev/null || true
-printf '%s\n' 'Fejes Mover Monitor removed; local configuration and backups preserved.'
-]]></INLINE></FILE>
-</PLUGIN>
-,scrub,re.M) or 'no errors found' not in scrub:
+    if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub unfinished or unhealthy')
     stats = subprocess.check_output(['btrfs','device','stats',str(mover.POOL_ROOT)],
                                     timeout=12,text=True)
