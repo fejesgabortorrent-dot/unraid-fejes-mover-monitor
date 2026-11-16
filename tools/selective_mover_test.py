@@ -92,6 +92,17 @@ class NativeSafety(unittest.TestCase):
             self.assertEqual(mover.execute_file('/unused',{},7)['reason'],'existing_array_copy')
             native.assert_not_called()
 
+    def test_fresh_candidate_rechecks_ratio_before_native_move(self):
+        from types import SimpleNamespace
+        now=2_000_000_000
+        key='/mnt/user/Filmek/video.mkv'
+        torrent=dict(content_path='/data/video.mkv',ratio=0.5,progress=1,state='stalledUP',completion_on=now-3*86400,upspeed=0,dlspeed=0)
+        mounts=[dict(Type='bind',Source='/mnt/user/Filmek',Destination='/data')]
+        info=SimpleNamespace(st_nlink=1,st_mtime=now-3*86400)
+        with patch.object(mover,'valid_file',return_value=info),patch.object(mover,'signature',return_value=[1]),patch.object(mover.inventory_adapter,'open_paths',return_value=set()),patch.object(mover,'torrent_snapshot',return_value=([torrent],mounts)),patch.object(mover,'guards',return_value={k:'pass' for k in REQUIRED_GUARDS}),patch.object(mover,'read_json',return_value={'version':1,'ratio_target':1}),patch.object(mover.time,'time',return_value=now):
+            path,eligible=mover.fresh_candidate(key,{'signature':[1],'first_seen':now-3*86400},1)
+            self.assertFalse(eligible)
+
     def test_reject_symlink_hardlink_and_native_path_ambiguity(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder)
@@ -172,9 +183,8 @@ class BatchReporting(unittest.TestCase):
     def test_sidecars_do_not_take_all_slots_before_large_media(self):
         gib=1024**3
         report,calls,attempt=self.run_batch([1]*8+[12*gib,10*gib],limit=32*gib,larger_first=True)
-        self.assertEqual(calls,8);self.assertTrue(attempt)
-        self.assertEqual(report['moved_bytes'],22*gib+6)
-        self.assertEqual(report['skipped']['batch_file_limit'],2)
+        self.assertEqual(calls,10);self.assertTrue(attempt)
+        self.assertEqual(report['moved_bytes'],22*gib+8)
 
     def test_integrity_race_before_first_native_move_defers_without_sticky_latch(self):
         report,calls,attempt=self.run_batch([1],integrity_after=0)
@@ -208,11 +218,27 @@ class BatchReporting(unittest.TestCase):
         self.assertEqual(calls,3)
         self.assertEqual(report['skipped']['batch_size_limit'],2)
 
-    def test_folder_over_file_cap_is_not_split(self):
-        paths=[f'/mnt/user/Filmek/Movie/{i:02}.bin' for i in range(9)]
-        report,calls,_=self.run_batch([1]*9,paths=paths)
+    def test_unit_larger_than_old_file_cap_moves_as_one(self):
+        paths=[f'/mnt/user/Filmek/Movie/{i:02}.bin' for i in range(11)]
+        report,calls,_=self.run_batch([1]*11,paths=paths)
+        self.assertEqual(calls,11)
+        self.assertEqual(report['moved_files'],11)
+        self.assertEqual(report['state'],'completed')
+
+    def test_large_unit_over_byte_budget_never_starts(self):
+        paths=[f'/mnt/user/Filmek/Season/{i:02}.bin' for i in range(11)]
+        result,calls,_=self.run_batch([2]*11,limit=20,paths=paths)
         self.assertEqual(calls,0)
-        self.assertEqual(report['skipped'],{'unit_file_limit':9})
+        self.assertEqual(result['moved_files'],0)
+        self.assertEqual(result['skipped'],{'unit_size_limit':11})
+
+    def test_interrupted_large_unit_requires_inspection(self):
+        paths=[f'/mnt/user/Filmek/Season/{i:02}.bin' for i in range(11)]
+        result,calls,_=self.run_batch([1]*11,paths=paths,retained_after=5)
+        self.assertEqual(calls,6)
+        self.assertEqual(result['moved_files'],5)
+        self.assertEqual(result['state'],'error')
+        self.assertTrue(result['requires_inspection'])
 
     def test_folder_over_byte_cap_is_not_split(self):
         gib=1024**3
@@ -269,10 +295,10 @@ class BatchReporting(unittest.TestCase):
         self.assertEqual(result['skipped'],{'batch_size_limit':2})
         self.assertEqual(calls,1)
 
-    def test_file_count_limit_records_every_deferred_candidate(self):
-        result,calls,_=self.run_batch([1]*(mover.MAX_FILES+3))
-        self.assertEqual(result['skipped'],{'batch_file_limit':3})
-        self.assertEqual(calls,mover.MAX_FILES)
+    def test_independent_files_are_limited_by_bytes_not_count(self):
+        result,calls,_=self.run_batch([1]*11)
+        self.assertEqual(calls,11)
+        self.assertEqual(result['moved_files'],11)
 
     def test_oversized_file_does_not_prevent_independent_small_file(self):
         result,calls,attempt=self.run_batch([mover.MAX_BYTES+1,1])
