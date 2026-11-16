@@ -4068,12 +4068,15 @@ def run():
                     log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
                 elif outcome['state']=='skipped':
                     reason=outcome['reason']
-                    if report['active_file_started']:
-                        # The native engine was invoked: its outcome is not a
-                        # read-only skip, even when the source was retained.
+                    if report['active_file_started'] and moved_in_unit:
+                        # After an earlier verified move, ambiguous native
+                        # intent for this file must retain inspection.
                         raise RuntimeError('Native outcome requires inspection')
                     if moved_in_unit and not safe_pre_native_partial_deferral(report,moved_in_unit,outcome):
                         raise RuntimeError('Unit partially moved; inspect before another run')
+                    # Preserve the historical no-files-moved behavior for a
+                    # retained source with no destination and no prior move.
+                    report['active_file_started']=False
                     for field in ('active_file','active_signature','active_sha256'):report.pop(field,None)
                     skips[reason if len(group)==1 else 'unit_changed']+=len(group)-moved_in_unit
                     if moved_in_unit:
