@@ -125,7 +125,7 @@ class BatchReporting(unittest.TestCase):
         from contextlib import ExitStack
         with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
             root=Path(folder)
-            candidates=paths or [f'/mnt/user/Filmek/{i:02}.bin' for i in range(len(sizes))]
+            candidates=paths or [f'/mnt/user/Filmek/{i:02}.mkv' for i in range(len(sizes))]
             inventory={key:{'signature':[1,i,size,0,0]} for i,(key,size) in enumerate(zip(candidates,sizes))}
             files=[{'path':key,'first_seen':i*3600} for i,key in enumerate(candidates)]
             if larger_first:candidates=mover.prioritize(candidates,[],[],0,sizes={k:inventory[k]['signature'][2] for k in candidates})

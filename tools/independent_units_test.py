@@ -32,6 +32,12 @@ class IndependentUnitGroupingTests(unittest.TestCase):
         groups = unit_groups(files, ROOT, [], [])
         self.assertEqual(sorted(map(len, groups)), [2])
 
+    def test_language_subtitles_stay_with_media(self):
+        files = [f('Shows/E01.mkv'), f('Shows/E01.hu.forced.srt'),
+                 f('Shows/E02.mkv')]
+        groups = unit_groups(files, ROOT, [], [])
+        self.assertEqual(sorted(map(len, groups)), [1, 2])
+
     def test_shared_torrent_owner_keeps_files_atomic(self):
         files = [f('Series/Season01/Episode01.mkv'),
                  f('Series/Season01/Episode02.mkv')]

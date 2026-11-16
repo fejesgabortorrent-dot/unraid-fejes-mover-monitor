@@ -110,13 +110,28 @@ def unit_groups(files, root, torrents=None, mounts=None):
                  'nfo', 'bif', 'jpg', 'jpeg', 'png', 'webp'}
         generic = {'poster', 'folder', 'fanart', 'banner', 'backdrop',
                    'clearart', 'clearlogo', 'landscape', 'thumb'}
-        if not sep or extension.lower() not in known or stem.lower() in generic:
+        if relative == 'EMBY':
+            key = ('excluded', path)
+        elif not sep or extension.lower() not in known or stem.lower() in generic:
             key = ('directory-wide', directory)
         else:
             key = ('stem', directory, stem)
         buckets.setdefault(key, []).append(path)
     for paths in buckets.values():
         join(paths)
+    # Language/forced suffixes on sidecars still belong to the media stem.
+    # If several media names match, merge all of them conservatively.
+    media_ext = {'mkv', 'mp4', 'avi', 'mov', 'm4v', 'ts', 'wmv'}
+    sidecar_ext = {'srt', 'ass', 'ssa', 'sub', 'idx', 'vtt', 'nfo', 'bif', 'jpg', 'jpeg', 'png', 'webp'}
+    for path in parents:
+        directory, _, name = path.rpartition('/')
+        stem, sep, ext = name.rpartition('.')
+        if sep and ext.lower() in sidecar_ext:
+            related = [other for other in parents
+                       if other.rpartition('/')[0] == directory
+                       and other.rpartition('/')[2].rpartition('.')[2].lower() in media_ext
+                       and stem.startswith(other.rpartition('/')[2].rpartition('.')[0] + '.')]
+            join([path] + related)
     # Never detach an unknown/generic companion from the folder it describes.
     for key, paths in buckets.items():
         if key[0] == 'directory-wide':
