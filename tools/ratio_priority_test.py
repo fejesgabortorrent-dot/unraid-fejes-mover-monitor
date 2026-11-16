@@ -48,6 +48,22 @@ class RatioPriority(unittest.TestCase):
         result=plan([item],[torrent],self.mounts,{k:'pass' for k in REQUIRED_GUARDS},days=7,now=now,observed_at=now,root=self.root)
         self.assertEqual(prioritize(result['candidates'],[torrent],self.mounts,1),[])
 
+    def test_ratio_target_blocks_low_unknown_and_shared_owner(self):
+        now=2_000_000_000; key=self.root+'/b'
+        item=dict(path=key,regular=True,symlink=False,nlink=1,open=False,stable=True,mtime=now-3*86400,first_seen=now-3*86400)
+        torrent=dict(content_path='/data/b',ratio=2,progress=1,state='stalledUP',completion_on=now-3*86400,upspeed=0,dlspeed=0)
+        def result(rows,target=1):
+            return plan([item],rows,self.mounts,{k:'pass' for k in REQUIRED_GUARDS},days=1,now=now,observed_at=now,root=self.root,target_ratio=target)
+        self.assertEqual(result([torrent])['candidates'],[key])
+        for value in (.5,None):
+            outcome=result([dict(torrent,ratio=value)])
+            self.assertEqual(outcome['candidates'],[])
+            self.assertEqual(outcome['skipped'][0]['reason'],'ratio_not_met')
+        self.assertEqual(result([torrent,dict(torrent,ratio=.2)])['candidates'],[])
+        self.assertEqual(result([dict(torrent,ratio=.5)],0)['candidates'],[key])
+        other=dict(torrent,content_path='/data/elsewhere')
+        self.assertEqual(result([other])['candidates'],[key])
+
     def test_batch_choices_reject_unknown_or_unbounded_limits(self):
         for n in (16,32,64,128):self.assertEqual(batch_bytes(n),n*1024**3)
         for n in (0,-1,256,16.0,True,'32'):

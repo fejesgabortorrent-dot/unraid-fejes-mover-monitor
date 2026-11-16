@@ -172,9 +172,8 @@ class BatchReporting(unittest.TestCase):
     def test_sidecars_do_not_take_all_slots_before_large_media(self):
         gib=1024**3
         report,calls,attempt=self.run_batch([1]*8+[12*gib,10*gib],limit=32*gib,larger_first=True)
-        self.assertEqual(calls,8);self.assertTrue(attempt)
-        self.assertEqual(report['moved_bytes'],22*gib+6)
-        self.assertEqual(report['skipped']['batch_file_limit'],2)
+        self.assertEqual(calls,10);self.assertTrue(attempt)
+        self.assertEqual(report['moved_bytes'],22*gib+8)
 
     def test_integrity_race_before_first_native_move_defers_without_sticky_latch(self):
         report,calls,attempt=self.run_batch([1],integrity_after=0)
@@ -208,11 +207,12 @@ class BatchReporting(unittest.TestCase):
         self.assertEqual(calls,3)
         self.assertEqual(report['skipped']['batch_size_limit'],2)
 
-    def test_folder_over_file_cap_is_not_split(self):
-        paths=[f'/mnt/user/Filmek/Movie/{i:02}.bin' for i in range(9)]
-        report,calls,_=self.run_batch([1]*9,paths=paths)
-        self.assertEqual(calls,0)
-        self.assertEqual(report['skipped'],{'unit_file_limit':9})
+    def test_unit_larger_than_old_file_cap_moves_as_one(self):
+        paths=[f'/mnt/user/Filmek/Movie/{i:02}.bin' for i in range(11)]
+        report,calls,_=self.run_batch([1]*11,paths=paths)
+        self.assertEqual(calls,11)
+        self.assertEqual(report['moved_files'],11)
+        self.assertEqual(report['state'],'completed')
 
     def test_folder_over_byte_cap_is_not_split(self):
         gib=1024**3
@@ -269,10 +269,10 @@ class BatchReporting(unittest.TestCase):
         self.assertEqual(result['skipped'],{'batch_size_limit':2})
         self.assertEqual(calls,1)
 
-    def test_file_count_limit_records_every_deferred_candidate(self):
-        result,calls,_=self.run_batch([1]*(mover.MAX_FILES+3))
-        self.assertEqual(result['skipped'],{'batch_file_limit':3})
-        self.assertEqual(calls,mover.MAX_FILES)
+    def test_independent_files_are_limited_by_bytes_not_count(self):
+        result,calls,_=self.run_batch([1]*11)
+        self.assertEqual(calls,11)
+        self.assertEqual(result['moved_files'],11)
 
     def test_oversized_file_does_not_prevent_independent_small_file(self):
         result,calls,attempt=self.run_batch([mover.MAX_BYTES+1,1])

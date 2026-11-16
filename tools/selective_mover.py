@@ -39,7 +39,6 @@ POOL_ROOT = Path('/mnt') / PROFILE.pool
 ENGINE = '/usr/libexec/unraid/move'
 PID = Path('/var/run/mover.pid')
 ATTEMPT = Path('/var/run/fejes-selective-last-attempt')
-MAX_FILES = 8
 MAX_BYTES = 16*1024**3
 ERRORS = (OSError, ValueError, TypeError, KeyError, AttributeError, RuntimeError,
           subprocess.SubprocessError)
@@ -230,7 +229,7 @@ def collect(update=False,owned=False):
     files,current=inventory_adapter.inventory(now,previous['files'])
     items,mounts=torrent_snapshot()
     protection=guards(owned)
-    selection=plan(files,items,mounts,protection,days=days,now=time.time(),observed_at=now,root=ROOT)
+    selection=plan(files,items,mounts,protection,days=days,now=time.time(),observed_at=now,root=ROOT,target_ratio=target)
     selection['ratio_target']=target
     selection['max_bytes']=limit
     selection['candidates']=prioritize(selection['candidates'],items,mounts,target,
@@ -262,7 +261,9 @@ def fresh_candidate(key,expected,days,owned=True):
     now=time.time()
     item=dict(path=key,regular=True,symlink=False,nlink=info.st_nlink,open=key in opened,
               stable=True,mtime=info.st_mtime,first_seen=expected['first_seen'])
-    selection=plan([item],items,mounts,protection,days=days,now=now,observed_at=now,root=ROOT)
+    settings=read_json(CONFIG,{'version':1,'age_days':7})
+    target=ratio_target(settings.get('ratio_target',0))
+    selection=plan([item],items,mounts,protection,days=days,now=now,observed_at=now,root=ROOT,target_ratio=target)
     return path,selection['candidates']==[key]
 
 
@@ -429,8 +430,6 @@ def run():
             if not selected.issuperset(group):
                 skips['unit_not_ready']+=len(group);continue
             unit_size=sum(current[key]['signature'][2] for key in group)
-            if len(group)>MAX_FILES-report['moved_files']:
-                skips['batch_file_limit' if len(group)==1 else 'unit_file_limit']+=len(group);continue
             if unit_size>limit-report['moved_bytes']:
                 skips['file_exceeds_batch_limit' if len(group)==1 and unit_size>limit else ('batch_size_limit' if len(group)==1 else 'unit_size_limit')]+=len(group);continue
             # Recheck every member before allowing the first native file move.

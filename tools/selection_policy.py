@@ -174,7 +174,7 @@ def protected_content(torrents, mounts, now, days):
 
 
 def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
-         observed_at, root):
+         observed_at, root, target_ratio=0):
     """Return private candidate paths, not an execution manifest or permission.
 
     Age uses the most recent of mtime, first_seen and known torrent completion.
@@ -186,6 +186,7 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
               'age_days': days, 'candidates': [], 'skipped': [], 'blockers': []}
     try:
         days = age_days(days)
+        target_ratio = ratio_target(target_ratio)
         now, observed_at = timestamp(now), timestamp(observed_at)
         if not 0 <= now - observed_at <= 30:
             raise ValueError('Snapshot stale or from the future')
@@ -216,6 +217,8 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
                 reason = 'excluded_directory'
             elif any(within(path, p) or within(p, path) for p in protected):
                 reason = 'protected_content'
+            elif target_ratio and torrent_owner(path, torrents, mounts) and (content_ratio(path, torrents, mounts) is None or content_ratio(path, torrents, mounts) < target_ratio):
+                reason = 'ratio_not_met'
             elif (item.get('regular') is not True or item.get('symlink') is not False
                   or type(item.get('nlink')) is not int or item['nlink'] != 1):
                 reason = 'unsupported_file'
@@ -256,7 +259,7 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
     """Private read-only age forecast, never an execution time or authorization."""
     target_ratio = ratio_target(target_ratio)
     diagnostic = plan(files,torrents,mounts,{k:'pass' for k in REQUIRED_GUARDS},
-                      days=days,now=now,observed_at=now,root=root)
+                      days=days,now=now,observed_at=now,root=root,target_ratio=target_ratio)
     if diagnostic['decision']=='unknown':
         raise ValueError('Forecast snapshot unavailable')
     reasons={x['path']:x['reason'] for x in diagnostic['skipped']}
