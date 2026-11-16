@@ -94,6 +94,7 @@ class RecoveryDispatch(unittest.TestCase):
         with patch.object(recovery,'backup_locked',return_value=Path('/mnt/disk5/saved.json')) as backup,\
              patch.object(recovery.mover,'atomic_json',side_effect=save),\
              patch.object(recovery.mover,'read_json',return_value=prior(state='deferred',requires_inspection=False)),\
+             patch.object(type(recovery.mover.LAST),'read_bytes',return_value=self.raw),\
              patch.object(recovery.hashlib,'sha256') as digest:
             digest.return_value.hexdigest.return_value=self.digest
             out=recovery.run('recover',self.digest,recovery.CONFIRM)
