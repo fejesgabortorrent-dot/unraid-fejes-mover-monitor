@@ -17,7 +17,7 @@ class ServiceTest(unittest.TestCase):
             root=Path(directory)
             launch=root/'launcher.sh'
             stamp=root/'last_attempt'
-            launch.write_text('KUSZOB_GIB=150\\nUJRA_PROBALKOZAS_MP=360\\n')
+            launch.write_text('KUSZOB_GIB=150\nUJRA_PROBALKOZAS_MP=360\n')
             stamp.write_text('500')
             report={'cache':'available','cache_free_bytes':100*1024**3,
                     'torrent':'no_torrent_blocker'}
