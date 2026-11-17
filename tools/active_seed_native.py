@@ -85,8 +85,10 @@ def move_verified_unit(*, expected_paths, inventory, days, execute_file,
             state["verified_files"].append(
                 {"source": path, "bytes": result["bytes"],
                  "sha256": result["sha256"], "destination": result["destination"]})
+            # Keep native evidence latched until the host verifies actual
+            # post-resume peer continuity, including after process loss.
             state.update(state="checking", active_file_started=False,
-                         requires_inspection=False)
+                         requires_inspection=True)
             state.pop("active_sha256", None)
             state.pop("active_file", None)
             persist(state)
@@ -96,7 +98,7 @@ def move_verified_unit(*, expected_paths, inventory, days, execute_file,
             persist(state)
             raise UnitInspectionRequired("verified native unit incomplete") from error
     state.update(state="native_verified", active_file_started=False,
-                 requires_inspection=False)
+                 requires_inspection=True)
     persist(state)
     return {"verified": True, "files": len(state["verified_files"]),
             "bytes": sum(row["bytes"] for row in state["verified_files"])}
