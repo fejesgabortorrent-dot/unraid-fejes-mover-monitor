@@ -19,7 +19,9 @@ class CompletedSeedAdmission(unittest.TestCase):
         torrent = {'content_path': '/data/new', 'state': 'stoppedUP', 'progress': 1,
                    'upspeed': 0, 'dlspeed': 0, 'ratio': 0, 'completion_on': 999}
         torrent.update(change or {})
-        with patch.object(native, 'valid_file', return_value=self.info), \
+        with patch.object(native, 'ROOT', '/mnt/user/Filmek'), \
+             patch.object(native, 'SOURCE', Path('/mnt/cache/Filmek')), \
+             patch.object(native, 'valid_file', return_value=self.info), \
              patch.object(native.inventory_adapter, 'open_paths', return_value=opened or set()), \
              patch.object(native, 'torrent_snapshot', return_value=(
                  [torrent], [{'Type': 'bind', 'Source': native.ROOT, 'Destination': '/data'}])), \
