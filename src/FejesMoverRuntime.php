@@ -233,7 +233,7 @@ HTML;
     $banner = substr_replace($banner, substr($design, 0, $designStyleEnd), strrpos($banner, '</div>'), 0);
     $banner .= substr($design, $designStyleEnd);
     // Aggregate report only. No scans, torrent queries or writes during UI refresh.
-    $summary='';$reportFault=false;
+    $summary='';$reportFault=false;$liveSeedWorker=false;
     if($mode==='advanced'&&$pool==='cache'){
         $lastPath='/boot/config/plugins/fejes.mover.monitor/selective-last.json';
         $last=is_link($lastPath)?null:json_decode(@file_get_contents($lastPath)?:'null',true);
@@ -241,9 +241,20 @@ HTML;
         $reasons=['capacity'=>$t('Szabadhely-küszöb','Free-space threshold','Freiplatzgrenze'),'cooldown'=>$t('Két kör közötti várakozás','Batch cooldown','Wartezeit zwischen Läufen'),'integrity'=>$t('Integritásvédelem','Integrity protection','Integritätsschutz'),'backup'=>$t('Biztonsági mentés','Backup','Sicherung'),'parity'=>$t('Paritásellenőrzés','Parity check','Paritätsprüfung')];
         $status=$t('Nincs olvasható jelentés','No readable report','Kein lesbarer Bericht');$detail='';
         if(is_array($last)){
-            $reportFault=($last['requires_inspection']??false)===true || (($last['state']??'')==='error'&&empty($last['inspection_resolution']));
+            $seedPidRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');
+            $seedPid=ctype_digit($seedPidRaw)?(int)$seedPidRaw:0;
+            $seedArgs=$seedPid>1?explode(chr(0),@file_get_contents("/proc/$seedPid/cmdline")?:''):[];
+            $seedScript=basename($seedArgs[1]??'');$seedAction=$seedArgs[2]??'';
+            $liveSeedWorker=($last['version']??null)===2&&($last['stage']??'')==='completed_seed_coordination'&&
+                in_array($last['state']??'',['checking','native_intent','native_verified'],true)&&
+                ($last['coordination_pid']??null)===$seedPid&&$seedPid>1&&
+                preg_match('/^python(?:3(?:[.][0-9]+)?)?$/D',basename($seedArgs[0]??''))&&
+                (($seedScript==='managed_schedule.py'&&$seedAction==='tick')||
+                 (in_array($seedScript,['selective_mover.py','completed_seed_pilot.py'],true)&&$seedAction==='run'));
+            $reportFault=!$liveSeedWorker&&(($last['requires_inspection']??false)===true || (($last['state']??'')==='error'&&empty($last['inspection_resolution'])));
             $status=$labels[$last['state']??'']??$t('Nem ellenőrizhető állapot','Unverified state','Ungeprüfter Zustand');
-            if(($last['requires_inspection']??false)===true)$status=$t('Beavatkozás szükséges · mozgatás tiltva','Inspection required · movement blocked','Prüfung erforderlich · Verschieben gesperrt');
+            if($liveSeedWorker)$status=$t('Ellenőrzés vagy mozgatás folyamatban','Checks or movement in progress','Prüfung oder Verschieben läuft');
+            elseif(($last['requires_inspection']??false)===true)$status=$t('Beavatkozás szükséges · mozgatás tiltva','Inspection required · movement blocked','Prüfung erforderlich · Verschieben gesperrt');
             if(!empty($last['inspection_resolution'])&&($last['state']??'')==='error'&&empty($last['requires_inspection']))$status=$t('Helyreállítás ellenőrizve · új körre vár','Recovery inspected · awaiting a new run','Wiederherstellung geprüft · wartet auf neuen Lauf');
             if(is_numeric($last['started']??null))$detail=$t('Jelentés ideje: ','Report time: ','Berichtszeit: ').date('Y-m-d H:i',(int)$last['started']);
             if(($last['state']??'')==='completed'&&is_numeric($last['moved_files']??null)&&is_numeric($last['moved_bytes']??null))$detail.=' · '.$last['moved_files'].' '.$t('fájl','files','Dateien').' · '.number_format($last['moved_bytes']/1073741824,2).' GiB';
@@ -295,5 +306,5 @@ HTML;
         'pathConfig'=>$configPath,'raw'=>$raw === false ? '' : $raw,
         'hash'=>hash('sha256',$raw === false ? '' : $raw),'lock'=>$lock,
         'token'=>is_array($token) ? ($token['csrf_token'] ?? '') : '',
-        't'=>$t,'esc'=>$esc,'versionBadge'=>$versionBadge,'installedVersion'=>$installedVersion,'banner'=>$banner,'summary'=>$summary,'reportFault'=>$reportFault];
+        't'=>$t,'esc'=>$esc,'versionBadge'=>$versionBadge,'installedVersion'=>$installedVersion,'banner'=>$banner,'summary'=>$summary,'reportFault'=>$reportFault,'liveSeedWorker'=>$liveSeedWorker];
 })(!empty($fmcConfigWrite));

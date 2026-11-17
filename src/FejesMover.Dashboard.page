@@ -13,7 +13,7 @@ if($fmc['mode']!=='demo'){
 $fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
 $fmdCmd=$fmdPid?str_replace(chr(0),' ',@file_get_contents("/proc/$fmdPid/cmdline")?:''):'';
-$fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmdCmd);
+$fmdRun=$fmdPid>1&&(preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmdCmd)||!empty($fmc['liveSeedWorker']));
 $fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,'.',','):'—';
@@ -44,7 +44,7 @@ if($fmc['mode']!=='demo'){
 $fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
 $fmdCmd=$fmdPid?str_replace(chr(0),' ',@file_get_contents("/proc/$fmdPid/cmdline")?:''):'';
-$fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmdCmd);
+$fmdRun=$fmdPid>1&&(preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmdCmd)||!empty($fmc['liveSeedWorker']));
 $fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,',',' '):'—';
@@ -75,7 +75,7 @@ if($fmc['mode']!=='demo'){
 $fmdMounted=$fmc['mounted'];
 $fmdRaw=trim(@file_get_contents('/var/run/mover.pid')?:'');$fmdPid=ctype_digit($fmdRaw)?(int)$fmdRaw:0;
 $fmdCmd=$fmdPid?str_replace(chr(0),' ',@file_get_contents("/proc/$fmdPid/cmdline")?:''):'';
-$fmdRun=$fmdPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmdCmd);
+$fmdRun=$fmdPid>1&&(preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmdCmd)||!empty($fmc['liveSeedWorker']));
 $fmdTotal=$fmdMounted?@disk_total_space($fmc['path']):false;$fmdFree=$fmdMounted?@disk_free_space($fmc['path']):false;$fmdUsed=$fmdTotal&&$fmdFree!==false?round(100*(1-$fmdFree/$fmdTotal),1):0;
 $fmdDisplay=$fmdTotal&&$fmdFree!==false?$fmdUsed.'%':'—';
 $fmdFreeText=$fmdFree!==false?number_format($fmdFree/1073741824,1,',',' '):'—';
