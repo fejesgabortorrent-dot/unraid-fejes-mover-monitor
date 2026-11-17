@@ -64,7 +64,12 @@ def move_verified_unit(*, expected_paths, inventory, days, execute_file,
             result = execute_file(path, inventory[path], days, before_native)
             if not isinstance(result, dict):
                 raise UnitInspectionRequired("native result invalid")
+            # Persist admission/skip evidence before raising on a partial unit.
+            # Never include arbitrary transport output or credential-bearing text.
+            state['native_outcome'] = {key: result[key] for key in
+                ('state', 'reason', 'admission_reason') if isinstance(result.get(key), str)}
             if result.get("state") != "moved" or intent != [True]:
+                persist(state)
                 if intent[0]:
                     raise UnitInspectionRequired("native outcome ambiguous")
                 if state["verified_files"]:
@@ -94,7 +99,7 @@ def move_verified_unit(*, expected_paths, inventory, days, execute_file,
             persist(state)
         except Exception as error:
             state.update(state="inspection_required",
-                         requires_inspection=True)
+                         requires_inspection=True, failure_type=type(error).__name__)
             persist(state)
             raise UnitInspectionRequired("verified native unit incomplete") from error
     state.update(state="native_verified", active_file_started=False,

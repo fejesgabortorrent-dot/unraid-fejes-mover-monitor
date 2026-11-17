@@ -326,7 +326,7 @@ def execute_file(key,expected,days,before_native=None):
     return _execute_file(key, expected, days, before_native, fresh_candidate)
 
 
-def completed_seed_candidate(key, expected, days, owned=True):
+def completed_seed_candidate(key, expected, days, owned=True, rejection=None):
     """Explicit seed transaction: completion replaces age/ratio, never guards.
 
     Only the opt-in coordinator calls this after stopping every unit owner.
@@ -335,29 +335,37 @@ def completed_seed_candidate(key, expected, days, owned=True):
     stable logical namespace and every existing native guard are still required.
     """
     path = SOURCE / Path(key).relative_to(ROOT)
+    def reject(reason):
+        if rejection is not None:
+            rejection.append(reason)
+        return path, False
     info = valid_file(path)
     first = expected.get('first_seen')
-    if (signature(info) != expected.get('signature') or
-            type(first) not in (int, float) or not math.isfinite(first) or
-            not 0 <= first < time.time() or key in inventory_adapter.open_paths()):
-        return path, False
+    if signature(info) != expected.get('signature'):
+        return reject('source_signature_changed')
+    if (type(first) not in (int, float) or not math.isfinite(first) or
+            not 0 <= first < time.time()):
+        return reject('inventory_time_unverified')
+    if key in inventory_adapter.open_paths():
+        return reject('source_open')
     items, mounts = torrent_snapshot()
     protection = guards(owned)
-    if any(protection.get(g) != 'pass' for g in (
+    for g in (
             'backup', 'parity', 'integrity', 'mount', 'mover', 'cooldown',
-            'capacity', 'open_files', 'namespace')):
-        return path, False
+            'capacity', 'open_files', 'namespace'):
+        if protection.get(g) != 'pass':
+            return reject('guard_' + g)
     owners = [t for t in items if within(key, host_path(t['content_path'], mounts))
               or within(host_path(t['content_path'], mounts), key)]
     if not owners:
-        return path, False
+        return reject('owner_missing')
     for t in owners:
         if (t.get('state') not in {'stoppedUP', 'pausedUP'} or
                 type(t.get('progress')) not in (int, float) or
                 t['progress'] != 1 or
                 type(t.get('dlspeed')) is not int or t['dlspeed'] != 0 or
                 type(t.get('upspeed')) is not int or t['upspeed'] != 0):
-            return path, False
+            return reject('owner_not_quiescent_complete_seed')
     return path, True
 
 
@@ -367,14 +375,24 @@ def execute_completed_seed_file(key, expected, days, before_native=None):
 
 
 def _execute_file(key, expected, days, before_native, candidate):
-    path,eligible=candidate(key,expected,days)
-    if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
+    rejection = []
+    def refresh():
+        if candidate is completed_seed_candidate:
+            return candidate(key, expected, days, rejection=rejection)
+        return candidate(key, expected, days)
+    def deferred():
+        result = {'state':'skipped','reason':'fresh_conditions_changed'}
+        if rejection:
+            result['admission_reason'] = rejection[-1]
+        return result
+    path,eligible=refresh()
+    if not eligible: return deferred()
     if destinations(path): return {'state':'skipped','reason':'existing_array_copy'}
     before=valid_file(path)
     attrs={key:os.getxattr(path,key) for key in os.listxattr(path)}
     checksum=sha256(path)
-    path,eligible=candidate(key,expected,days)
-    if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
+    path,eligible=refresh()
+    if not eligible: return deferred()
     if destinations(path) or signature(path.stat())!=signature(before):
         return {'state':'skipped','reason':'source_or_destination_changed'}
     opened=subprocess.run(['fuser','-s',str(path)],capture_output=True)

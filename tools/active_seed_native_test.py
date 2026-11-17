@@ -75,6 +75,9 @@ class NativeBridgeTests(unittest.TestCase):
                                test_vm_authorized=True)
         self.assertEqual(journal[-1]["state"], "inspection_required")
         self.assertEqual(len(journal[-1]["verified_files"]), 1)
+        self.assertEqual(journal[-1]['native_outcome'],
+                         {'state': 'skipped', 'reason': 'file_changed'})
+        self.assertFalse(journal[-1]['active_file_started'])
 
     def test_native_exception_sticks_inspection(self):
         def native(path, expected, days, before_native):

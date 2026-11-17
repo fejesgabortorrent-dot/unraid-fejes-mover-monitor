@@ -17,7 +17,7 @@ class CompletedSeedAdmission(unittest.TestCase):
     expected = {'signature': [1, 2, 10, 3, 4], 'first_seen': 999.0}
     info = SimpleNamespace(st_dev=1, st_ino=2, st_size=10, st_mtime_ns=3, st_ctime_ns=4)
 
-    def candidate(self, change=None, guards=None, opened=None, expected=None):
+    def candidate(self, change=None, guards=None, opened=None, expected=None, rejection=None):
         torrent = {'content_path': '/data/new', 'state': 'stoppedUP', 'progress': 1,
                    'upspeed': 0, 'dlspeed': 0, 'ratio': 0, 'completion_on': 999}
         torrent.update(change or {})
@@ -29,7 +29,16 @@ class CompletedSeedAdmission(unittest.TestCase):
                  [torrent], [{'Type': 'bind', 'Source': native.ROOT, 'Destination': '/data'}])), \
              patch.object(native, 'guards', return_value=guards or {g: 'pass' for g in REQUIRED_GUARDS}), \
              patch.object(native.time, 'time', return_value=1000):
-            return native.completed_seed_candidate(self.key, expected or self.expected, 30)[1]
+            return native.completed_seed_candidate(self.key, expected or self.expected, 30,
+                                                   rejection=rejection)[1]
+
+    def test_diagnostic_reason_preserves_the_guard_without_admitting_the_file(self):
+        for kwargs, reason in (({'opened': {self.key}}, 'source_open'),
+                ({'change': {'state': 'uploading'}}, 'owner_not_quiescent_complete_seed'),
+                ({'guards': {g: 'wait' if g == 'backup' else 'pass' for g in REQUIRED_GUARDS}}, 'guard_backup')):
+            rejected = []
+            self.assertFalse(self.candidate(**kwargs, rejection=rejected))
+            self.assertEqual(rejected, [reason])
 
     def test_fresh_complete_seed_does_not_wait_for_age_or_ratio(self):
         self.assertTrue(self.candidate())
