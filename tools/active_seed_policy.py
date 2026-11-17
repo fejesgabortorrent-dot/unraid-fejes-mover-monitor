@@ -103,11 +103,23 @@ def validate_transition(before, after, *, files_verified, logical_paths_unchange
     A completed copy/hash check alone never proves continued real peer upload.
     Preserve a failure/inspection state until all invariants are evidenced.
     """
+    ready = validate_readiness(before, after, files_verified=files_verified,
+        logical_paths_unchanged=logical_paths_unchanged, complete=complete, resumed=resumed)
+    if not ready['verified']:
+        return ready
+    if peer_upload_verified is not True:
+        return {"verified": False, "reason": "continuity_unverified"}
+    return {"verified": True, "reason": "peer_continuity_verified"}
+
+
+def validate_readiness(before, after, *, files_verified, logical_paths_unchanged,
+                       complete, resumed):
+    """Seed readiness is distinct from observed traffic to a connected peer."""
     if not isinstance(before, dict) or before.get("decision") != "coordination_required":
         return {"verified": False, "reason": "missing_preflight"}
     if not isinstance(after, dict) or after.get("owner_hashes") != before.get("owner_hashes"):
         return {"verified": False, "reason": "owners_changed"}
-    flags = (files_verified, logical_paths_unchanged, complete, resumed, peer_upload_verified)
+    flags = (files_verified, logical_paths_unchanged, complete, resumed)
     if any(flag is not True for flag in flags):
         return {"verified": False, "reason": "continuity_unverified"}
-    return {"verified": True, "reason": "peer_continuity_verified"}
+    return {"verified": True, "reason": "seed_ready_verified"}

@@ -6,7 +6,7 @@ only until native movement, crash recovery, real peer upload and pause/restore
 have been verified. A caller supplies both a trusted inventory and a reviewed
 native unit move callback; this module does not delete or move files itself.
 """
-from active_seed_policy import assess_unit, validate_transition
+from active_seed_policy import assess_unit, validate_transition, validate_readiness
 from seed_coordination import SeedCoordinator, CoordinationError, RestorationUnverified
 
 
@@ -15,7 +15,8 @@ class UnitInspectionRequired(RuntimeError):
 
 
 def run_unit(*, snapshot, transport, preflight, move_unit, verify_files,
-             verify_peer, sleep, vm_test_authorized=False, journal=None):
+             verify_peer, sleep, vm_test_authorized=False, journal=None,
+             require_peer_upload=True):
     """Coordinate one complete torrent-owned unit.
 
     snapshot is a fresh evidence bundle from a trusted adapter. After stop,
@@ -74,6 +75,15 @@ def run_unit(*, snapshot, transport, preflight, move_unit, verify_files,
     try:
         evidence = verify_files()
         peer = verify_peer(hashes)
+        if peer is False and require_peer_upload is False:
+            ready = validate_readiness(initial, {"owner_hashes": hashes},
+                files_verified=evidence.get('hashes_match'),
+                logical_paths_unchanged=evidence.get('logical_paths_unchanged'),
+                complete=evidence.get('all_complete'), resumed=evidence.get('resumed'))
+            if not ready['verified']:
+                raise UnitInspectionRequired('post-move seed readiness not verified')
+            return {'state': 'completed_seed_ready', 'native_verified': True,
+                    'seed_ready_verified': True, 'peer_upload_verified': False}
         result = validate_transition(
             initial, {"owner_hashes": hashes},
             files_verified=evidence.get("hashes_match"),

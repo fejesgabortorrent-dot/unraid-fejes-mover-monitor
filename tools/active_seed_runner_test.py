@@ -46,7 +46,7 @@ class Transport:
 
 class ActiveSeedRunnerTests(unittest.TestCase):
     def call(self, transport=None, *, authorized=True, preflight=None,
-             move=None, file_check=None, peer=None, initial=None):
+             move=None, file_check=None, peer=None, initial=None, require_peer=True):
         transport = transport or Transport()
         count = {"move": 0}
         def native():
@@ -61,7 +61,8 @@ class ActiveSeedRunnerTests(unittest.TestCase):
                 "logical_paths_unchanged": True, "all_complete": True,
                 "resumed": True}),
             verify_peer=peer or (lambda hashes: True),
-            sleep=lambda seconds: None, vm_test_authorized=authorized)
+            sleep=lambda seconds: None, vm_test_authorized=authorized,
+            require_peer_upload=require_peer)
         return result, transport, count
 
     def test_opt_in_required_without_torrent_mutation(self):
@@ -99,6 +100,25 @@ class ActiveSeedRunnerTests(unittest.TestCase):
     def test_missing_peer_evidence_is_not_success(self):
         with self.assertRaises(UnitInspectionRequired):
             self.call(peer=lambda hashes: False)
+
+    def test_explicit_idle_pilot_reports_readiness_without_claiming_peer_upload(self):
+        result, _, stats = self.call(peer=lambda hashes: False, require_peer=False)
+        self.assertEqual(result['state'], 'completed_seed_ready')
+        self.assertTrue(result['seed_ready_verified'])
+        self.assertFalse(result['peer_upload_verified'])
+        self.assertEqual(stats['move'], 1)
+
+    def test_idle_pilot_still_rejects_missing_file_or_resume_evidence(self):
+        with self.assertRaises(UnitInspectionRequired):
+            self.call(peer=lambda hashes: False, require_peer=False,
+                      file_check=lambda: {'hashes_match': True, 'all_complete': True,
+                                         'logical_paths_unchanged': True, 'resumed': False})
+
+    def test_idle_pilot_api_failure_is_not_downgraded_to_no_peer(self):
+        def unavailable(hashes):
+            raise RuntimeError('API unavailable')
+        with self.assertRaises(UnitInspectionRequired):
+            self.call(peer=unavailable, require_peer=False)
 
     def test_unchanged_invalid_guard_never_stops_torrent(self):
         result, api, stats = self.call(initial=evidence(

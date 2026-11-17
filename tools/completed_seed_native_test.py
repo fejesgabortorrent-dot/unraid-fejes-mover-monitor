@@ -2,6 +2,8 @@
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
+import os
+import tempfile
 from unittest.mock import patch
 
 from test_support import install
@@ -53,6 +55,24 @@ class CompletedSeedAdmission(unittest.TestCase):
         with patch.object(native, '_execute_file', return_value={'state': 'skipped'}) as executor:
             native.execute_file(self.key, self.expected, 7)
         self.assertIs(executor.call_args.args[-1], native.fresh_candidate)
+
+    def test_historical_or_stale_pid_latch_cannot_be_ignored(self):
+        with tempfile.TemporaryDirectory() as directory:
+            pid = Path(directory) / 'mover.pid'
+            for text, recorded in ((str(os.getpid()), os.getpid()+1),
+                                   (str(os.getpid()+1), os.getpid())):
+                pid.write_text(text)
+                with patch.object(native, 'PID', pid), patch.object(native, 'read_json',
+                     return_value={'requires_inspection': True, 'coordination_pid': recorded}):
+                    with self.assertRaises(native.InspectionRequired): native.guards(owned=True)
+
+    def test_own_ledger_does_not_bypass_other_native_guards(self):
+        with tempfile.TemporaryDirectory() as directory:
+            pid = Path(directory) / 'mover.pid'; pid.write_text(str(os.getpid()))
+            with patch.object(native, 'PID', pid), patch.object(native, 'read_json',
+                 return_value={'requires_inspection': True, 'coordination_pid': os.getpid()}):
+                with self.assertRaisesRegex(ValueError, 'Advanced cache mode required'):
+                    native.guards(owned=True)
 
 
 if __name__ == '__main__':

@@ -162,7 +162,9 @@ def cooldown_duration_seconds(automation, launcher_text):
 
 def guards(owned=False):
     prior=read_json(LAST,{})
-    if prior.get('requires_inspection') or (not owned and needs_inspection(prior)):
+    own_coordination = (owned and PID.is_file() and PID.read_text() == str(os.getpid())
+                        and prior.get('coordination_pid') == os.getpid())
+    if (prior.get('requires_inspection') and not own_coordination) or (not owned and needs_inspection(prior)):
         raise InspectionRequired('Previous movement requires inspection')
     runtime=read_json(BASE/'settings.json',{})
     if runtime.get('version')!=1 or runtime.get('mode')!='advanced' or runtime.get('pool')!='cache':
