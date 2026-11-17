@@ -5,15 +5,20 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.11.16.6'
+version='2026.11.17.1'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
-helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py','managed_schedule.py','selective_recovery.py')]
+helpers=[ROOT/'tools'/name for name in ('torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py','managed_schedule.py','selective_recovery.py','active_seed_policy.py','active_seed_runner.py','active_seed_native.py','active_seed_host.py','seed_coordination.py','qbit_seed_transport.py','completed_seed_pilot.py','completed_seed_service.py')]
 
 def cdata(s):
     return '<![CDATA['+s.replace(']]>',']]]]><![CDATA[>')+']]>'
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.11.17.1 (unreleased completed-seed candidate)
+- Add explicit completed-download mode: per-torrent stop, verified native movement and resume without age or ratio waiting.
+- Keep existing scheduling and every maintenance guard; bound each invocation to one unit, 32 GiB and 128 files.
+- Preserve durable native failure reasons and verified manual inspection recovery.
+- Verify fresh isolated peer continuity and complete torrents spanning cache and array; power-loss acceptance remains pending.
 ### 2026.11.16.6 (unreleased development candidate)
 - Require the configured share ratio for all torrent owners and keep eligible units together within the byte limit.
 - Real seed transfer, recovery, and release acceptance are pending.

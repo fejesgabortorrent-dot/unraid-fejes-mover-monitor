@@ -10,10 +10,11 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 
 class SelectiveInterface(unittest.TestCase):
-    def render(self,post=None,mode='advanced',lang='hu',last=None,forecast=None):
+    def render(self,post=None,mode='advanced',lang='hu',last=None,forecast=None,config_extra=None):
         with tempfile.TemporaryDirectory(prefix='fejes-selective-ui-') as folder:
             lab=Path(folder)
             config='{"version":1,"age_days":7}'
+            if config_extra is not None:config=json.dumps({'version':1,'age_days':7,**config_extra})
             (lab/'selective.json').write_text(config)
             (lab/'selective-last.json').write_text(json.dumps(last if last is not None else {'state':'nothing_eligible','skipped':{'too_young':4}}))
             if forecast is not None:(lab/'selective-forecast.json').write_text(json.dumps(forecast))
@@ -45,6 +46,31 @@ class SelectiveInterface(unittest.TestCase):
 
     def request(self,**extra):
         return dict(fejes_csrf='test-token',source_hash='CURRENT',action='run',**extra)
+
+    def test_completed_mode_is_localized_and_never_enabled_by_get(self):
+        for lang,label in [('hu','Letöltés után HDD-re'),('en','Move completed downloads to HDD'),('de','Fertige Downloads auf HDD')]:
+            result=self.render(lang=lang,config_extra={'completed_seed_mode':True,'batch_gib':32})
+            self.assertIn(label,result['html'])
+            self.assertIn('value="1" checked',result['html'])
+            self.assertEqual(result['html'].count('id="fms-run"'),1)
+            self.assertFalse(result['calls'])
+
+    def test_completed_mode_save_requires_session_and_caps_bounded_worker(self):
+        request=dict(fejes_csrf='test-token',source_hash='CURRENT',fms_action='save',completed_seed_mode='1',batch_gib='64')
+        result=self.render(request)
+        self.assertTrue(result['config']['completed_seed_mode'])
+        self.assertEqual(result['config']['batch_gib'],32)
+        self.assertEqual(result['config']['age_days'],7)
+        self.assertFalse(result['calls'])
+        request['fejes_csrf']='wrong'
+        self.assertNotIn('completed_seed_mode',self.render(request)['config'])
+
+    def test_completed_mode_can_be_disabled_without_losing_legacy_settings(self):
+        result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',fms_action='save'),
+            config_extra={'completed_seed_mode':True,'ratio_target':1.25,'batch_gib':32})
+        self.assertFalse(result['config']['completed_seed_mode'])
+        self.assertEqual(result['config']['ratio_target'],1.25)
+        self.assertEqual(result['config']['age_days'],7)
 
     def test_get_never_executes_helper_in_all_languages(self):
         for language,label in [('hu','Koralapú szelektív'),('en','Age-filtered selective'),('de','Altersabhängiges selektives')]:

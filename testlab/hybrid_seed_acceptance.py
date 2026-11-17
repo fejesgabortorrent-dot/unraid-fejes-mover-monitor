@@ -6,10 +6,9 @@ then let the bounded pilot discover and move only the remaining cache member.
 This is deliberate fixture preparation, not recovery of an ambiguous operation.
 No old fixture is reset or replayed. The original Nov 10 proof stays unchanged.
 """
-from contextlib import ExitStack, redirect_stdout
+from contextlib import ExitStack
 import fcntl
 import hashlib
-import io
 import json
 import os
 from pathlib import Path
@@ -83,10 +82,7 @@ def run():
         unit = units[0]
         assert unit['paths'] == [keys[1]] and set(unit['retained_members']) == {keys[0]}
         h.write_new(BASE / 'hybrid-discovery.json', unit)
-        output = io.StringIO()
-        with redirect_stdout(output):
-            pilot.prepare(unit['unit_digest'])
-        authorization = json.loads(output.getvalue())['authorization']
+        authorization = pilot.prepare(unit['unit_digest'])['authorization']
         pilot.run(authorization)
         outcome = json.loads((Path(authorization).parent / 'outcome.json').read_text())
         assert outcome['state'] in {'completed', 'completed_seed_ready'}

@@ -246,12 +246,19 @@ def collect(update=False,owned=False):
 
 def preview(update=False):
     selection,files,current,items,mounts,protection=collect(update)
-    return {'execution_allowed':False,'live_movement':'available','age_days':selection['age_days'],
+    result = {'execution_allowed':False,'live_movement':'available','age_days':selection['age_days'],
             'decision':selection['decision'],'candidate_count':len(selection['candidates']),
             'file_count':len(files),'skipped_counts':dict(Counter(x['reason'] for x in selection['skipped'])),
             'blockers':selection['blockers'],'guards':protection,'inventory_updated':update,
             'forecast':waiting_table(files,items,mounts,current,protection,
                                      days=selection['age_days'],now=time.time(),root=ROOT,target_ratio=selection['ratio_target'],max_bytes=selection['max_bytes'])}
+    completed_mode=read_json(CONFIG, {}).get('completed_seed_mode', False)
+    if type(completed_mode) is not bool:
+        raise ValueError('Completed seed mode must be explicitly boolean')
+    if completed_mode:
+        import completed_seed_service
+        return completed_seed_service.preview(result, update)
+    return result
 
 
 def fresh_candidate(key,expected,days,owned=True):
@@ -652,7 +659,15 @@ def main():
                     stdin=subprocess.DEVNULL,stdout=logfile,stderr=subprocess.STDOUT,
                     start_new_session=True,close_fds=True)
             output={'state':'requested','pid':child.pid,'message':'The worker will recheck every guard before movement.'}
-        elif args.action=='run': output=run()
+        elif args.action=='run':
+            completed_mode=read_json(CONFIG, {}).get('completed_seed_mode', False)
+            if type(completed_mode) is not bool:
+                raise ValueError('Completed seed mode must be explicitly boolean')
+            if completed_mode:
+                import completed_seed_service
+                output=completed_seed_service.run()
+            else:
+                output=run()
         elif args.action=='status': output=read_json(LAST,{'state':'not_run'})
         else:
             with open('/var/run/fejes-selective-inventory.lock','a') as lock:

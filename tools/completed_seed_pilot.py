@@ -234,8 +234,8 @@ def prepare(chosen):
     atomic_json(directory / 'authorization.json', {'version': 1, 'host': os.uname().nodename,
         'profile': {'pool': n.PROFILE.pool, 'share': n.PROFILE.share, 'torrent_container': n.PROFILE.torrent_container},
         'scope_paths': unit['paths'], 'rollback_sha256': backup_digest})
-    print(json.dumps({'authorization': str(directory / 'authorization.json'),
-                      'bytes': unit['bytes'], 'files': unit['files']}, indent=2))
+    return {'authorization': str(directory / 'authorization.json'),
+            'bytes': unit['bytes'], 'files': unit['files']}
 
 
 class Evidence:
@@ -329,7 +329,7 @@ def run(authorization):
         verify_files=evidence.verify_files, verify_peer=evidence.verify_peer, sleep=time.sleep,
         native_module=n)
     atomic_json(directory / 'outcome.json', result)
-    print(json.dumps(result, indent=2))
+    return result
 
 
 def main():
@@ -342,11 +342,11 @@ def main():
     if args.action == 'plan':
         print(json.dumps([{'unit_digest': u['unit_digest'], 'bytes': u['bytes'], 'files': u['files']} for u in plan()], indent=2))
     elif args.action == 'prepare':
-        prepare(args.unit_digest)
+        print(json.dumps(prepare(args.unit_digest), indent=2))
     elif not args.authorization:
         parser.error('run requires the exact prepared authorization path')
     else:
-        run(args.authorization)
+        print(json.dumps(run(args.authorization), indent=2))
 
 
 if __name__ == '__main__':
