@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import posixpath
 import subprocess
+import stat
 import tarfile
 import time
 
@@ -104,6 +105,33 @@ def no_writers(keys):
     return True
 
 
+def retained_members(members, selected):
+    """Bind existing array members without moving or claiming to rehash them.
+
+    A completed torrent may already span cache and array. Every unselected API
+    member must have exactly one regular, unchanged array placement and no cache
+    copy. This is not permission to split or move an incomplete torrent.
+    """
+    retained = {}
+    for key, size in members.items():
+        if key in selected:
+            continue
+        if not key.startswith(n.ROOT + '/') or '..' in key.split('/'):
+            raise ValueError('Retained member outside profile')
+        source = n.SOURCE / Path(key).relative_to(n.ROOT)
+        targets = n.destinations(source)
+        if source.exists() or source.is_symlink() or len(targets) != 1:
+            raise ValueError('Retained member missing or duplicated')
+        target = targets[0]
+        if any(p.is_symlink() for p in (target, *target.parents)):
+            raise ValueError('Linked retained member')
+        info = target.lstat()
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size != size:
+            raise ValueError('Retained member type or size changed')
+        retained[key] = {'destination': str(target), 'signature': n.signature(info)}
+    return retained
+
+
 def collect(previous=None):
     previous = previous if previous is not None else read_json(n.INVENTORY, {'files': {}})['files']
     files, current = n.inventory_adapter.inventory(time.time(), previous)
@@ -130,11 +158,14 @@ def plan():
         if any(not bypath[k]['stable'] or not bypath[k]['regular'] or bypath[k]['symlink'] or bypath[k]['nlink'] != 1 for k in group):
             continue
         try:
+            retained, api_membership = {}, {}
             for t in owners:
                 members = mapped_files(t, mounts)
-                if not set(members).issubset(group) or any(members[k] != current[k]['signature'][2] for k in members):
-                    raise ValueError('Unit spans storage or has missing members')
-            if not no_writers(set(group)):
+                api_membership[t['hash']] = members
+                retained.update(retained_members(members, group))
+                if any(members[k] != current[k]['signature'][2] for k in members if k in group):
+                    raise ValueError('Selected API member size changed')
+            if not no_writers(set(group) | set(retained)):
                 continue
             for key in group:
                 p = n.SOURCE / Path(key).relative_to(n.ROOT)
@@ -145,7 +176,8 @@ def plan():
             continue
         result.append({'unit_digest': digest_paths(group), 'paths': sorted(group),
                        'bytes': size, 'files': len(group), 'owners': sorted(t['hash'] for t in owners),
-                       'inventory': {k: current[k] for k in group}})
+                       'inventory': {k: current[k] for k in group},
+                       'retained_members': retained, 'api_membership': api_membership})
     return sorted(result, key=lambda x: -x['bytes'])
 
 
@@ -214,8 +246,14 @@ class Evidence:
             if {k: t[k] for k in ('content_path', 'save_path')} != self.unit['logical_paths'][t['hash']]:
                 raise ValueError('Torrent namespace changed')
             members = mapped_files(t, mounts)
-            if not set(members).issubset(self.keys) or any(members[k] != current[k]['signature'][2] for k in members):
+            if (members != self.unit['api_membership'][t['hash']]
+                    or any(members[k] != current[k]['signature'][2] for k in members if k in self.keys)):
                 raise ValueError('API file membership changed')
+        retained = {}
+        for t in owners:
+            retained.update(retained_members(self.unit['api_membership'][t['hash']], self.keys))
+        if retained != self.unit['retained_members']:
+            raise ValueError('Retained array members changed')
         for key in self.keys:
             p = n.SOURCE / Path(key).relative_to(n.ROOT)
             if current[key] != self.inventory[key] or n.sha256(p) != self.unit['sha256'][key] or n.destinations(p):
@@ -229,7 +267,7 @@ class Evidence:
         return {'torrents': owners, 'guards': guards, 'owner_hashes': self.unit['owners'],
                 'expected_paths': self.keys, 'verified_paths': self.keys,
                 'stable': all(bypath[k]['stable'] for k in self.keys),
-                'no_writers': no_writers(set(self.keys)), 'namespace_unchanged': True}
+                'no_writers': no_writers(set(self.keys) | set(retained)), 'namespace_unchanged': True}
 
     def verify_files(self):
         for key in self.keys:
@@ -246,8 +284,11 @@ class Evidence:
                     or {k: t[k] for k in ('content_path', 'save_path')} != self.unit['logical_paths'][digest]):
                 raise ValueError('Seed readiness/namespace not verified')
             members = mapped_files(t, mounts)
-            if not set(members).issubset(self.keys):
+            if members != self.unit['api_membership'][digest]:
                 raise ValueError('Post-move API membership changed')
+            if retained_members(members, self.keys) != {
+                    k: v for k, v in self.unit['retained_members'].items() if k in members}:
+                raise ValueError('Post-move retained array members changed')
         self.post_uploaded = {digest: t['uploaded'] for digest, t in rows.items()}
         atomic_json(self.directory / 'seed-ready.json', {'verified': True, 'peer_upload_baseline': self.post_uploaded})
         return {'hashes_match': True, 'logical_paths_unchanged': True, 'all_complete': True, 'resumed': True}
