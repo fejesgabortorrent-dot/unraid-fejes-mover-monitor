@@ -45,9 +45,10 @@ class DockerQbitTransport:
                "--fail", "--silent", "--show-error", "--noproxy", "*",
                "--connect-timeout", str(self.timeout),
                "--max-time", str(self.timeout),
-               "--request", "POST" if mutation else "GET",
-               "--data-urlencode", "hashes=" + selected,
-               "http://127.0.0.1:8080/api/v2/torrents/" + route]
+               "--request", "POST" if mutation else "GET"]
+        if mutation:
+            cmd.extend(["--data-urlencode", "hashes=" + selected])
+        cmd.append("http://127.0.0.1:8080/api/v2/torrents/" + route)
         try:
             proc = self.runner(cmd, capture_output=True, text=True,
                                timeout=self.timeout + 3, check=False)
@@ -67,9 +68,13 @@ class DockerQbitTransport:
             raise TorrentTransportError("qBittorrent snapshot invalid")
         # API-side filter must not allow missing or unrelated torrent data.
         wanted = set(hashes)
-        if {r.get("hash") for r in result if isinstance(r, dict)} != wanted:
+        if any(not isinstance(r, dict) or type(r.get("hash")) is not str
+               for r in result):
+            raise TorrentTransportError("qBittorrent snapshot invalid")
+        selected = [r for r in result if r["hash"] in wanted]
+        if len(selected) != len(wanted) or {r["hash"] for r in selected} != wanted:
             raise TorrentTransportError("qBittorrent owners changed")
-        return result
+        return selected
 
     def stop(self, hashes):
         self._curl("stop", hashes, mutation=True)
