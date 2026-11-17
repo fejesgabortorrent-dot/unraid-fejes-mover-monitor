@@ -7,7 +7,7 @@ have been verified. A caller supplies both a trusted inventory and a reviewed
 native unit move callback; this module does not delete or move files itself.
 """
 from active_seed_policy import assess_unit, validate_transition
-from seed_coordination import SeedCoordinator, CoordinationError
+from seed_coordination import SeedCoordinator, CoordinationError, RestorationUnverified
 
 
 class UnitInspectionRequired(RuntimeError):
@@ -64,6 +64,8 @@ def run_unit(*, snapshot, transport, preflight, move_unit, verify_files,
                 # and inspection latch; no automated retry after uncertain restore.
                 raise UnitInspectionRequired("torrent restoration unverified") from exc
     if operation_error is not None:
+        if isinstance(operation_error, RestorationUnverified):
+            raise UnitInspectionRequired("quiescence restoration unverified") from operation_error
         if native_started:
             raise UnitInspectionRequired("native outcome requires inspection") from operation_error
         return {"state": "deferred", "reason": "pre_native_coordination_failed"}
