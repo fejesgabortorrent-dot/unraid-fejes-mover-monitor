@@ -39,11 +39,15 @@ class ActiveSeedPolicyTests(unittest.TestCase):
     def test_no_incomplete_or_actively_writing_torrent(self):
         for change in ({"progress": .99}, {"state": "downloading", "progress": .5},
                        {"state": "checkingUP"}, {"state": "moving"},
-                       {"dlspeed": 1}, {"state": "stoppedUP"},
-                       {"state": "error"}):
+                       {"dlspeed": 1}, {"state": "error"}):
             with self.subTest(change=change):
                 self.assertEqual(assess_unit(**evidence(torrents=[
                     torrent(**change)]))["decision"], "blocked")
+
+    def test_stopped_completed_owner_needs_verified_coordination(self):
+        result = assess_unit(**evidence(torrents=[torrent(state="stoppedUP", upspeed=0)]))
+        self.assertEqual(result["decision"], "coordination_required")
+        self.assertFalse(result["execute_allowed"])
 
     def test_unverifiable_api_snapshot_denied(self):
         for change in ({"ratio": None}, {"upspeed": -1}, {"hash": ""},
