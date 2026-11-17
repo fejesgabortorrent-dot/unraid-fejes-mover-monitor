@@ -7,7 +7,7 @@ required before connecting it to production execution.
 """
 import math
 
-SEED_STATES = frozenset({"uploading", "stalledUP", "queuedUP"})
+SEED_STATES = frozenset({"uploading", "stalledUP", "queuedUP", "stoppedUP", "pausedUP"})
 BLOCKED_STATES = frozenset({"checkingUP", "checkingDL", "moving", "downloading",
                             "stalledDL", "queuedDL", "forcedDL", "error",
                             "missingFiles", "allocating", "metaDL"})
@@ -42,6 +42,8 @@ def classify_completed_seed(torrent):
         return "unknown"
     if not isinstance(torrent.get("content_path"), str) or not torrent["content_path"].startswith("/"):
         return "unknown"
+    if torrent["state"] in {"stoppedUP", "pausedUP"} and torrent["upspeed"] != 0:
+        return "blocked"
     if torrent["state"] == "uploading" or torrent["upspeed"] > 0:
         return "active_coordination_required"
     return "idle_coordination_required"
