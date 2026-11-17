@@ -1659,11 +1659,14 @@ $help=function($label,$text)use(&$helpIndex,$e,$t){
 $queueRows=$forecast['rows']??[];$nextAge=null;$ageNow=time();$young=0;$protected=0;
 foreach($queueRows as $qr){if(!is_array($qr))continue;$when=$qr['age_ready_at']??null;if(($qr['reason']??'')==='too_young'&&is_numeric($when)&&$when>$ageNow&&($nextAge===null||$when<$nextAge))$nextAge=$when;if(($qr['reason']??'')==='too_young')$young++;if(($qr['reason']??'')==='protected_content')$protected++;}
 $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false;
+$lastDisplay=!empty($fmc['liveSeedWorker'])?$t('Ellenőrzés vagy mozgatás folyamatban','Checks or movement in progress','Prüfung oder Verschieben läuft'):
+    ((($last['requires_inspection']??false)===true)?$t('Beavatkozás szükséges · mozgatás tiltva','Inspection required · movement blocked','Prüfung erforderlich · Verschieben gesperrt'):
+    ($states[$last['state']??'unknown']??$t('Nem ellenőrizhető','Unverifiable','Nicht überprüfbar')));
 ?>
 <p id="fms-refresh-state" role="status" aria-live="polite" style="font-size:13px;opacity:.85"><?=$e($t('Kijelzés betöltve. A felmérés időpontját külön jelöljük.','Display loaded. The observation timestamp is shown separately.','Anzeige geladen. Der Erfassungszeitpunkt wird separat angezeigt.'))?></p>
 <?php if($completedSeedMode):?><p role="status" class="fms-panel"><strong><?=$e($t('Letöltés után HDD-re · seedelés folytatásával','Move completed downloads to HDD · continue seeding','Fertige Downloads auf HDD · Seeding fortsetzen'))?></strong><br><?=$e($t('Nem vár korhatárra vagy megosztási arányra. Csak teljesen letöltött, ellenőrzött torrentet mozgat; az érintett torrentet megállítja, majd visszaindítja. A szabadhely-küszöb, a várakozási idő és minden védelem érvényes. Körönként egy teljes egység, legfeljebb 32 GiB és 128 fájl.','No age or share-ratio wait. Only verified, complete torrents move; the affected torrent is stopped and restarted. Free-space threshold, cooldown and every protection still apply. One whole unit per run, up to 32 GiB and 128 files.','Keine Wartezeit auf Alter oder Verhältnis. Nur geprüfte vollständige Torrents werden mit gezieltem Stopp und Neustart verschoben. Freiplatzgrenze, Wartezeit und alle Schutzprüfungen gelten. Eine ganze Einheit pro Lauf, höchstens 32 GiB und 128 Dateien.'))?></p><?php endif?>
 <div class="fms-cards">
-<div data-fms-status-card><span><?=$e($t('Legutóbbi Mover-állapot','Last Mover status','Letzter Mover-Status'))?></span><strong><?=$e($states[$last['state']??'unknown']??$t('Nem ellenőrizhető','Unverifiable','Nicht überprüfbar'))?></strong></div>
+<div data-fms-status-card><span><?=$e($t('Legutóbbi Mover-állapot','Last Mover status','Letzter Mover-Status'))?></span><strong><?=$e($lastDisplay)?></strong></div>
 <div data-fms-space-card><span><?=$e($t('Cache szabad hely','Cache free space','Freier Cache-Speicher'))?></span><strong><?=$cacheFree===false?'—':$e(number_format($cacheFree/1073741824,1)).' GiB'?></strong></div>
 <div><span><?=$e($t('Felmért várakozó tartalom','Observed waiting content','Erfasste wartende Inhalte'))?></span><strong><?=$forecast===null?'—':$e(count($queueRows)).' · '.$e(number_format(($forecast['total_bytes']??0)/1073741824,2)).' GiB'?></strong><?php if(!$completedSeedMode):?><small><?=$e($t('Fiatal','Young','Jung'))?>: <?=$young?> · <?=$e($t('Torrentvédelem','Torrent protection','Torrent-Schutz'))?>: <?=$protected?></small><?php endif?></div>
 <?php if($completedSeedMode):?><div><span><?=$e($t('Cache telítettségi határok','Cache fill thresholds','Cache-Füllgrenzen'))?></span><strong><?=$e($cacheStart.'% → '.$cacheStop.'%')?></strong><small><?=$e($t('Indítás → ürítési cél','Start → drain target','Start → Leerungsziel'))?></small></div><?php else:?>
@@ -1753,7 +1756,7 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 </details><?php endif?>
 <details class="fms-panel"><summary><?=$e($t('Utolsó futás részletei és napló','Last run details and log','Letzter Lauf und Protokoll'))?></summary><section id="fms-last" style="border:1px solid #8886;padding:18px;margin-top:24px">
 <h3><?=$e($t('Utolsó szelektív futás','Last selective run','Letzter selektiver Lauf'))?></h3>
-<p><?=$e($states[$last['state']??'unknown']??$t('Nem ellenőrizhető','Unverifiable','Nicht überprüfbar'))?></p>
+<p><?=$e($lastDisplay)?></p>
 <p><?=$e($t('Ellenőrzötten áthelyezve','Verified movement','Geprüft verschoben'))?>: <?=$e($last['moved_files']??0)?> <?=$e($t('fájl','files','Dateien'))?> · <?=$e(number_format(($last['moved_bytes']??0)/1073741824,3))?> GiB</p>
 <?php foreach(($last['skipped']??[]) as $key=>$count):?><p><?=$e($skipLabels[$key]??$t('Bizonytalan vagy nem támogatott','Unverifiable or unsupported','Ungeprüft oder nicht unterstützt'))?>: <?=$e($count)?></p><?php endforeach?>
 <?php if(!empty($last['blockers'])):?><pre><?=$e($blockerText($last['blockers']))?></pre><?php endif?>

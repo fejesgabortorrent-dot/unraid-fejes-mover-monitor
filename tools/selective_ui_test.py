@@ -105,6 +105,11 @@ class SelectiveInterface(unittest.TestCase):
             self.assertIn(label,result['html'])
             self.assertFalse(result['calls'])
 
+    def test_stale_native_intent_keeps_inspection_status_visible(self):
+        result=self.render(lang='en',last={'state':'native_intent','requires_inspection':True})
+        self.assertIn('Inspection required',result['html'])
+        self.assertFalse(result['calls'])
+
     def test_observer_cannot_launch(self):
         self.assertFalse(self.render(self.request(),mode='observer')['calls'])
 
