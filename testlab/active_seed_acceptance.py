@@ -64,6 +64,32 @@ def prove_api_files(rows, state):
         raise RuntimeError('Complete API file membership not verified')
 
 
+def wait_rechecked(state, timeout=60):
+    """A POST/recheck reply can precede the asynchronous state transition.
+
+    Require both the torrent and every API file to remain complete over a
+    two-second observation window, rather than accepting the first old row.
+    """
+    deadline = time.monotonic() + timeout
+    complete_since = None
+    while time.monotonic() < deadline:
+        row = lab.torrent(lab.SEED, state['hash'])
+        complete = row.get('progress') == 1 and row.get('state') in {'uploading', 'stalledUP', 'queuedUP'}
+        try:
+            prove_api_files(api_files(lab.SEED, state['hash']), state)
+        except RuntimeError:
+            complete = False
+        if complete:
+            if complete_since is None:
+                complete_since = time.monotonic()
+            if time.monotonic() - complete_since >= 2:
+                return row
+        else:
+            complete_since = None
+        time.sleep(.5)
+    raise RuntimeError('Bounded recheck/file-completeness wait expired')
+
+
 def wait_active(state):
     deadline = time.monotonic() + 45
     while time.monotonic() < deadline:
@@ -214,7 +240,7 @@ class Evidence:
             if source.exists() or len(targets) != 1 or n.sha256(targets[0]) != f['sha256'] or n.sha256(key) != f['sha256']:
                 raise RuntimeError('Post-move physical/logical hash verification failed')
         lab.api(lab.SEED, 'torrents/recheck', {'hashes': s['hash']})
-        row = lab.wait_complete(lab.SEED, s['hash'])
+        row = wait_rechecked(s)
         prove_api_files(api_files(lab.SEED, s['hash']), s)
         if self.paths != {'content_path': row['content_path'], 'save_path': row['save_path']}:
             raise RuntimeError('Post-move torrent path changed')
@@ -289,9 +315,13 @@ def run():
 
 
 def main():
+    global BASE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['preflight', 'prepare', 'status', 'run'])
-    action = parser.parse_args().action
+    parser.add_argument('--case', choices=['v1', 'v2'], default='v2')
+    args = parser.parse_args()
+    BASE = BASE.with_name('pr48-completed-seed-' + args.case)
+    action = args.action
     if action == 'preflight':
         native = environment()
         for name in (lab.SEED, lab.PEER):
