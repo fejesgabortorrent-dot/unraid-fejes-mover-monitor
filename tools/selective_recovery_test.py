@@ -3,6 +3,7 @@
 import copy
 import json
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 from test_support import install
 install()
@@ -23,6 +24,13 @@ def prior(**overrides):
 
 
 class RecoveryPolicy(unittest.TestCase):
+    def setUp(self):
+        for name, value in (('ROOT', '/mnt/user/Filmek'),
+                ('PROFILE', SimpleNamespace(pool='cache', share='Filmek'))):
+            patched = patch.object(recovery.mover, name, value)
+            patched.start()
+            self.addCleanup(patched.stop)
+
     def pilot(self):
         a, b = '/mnt/user/Filmek/unit/movie.mkv', '/mnt/user/Filmek/unit/movie.nfo'
         unit = {'paths': [a, b], 'owners': ['1' * 40],
