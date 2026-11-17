@@ -49,14 +49,14 @@ class ManagedSchedule(unittest.TestCase):
         with self.assertRaises(ValueError):scheduler.load(self.path,DEFAULT)
     def test_disabled_tick_never_enters_executor(self):
         self.data['enabled']=False
-        with patch.object(scheduler,'load',return_value=self.data),patch('selective_mover.run') as run:
+        with patch.object(scheduler,'load',return_value=self.data),patch('selective_mover.run_configured') as run:
             self.assertEqual(scheduler.tick()['state'],'deferred');run.assert_not_called()
     def test_removed_plugin_never_enters_executor(self):
-        with patch.object(scheduler,'load',return_value=self.data),patch.object(scheduler,'RUNTIME',self.path.parent/'missing'),patch('selective_mover.run') as run:
+        with patch.object(scheduler,'load',return_value=self.data),patch.object(scheduler,'RUNTIME',self.path.parent/'missing'),patch('selective_mover.run_configured') as run:
             self.assertEqual(scheduler.tick()['state'],'deferred');run.assert_not_called()
     def test_enabled_tick_uses_existing_guarded_executor(self):
         self.path.touch()
-        with patch.object(scheduler,'load',return_value=self.data),patch.object(scheduler,'RUNTIME',self.path),patch('selective_mover.run',return_value={'state':'deferred','blockers':['parity']}) as run:
+        with patch.object(scheduler,'load',return_value=self.data),patch.object(scheduler,'RUNTIME',self.path),patch('selective_mover.run_configured',return_value={'state':'deferred','blockers':['parity']}) as run:
             self.assertEqual(scheduler.tick()['blockers'],['parity']);run.assert_called_once_with()
 
 class ScheduleLifecycle(ManagedSchedule):

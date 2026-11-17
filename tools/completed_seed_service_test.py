@@ -8,6 +8,20 @@ import completed_seed_service as service
 
 
 class CompletedSeedWorker(unittest.TestCase):
+    def test_manual_and_scheduled_dispatch_honor_the_same_explicit_mode(self):
+        with patch.object(service.n, 'read_json', return_value={'completed_seed_mode': True}), \
+             patch.object(service, 'run', return_value={'state': 'completed_seed_ready'}) as completed, \
+             patch.object(service.n, 'run') as legacy:
+            self.assertEqual(service.n.run_configured()['state'], 'completed_seed_ready')
+        completed.assert_called_once()
+        legacy.assert_not_called()
+        with patch.object(service.n, 'read_json', return_value={}), \
+             patch.object(service, 'run') as completed, \
+             patch.object(service.n, 'run', return_value={'state': 'nothing_eligible'}) as legacy:
+            self.assertEqual(service.n.run_configured()['state'], 'nothing_eligible')
+        legacy.assert_called_once()
+        completed.assert_not_called()
+
     def test_completed_preview_does_not_publish_old_age_or_ratio_blockers(self):
         report = {'forecast': {'rows': [{'file': 'a.mkv', 'reason': 'ratio_not_met',
             'age_ready_at': 99999, 'ratio_target_met': True},

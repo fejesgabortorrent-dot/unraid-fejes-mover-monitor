@@ -59,7 +59,7 @@ def tick():
     if settings is None or not settings['enabled'] or not RUNTIME.is_file():
         return {'state':'deferred','reason':'managed_automation_disabled'}
     import selective_mover
-    return selective_mover.run()
+    return selective_mover.run_configured()
 
 
 CRON = CONFIG.parent / 'managed-schedule.cron'
