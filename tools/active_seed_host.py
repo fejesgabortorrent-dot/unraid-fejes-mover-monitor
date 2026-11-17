@@ -60,6 +60,7 @@ def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
     locks = []
     own_pid = False
     report = {"version": 1, "state": "checking", "requires_inspection": True}
+    last_durable = [None]
     try:
         for name in LOCK_NAMES:
             handle = open("/var/run/" + name, "a")
@@ -110,13 +111,16 @@ def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
 
         snapshot = guard_snapshot(initial_evidence)
         expected = snapshot.get("expected_paths")
-        if (not isinstance(expected, list) or not isinstance(inventory, dict)
+        if (not isinstance(expected, list) or any(type(p) is not str for p in expected)
+                or len(expected) != len(set(expected)) or not isinstance(inventory, dict)
                 or set(expected) != set(inventory)):
             return {"state": "deferred", "reason": "unit_inventory_unverified"}
 
         def persist(state):
+            # Preserve full per-file ledger across transitions, including errors.
             # Keep the post-peer audit gate sticky until final success.
             atomic_json(path, state)
+            last_durable[0] = dict(state)
 
         def move():
             return move_verified_unit(
@@ -137,19 +141,19 @@ def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
                 move_unit=move, verify_files=verify_files,
                 verify_peer=verify_peer, sleep=sleep,
                 vm_test_authorized=True)
+            report = dict(last_durable[0] or report)
             if outcome.get("state") == "completed":
-                report = {"version": 1, "state": "completed",
-                          "requires_inspection": False,
-                          "peer_upload_verified": True}
+                report.update(state="completed", requires_inspection=False,
+                              peer_upload_verified=True)
             else:
-                report = {"version": 1, "state": "deferred",
-                          "requires_inspection": True,
-                          "reason": outcome.get("reason", "unverified")}
+                report.update(state="deferred", requires_inspection=True,
+                              reason=outcome.get("reason", "unverified"))
             persist(report)
             return outcome
         except Exception:
-            persist({"version": 1, "state": "inspection_required",
-                     "requires_inspection": True})
+            failure = dict(last_durable[0] or report)
+            failure.update(state="inspection_required", requires_inspection=True)
+            persist(failure)
             raise
     finally:
         if own_pid and native.PID.exists():
