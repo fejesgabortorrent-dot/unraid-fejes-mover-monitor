@@ -14,7 +14,7 @@ def cdata(s):
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
-### 2026.11.17.1 (unreleased completed-seed candidate)
+### 2026.11.17.1 (reviewed completed-download mode)
 - Add explicit completed-download mode: per-torrent stop, verified native movement and resume without age or ratio waiting.
 - Add configurable cache fill start/stop percentages, default 75/65, with a durable drain cycle.
 - Keep existing scheduling and every maintenance guard; bound each invocation to one unit, 32 GiB and 128 files.

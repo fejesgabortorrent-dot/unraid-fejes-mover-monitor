@@ -1,10 +1,30 @@
 # Fejes Mover Monitor
 
-**Stable release 2026.11.14.3 · Unraid 7.x · Magyar / English (US) / Deutsch**
+**Release 2026.11.17.1 · Unraid 7.x · Magyar / English (US) / Deutsch**
 
-Monitor Mover activity and cache capacity, inspect waiting content, and optionally use guarded age-filtered cache-to-array movement in the documented reviewed setup.
+Monitor cache capacity and optionally move completed downloads to the array, then resume seeding, in the documented reviewed setup. Completed-download mode uses configurable cache fill start/stop limits (default 75% / 65%).
 
-[Latest stable release](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.14.3) · [Acceptance evidence](docs/ACCEPTANCE-20261112.md) · [Movement guide](docs/SELECTIVE-MOVEMENT.md) · [Reboot recovery](docs/REBOOT-RECOVERY.md)
+[Release](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.17.1) · [Current acceptance and limits](docs/ACCEPTANCE-20261117.md) · [Movement guide](docs/SELECTIVE-MOVEMENT.md) · [Reboot recovery](docs/REBOOT-RECOVERY.md)
+
+## Completed-download mode
+
+Explicitly enable this mode in Advanced movement settings after reviewing the
+scope and retaining a backup. It waits for full download completion, briefly
+stops only the affected torrent, performs verified native movement and restores
+seeding through the same user-share path. It does not wait for age or ratio.
+Installation leaves this opt-in disabled on other systems.
+
+At the upper cache fill limit, a drain cycle starts. Scheduled invocations move
+one complete unit each until the lower limit is reached. Defaults are 75% start
+and 65% stop; the already-started unit finishes even if it crosses the target.
+Each invocation is capped at 32 GiB and 128 files. Larger units and incomplete
+torrents remain in cache. Direct HDD downloading for torrents larger than cache
+is not implemented. Upload pauses briefly during the affected unit's move.
+All maintenance, open-file, namespace, cooldown and inspection guards remain.
+
+Fresh VM peer transfer, hybrid cache/array placement and installed-scheduler
+movement were verified on Unraid 7.3.4. Physical power-loss and mid-native-I/O
+termination recovery remain uncertified. See the dated acceptance document.
 
 ## Magyar
 
@@ -38,7 +58,7 @@ English interface crops captured on 2026-11-12. These are actual interface views
 
 ![Operating modes and compatibility limits](docs/images/store-en-setup-20261112.png)
 
-## Features
+## Legacy age-filtered mode features
 
 - Mover process status, cache capacity, open-file observations and recent Mover-related logs.
 - Hungarian, US English and German interfaces; appearance palettes, raised/flat cards, keyboard navigation and help.
@@ -61,7 +81,7 @@ Installation and mode changes create no schedule and start no transfer. A native
 
 After reboot, missing btrfs scrub history can block movement until a fresh real scrub completes successfully. Follow [reboot recovery](docs/REBOOT-RECOVERY.md); unattended reboot-to-ready is not claimed.
 
-## Validation
+## Previous stable validation
 
 Stable 2026.11.14.3 passed GitHub Actions run #137, including the isolated test suite and release publication. On the disposable Unraid 7.3.4 VM, the plugin installed and reported the same version; saving a 30-minute managed schedule succeeded, the read-only probe performed no movement, and the schedule was disabled after acceptance. The previous stable build's isolated guarded movement and peer-transfer evidence remains documented below.
 
@@ -72,10 +92,10 @@ This does not certify public tracker credit, production VPN behavior, physical p
 Read the [movement guide](docs/SELECTIVE-MOVEMENT.md) and retain a backup. Find **Fejes Mover Monitor** in Community Applications, or use **Plugins → Install Plugin**:
 
 ```
-https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v2026.11.14.3/fejes.mover.monitor.plg
+https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v2026.11.17.1/fejes.mover.monitor.plg
 ```
 
-Manifest SHA-256: `2cb9799f9acdac9781e8e1c24bc719f1dbc761630fd1309f2406ded669aa3550`. See [release assets](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.14.3) for the ZIP and checksum files.
+See [release assets](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.17.1) for the manifest, source ZIP and SHA-256 checksum files.
 
 Open **Tools → Mover figyelő** or the dashboard card. The self-contained manifest supplies the runtime. Start in Observer mode and review the compatibility limits before Advanced mode.
 

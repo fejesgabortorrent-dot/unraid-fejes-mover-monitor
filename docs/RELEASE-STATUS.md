@@ -1,4 +1,14 @@
-# Release status — stable 2026.11.14.3
+# Release status — 2026.11.17.1
+
+The completed-download release adds explicit opt-in movement with resumed
+seeding and configurable 75% / 65% cache hysteresis. Fresh VM peer continuity,
+hybrid placement and installed-scheduler acceptance passed on Unraid 7.3.4;
+see [November 17 evidence and limits](ACCEPTANCE-20261117.md).
+Each invocation handles one complete unit up to 32 GiB / 128 files.
+Physical power loss, mid-native-I/O termination and direct-to-HDD downloading
+of oversized incomplete torrents remain outside the certified scope.
+
+The sections below preserve previous stable-build acceptance history.
 
 ## Scheduler fix and VM acceptance — 2026-11-14
 
