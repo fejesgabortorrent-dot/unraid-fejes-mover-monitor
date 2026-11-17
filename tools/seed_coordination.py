@@ -15,6 +15,10 @@ class CoordinationError(RuntimeError):
     pass
 
 
+class RestorationUnverified(CoordinationError):
+    """A failed stop may have changed a torrent and restoration is unproven."""
+
+
 def _hashes(records):
     if not isinstance(records, list):
         raise CoordinationError("invalid torrent snapshot")
@@ -72,11 +76,18 @@ class SeedCoordinator:
                     self.sleep(1)
             raise CoordinationError("stop confirmation timeout")
         except Exception as exc:
+            # A failed POST can still have stopped some torrents. Never silently
+            # downgrade an unverified restoration to a routine deferral.
             if originally_running:
                 try:
                     self.transport.start(originally_running)
-                except Exception:
-                    pass  # Caller must report restoration uncertainty.
+                    self._verify(hashes, COMPLETE_SEED_STATES | STOPPED_STATES)
+                    resumed = self.transport.snapshot(hashes)
+                    if not all(r["state"] in COMPLETE_SEED_STATES
+                               for r in resumed if r["hash"] in originally_running):
+                        raise RestorationUnverified("owners remained stopped")
+                except Exception as restore_error:
+                    raise RestorationUnverified("stop failed and restore unverified") from restore_error
             raise CoordinationError("quiescence failed; movement forbidden") from exc
 
     def restore(self, token):
