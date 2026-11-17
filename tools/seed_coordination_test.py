@@ -37,6 +37,27 @@ class FakeQbit:
 
 
 class CoordinationTests(unittest.TestCase):
+    def test_durable_resume_intent_precedes_stop_and_is_kept_through_restore(self):
+        api = FakeQbit()
+        saved = []
+        def journal(state):
+            if state['phase'] == 'before_stop':
+                self.assertEqual(api.calls, [])
+                self.assertEqual(state['resume'], ['a'*40, 'b'*40])
+            saved.append(state)
+        flow = SeedCoordinator(api, sleep=lambda _: None, journal=journal)
+        token = flow.prepare(['a'*40, 'b'*40])
+        flow.restore(token)
+        self.assertEqual([s['phase'] for s in saved], ['before_stop', 'stopped', 'before_restore', 'restored'])
+
+    def test_failed_intent_persistence_never_stops_torrent(self):
+        api = FakeQbit()
+        def journal(state):
+            raise OSError('disk full')
+        with self.assertRaises(OSError):
+            SeedCoordinator(api, journal=journal).prepare(['a'*40])
+        self.assertEqual(api.calls, [])
+
     def test_full_group_quiesces_and_restores_original_state(self):
         api = FakeQbit()
         flow = SeedCoordinator(api, sleep=lambda _: None)

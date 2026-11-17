@@ -15,7 +15,7 @@ class UnitInspectionRequired(RuntimeError):
 
 
 def run_unit(*, snapshot, transport, preflight, move_unit, verify_files,
-             verify_peer, sleep, vm_test_authorized=False):
+             verify_peer, sleep, vm_test_authorized=False, journal=None):
     """Coordinate one complete torrent-owned unit.
 
     snapshot is a fresh evidence bundle from a trusted adapter. After stop,
@@ -34,7 +34,7 @@ def run_unit(*, snapshot, transport, preflight, move_unit, verify_files,
     if initial["decision"] != "coordination_required":
         return {"state": "deferred", "reason": initial["reason"]}
     hashes = initial["owner_hashes"]
-    coordinator = SeedCoordinator(transport, sleep=sleep)
+    coordinator = SeedCoordinator(transport, sleep=sleep, journal=journal)
     token = None
     native_started = False
     native_result = None

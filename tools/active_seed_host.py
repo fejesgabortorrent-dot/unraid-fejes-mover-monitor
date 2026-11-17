@@ -33,7 +33,7 @@ def verified_vm_marker(path):
 
 def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
                  transport, inventory, days, verify_files, verify_peer,
-                 sleep, native_module=None):
+                 sleep, native_module=None, completed_seed=False):
     """Wire the real execute_file protocol behind locks and a durable journal.
 
     Callbacks are provided by a disposable-guest harness:
@@ -61,6 +61,7 @@ def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
     own_pid = False
     report = {"version": 1, "state": "checking", "requires_inspection": True}
     last_durable = [None]
+    coordination = [None]
     try:
         for name in LOCK_NAMES:
             handle = open("/var/run/" + name, "a")
@@ -123,13 +124,22 @@ def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
         def persist(state):
             # Preserve full per-file ledger across transitions, including errors.
             # Keep the post-peer audit gate sticky until final success.
+            state = dict(state)
+            if coordination[0] is not None:
+                state['coordination'] = dict(coordination[0])
+                state['requires_inspection'] = True
             atomic_json(path, state)
             last_durable[0] = dict(state)
+
+        def journal(value):
+            coordination[0] = dict(value)
+            persist(last_durable[0] or report)
 
         def move():
             return move_verified_unit(
                 expected_paths=expected, inventory=inventory, days=days,
-                execute_file=native.execute_file, persist=persist,
+                execute_file=(native.execute_completed_seed_file if completed_seed
+                              else native.execute_file), persist=persist,
                 test_vm_authorized=True)
 
         def preflight():
@@ -144,9 +154,10 @@ def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
                 snapshot=snapshot, transport=transport, preflight=preflight,
                 move_unit=move, verify_files=verify_files,
                 verify_peer=verify_peer, sleep=sleep,
-                vm_test_authorized=True)
+                vm_test_authorized=True, journal=journal)
             report = dict(last_durable[0] or report)
             if outcome.get("state") == "completed":
+                coordination[0] = None
                 report.update(state="completed", requires_inspection=False,
                               peer_upload_verified=True)
             else:

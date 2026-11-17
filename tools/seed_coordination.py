@@ -41,9 +41,10 @@ class SeedCoordinator:
     torrent-specific, never global; no filesystem movement is done here.
     """
 
-    def __init__(self, transport, sleep=time.sleep):
+    def __init__(self, transport, sleep=time.sleep, journal=None):
         self.transport = transport
         self.sleep = sleep
+        self.journal = journal or (lambda state: None)
 
     def _verify(self, hashes, states):
         records = self.transport.snapshot(hashes)
@@ -64,14 +65,20 @@ class SeedCoordinator:
         current = self._verify(hashes, COMPLETE_SEED_STATES | STOPPED_STATES)
         originally_running = sorted(r["hash"] for r in current
                                     if r["state"] in COMPLETE_SEED_STATES)
+        token = {"owners": sorted(hashes), "resume": originally_running,
+                 "quiesced": False}
+        # Durable intent precedes even the first stop request. Process loss
+        # must leave enough information for manual scoped restoration.
+        self.journal(dict(token, phase="before_stop"))
         try:
             if originally_running:
                 self.transport.stop(originally_running)
             for _ in range(WAIT_ATTEMPTS):
                 try:
                     self._verify(hashes, STOPPED_STATES)
-                    return {"owners": sorted(hashes), "resume": originally_running,
-                            "quiesced": True}
+                    token["quiesced"] = True
+                    self.journal(dict(token, phase="stopped"))
+                    return token
                 except CoordinationError:
                     self.sleep(1)
             raise CoordinationError("stop confirmation timeout")
@@ -86,6 +93,7 @@ class SeedCoordinator:
                     if not all(r["state"] in COMPLETE_SEED_STATES
                                for r in resumed if r["hash"] in originally_running):
                         raise RestorationUnverified("owners remained stopped")
+                    self.journal(dict(token, phase="stop_failed_restored"))
                 except Exception as restore_error:
                     raise RestorationUnverified("stop failed and restore unverified") from restore_error
             raise CoordinationError("quiescence failed; movement forbidden") from exc
@@ -103,6 +111,7 @@ class SeedCoordinator:
                 or any(h not in owners for h in resume)):
             raise CoordinationError("restoration owner mismatch")
         self._verify(owners, STOPPED_STATES)
+        self.journal(dict(token, phase="before_restore"))
         if resume:
             self.transport.start(resume)
         for _ in range(WAIT_ATTEMPTS):
@@ -111,6 +120,7 @@ class SeedCoordinator:
                     and all(_complete(r) for r in records)
                     and all(r["state"] in COMPLETE_SEED_STATES
                             for r in records if r["hash"] in resume)):
+                self.journal(dict(token, phase="restored"))
                 return {"restored": True, "peer_upload_verified": False}
             self.sleep(1)
         raise CoordinationError("resume confirmation timeout")

@@ -10,6 +10,7 @@ from collections import Counter
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -320,13 +321,57 @@ class NativeMoveError(RuntimeError):
 
 
 def execute_file(key,expected,days,before_native=None):
-    path,eligible=fresh_candidate(key,expected,days)
+    return _execute_file(key, expected, days, before_native, fresh_candidate)
+
+
+def completed_seed_candidate(key, expected, days, owned=True):
+    """Explicit seed transaction: completion replaces age/ratio, never guards.
+
+    Only the opt-in coordinator calls this after stopping every unit owner.
+    The complete unit and API file list must also be checked by its host adapter.
+    A real second inventory signature, no open handles, a complete stopped seed,
+    stable logical namespace and every existing native guard are still required.
+    """
+    path = SOURCE / Path(key).relative_to(ROOT)
+    info = valid_file(path)
+    first = expected.get('first_seen')
+    if (signature(info) != expected.get('signature') or
+            type(first) not in (int, float) or not math.isfinite(first) or
+            not 0 <= first < time.time() or key in inventory_adapter.open_paths()):
+        return path, False
+    items, mounts = torrent_snapshot()
+    protection = guards(owned)
+    if any(protection.get(g) != 'pass' for g in (
+            'backup', 'parity', 'integrity', 'mount', 'mover', 'cooldown',
+            'capacity', 'open_files', 'namespace')):
+        return path, False
+    owners = [t for t in items if within(key, host_path(t['content_path'], mounts))
+              or within(host_path(t['content_path'], mounts), key)]
+    if not owners:
+        return path, False
+    for t in owners:
+        if (t.get('state') not in {'stoppedUP', 'pausedUP'} or
+                type(t.get('progress')) not in (int, float) or
+                t['progress'] != 1 or
+                type(t.get('dlspeed')) is not int or t['dlspeed'] != 0 or
+                type(t.get('upspeed')) is not int or t['upspeed'] != 0):
+            return path, False
+    return path, True
+
+
+def execute_completed_seed_file(key, expected, days, before_native=None):
+    """VM-only opt-in completed-seed path; not wired to run() or scheduler."""
+    return _execute_file(key, expected, days, before_native, completed_seed_candidate)
+
+
+def _execute_file(key, expected, days, before_native, candidate):
+    path,eligible=candidate(key,expected,days)
     if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
     if destinations(path): return {'state':'skipped','reason':'existing_array_copy'}
     before=valid_file(path)
     attrs={key:os.getxattr(path,key) for key in os.listxattr(path)}
     checksum=sha256(path)
-    path,eligible=fresh_candidate(key,expected,days)
+    path,eligible=candidate(key,expected,days)
     if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
     if destinations(path) or signature(path.stat())!=signature(before):
         return {'state':'skipped','reason':'source_or_destination_changed'}

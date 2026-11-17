@@ -112,6 +112,7 @@ class VMHostTest(unittest.TestCase):
         self.assertEqual(len(stored["verified_files"]), 1)
         self.assertFalse(stored["requires_inspection"])
         self.assertTrue(stored["peer_upload_verified"])
+        self.assertEqual(stored['coordination']['phase'], 'restored')
 
     def test_missing_marker_never_calls_api_or_native(self):
         result, stored, events, moves = self.run_case(marker=False)
@@ -133,6 +134,7 @@ class VMHostTest(unittest.TestCase):
         self.assertTrue(stored["requires_inspection"])
         self.assertEqual(events, ["stop", "start"])
         self.assertEqual(moves, [P])
+        self.assertEqual(stored['coordination']['resume'], [H])
 
 
 if __name__ == "__main__":
