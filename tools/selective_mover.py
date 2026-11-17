@@ -371,7 +371,23 @@ def completed_seed_candidate(key, expected, days, owned=True, rejection=None):
 
 def execute_completed_seed_file(key, expected, days, before_native=None):
     """VM-only opt-in completed-seed path; not wired to run() or scheduler."""
-    return _execute_file(key, expected, days, before_native, completed_seed_candidate)
+    if before_native is None:
+        return _execute_file(key, expected, days, before_native, completed_seed_candidate)
+    deadline = time.monotonic() + 120
+    intent = False
+    def journal(checksum):
+        nonlocal intent
+        intent = True
+        before_native(checksum)
+    while True:
+        try:
+            return _execute_file(key, expected, days, journal, completed_seed_candidate)
+        except IntegrityBusy:
+            # File Integrity's event watcher may start between files despite the
+            # shared scheduling lock. Retry only admission, never native intent.
+            if intent or time.monotonic() >= deadline:
+                raise
+            time.sleep(2)
 
 
 def _execute_file(key, expected, days, before_native, candidate):

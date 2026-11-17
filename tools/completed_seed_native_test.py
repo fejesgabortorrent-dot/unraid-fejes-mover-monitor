@@ -17,6 +17,31 @@ class CompletedSeedAdmission(unittest.TestCase):
     expected = {'signature': [1, 2, 10, 3, 4], 'first_seen': 999.0}
     info = SimpleNamespace(st_dev=1, st_ino=2, st_size=10, st_mtime_ns=3, st_ctime_ns=4)
 
+    def test_transient_integrity_activity_retries_only_before_native_intent(self):
+        with patch.object(native, '_execute_file', side_effect=[native.IntegrityBusy(), {'state': 'moved'}]) as execute, \
+             patch.object(native.time, 'sleep') as sleep:
+            self.assertEqual(native.execute_completed_seed_file(self.key, self.expected, 1, lambda h: None),
+                             {'state': 'moved'})
+            self.assertEqual(execute.call_count, 2)
+            sleep.assert_called_once_with(2)
+
+    def test_integrity_wait_is_bounded_and_any_native_intent_blocks_retry(self):
+        with patch.object(native, '_execute_file', side_effect=native.IntegrityBusy()), \
+             patch.object(native.time, 'monotonic', side_effect=[0, 121]), \
+             patch.object(native.time, 'sleep') as sleep:
+            with self.assertRaises(native.IntegrityBusy):
+                native.execute_completed_seed_file(self.key, self.expected, 1, lambda h: None)
+            sleep.assert_not_called()
+        def after_intent(key, expected, days, callback, candidate):
+            callback('a' * 64)
+            raise native.IntegrityBusy()
+        with patch.object(native, '_execute_file', side_effect=after_intent) as execute, \
+             patch.object(native.time, 'sleep') as sleep:
+            with self.assertRaises(native.IntegrityBusy):
+                native.execute_completed_seed_file(self.key, self.expected, 1, lambda h: None)
+            execute.assert_called_once()
+            sleep.assert_not_called()
+
     def candidate(self, change=None, guards=None, opened=None, expected=None, rejection=None):
         torrent = {'content_path': '/data/new', 'state': 'stoppedUP', 'progress': 1,
                    'upspeed': 0, 'dlspeed': 0, 'ratio': 0, 'completion_on': 999}
