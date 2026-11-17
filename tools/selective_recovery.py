@@ -301,10 +301,38 @@ def inspect_locked(pilot_directory=None):
         rows = validate_report(report)
         retained = {}
     else:
+        from completed_seed_pilot import no_writers, owners_for
         unit, rows = pilot_evidence(pilot_directory, report)
+        def physical_snapshot():
+            snapshot = {}
+            for key in unit['paths']:
+                source = mover.SOURCE / Path(key).relative_to(mover.ROOT)
+                targets = mover.destinations(source)
+                if source.exists():
+                    if targets:
+                        raise ValueError('Duplicate physical placement')
+                    mover.valid_file(source)
+                    target = source
+                else:
+                    if len(targets) != 1:
+                        raise ValueError('Ambiguous physical placement')
+                    target = targets[0]
+                snapshot[key] = (str(target), mover.signature(target.lstat()))
+            return snapshot
+        before = physical_snapshot()
+        if not no_writers(set(unit['paths'])):
+            raise ValueError('Unit has an active writer')
         retained = {'checked_retained_files': check_retained(unit, rows)}
     checked = check_media(rows)
     torrents = current_torrent_evidence(rows)
+    if pilot_directory is not None:
+        items, mounts = mover.torrent_snapshot()
+        owners = owners_for(unit['paths'], items, mounts)
+        if (sorted(t['hash'] for t in owners) != sorted(unit['owners'])
+                or any({k: t.get(k) for k in ('content_path', 'save_path')}
+                       != unit['logical_paths'].get(t['hash']) for t in owners)
+                or physical_snapshot() != before or not no_writers(set(unit['paths']))):
+            raise ValueError('Unit changed during recovery inspection')
     if hashlib.sha256(mover.LAST.read_bytes()).hexdigest() != digest:
         raise ValueError('Prior report changed during inspection')
     return raw, digest, report, {'checked_destinations':checked,**torrents,**retained}
