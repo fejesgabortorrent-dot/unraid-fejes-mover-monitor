@@ -65,8 +65,9 @@ class VMHostTest(unittest.TestCase):
             fake_native = SimpleNamespace(
                 LAST=base/"last.json", PID=base/"mover.pid",
                 needs_inspection=lambda report: report.get("requires_inspection", False),
-                guards=lambda owned: {"backup": "pass", "parity": "pass",
-                                      "integrity": "pass", "mount": "pass"},
+                guards=lambda owned: {k: "pass" for k in (
+                    "backup", "parity", "integrity", "mount", "mover",
+                    "cooldown", "capacity", "open_files", "namespace")},
                 execute_file=native_execute)
             with patch.object(host, "open", return_value=io.StringIO(), create=True), \
                  patch.object(host.fcntl, "flock", return_value=None):
