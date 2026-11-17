@@ -63,6 +63,8 @@ class SelectiveInterface(unittest.TestCase):
         self.assertTrue(result['config']['completed_seed_mode'])
         self.assertEqual(result['config']['batch_gib'],32)
         self.assertEqual(result['config']['age_days'],7)
+        self.assertEqual(result['config']['cache_start_percent'],75)
+        self.assertEqual(result['config']['cache_stop_percent'],65)
         self.assertFalse(result['calls'])
         request['fejes_csrf']='wrong'
         self.assertNotIn('completed_seed_mode',self.render(request)['config'])
@@ -73,6 +75,13 @@ class SelectiveInterface(unittest.TestCase):
         self.assertFalse(result['config']['completed_seed_mode'])
         self.assertEqual(result['config']['ratio_target'],1.25)
         self.assertEqual(result['config']['age_days'],7)
+
+    def test_invalid_percent_order_and_types_cannot_be_saved(self):
+        for start,stop in [('65','75'),('75','75'),('100','65'),('75','0'),([], '65')]:
+            result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',fms_action='save',
+                completed_seed_mode='1',cache_start_percent=start,cache_stop_percent=stop))
+            self.assertEqual(result['config'],{'version':1,'age_days':7})
+            self.assertFalse(result['calls'])
 
     def test_get_never_executes_helper_in_all_languages(self):
         for language,label in [('hu','Koralapú szelektív'),('en','Age-filtered selective'),('de','Altersabhängiges selektives')]:

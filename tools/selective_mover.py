@@ -160,6 +160,14 @@ def cooldown_duration_seconds(automation, launcher_text):
     return seconds
 
 
+def finish_current_cache_unit(prior, own_coordination, state, detail):
+    return (own_coordination and prior.get('stage') == 'completed_seed_coordination'
+            and prior.get('requires_inspection') is True
+            and type(prior.get('moved_files')) is int and prior['moved_files'] > 0
+            and state == 'wait' and isinstance(detail, dict)
+            and detail.get('stop_reached') is True)
+
+
 def guards(owned=False):
     prior=read_json(LAST,{})
     own_coordination = (owned and PID.is_file() and PID.read_text() == str(os.getpid())
@@ -183,6 +191,12 @@ def guards(owned=False):
     report=dry_run()
     checks={x['key']:x['state'] for x in report['dry_run']['checks']}
     result={key:checks.get(key,'unknown') for key in ('backup','parity','mover','cooldown','capacity')}
+    # Finish an already partially moved, owned unit at the lower drain target.
+    # This only defers a cycle stop, never unknown capacity or another guard.
+    capacity_detail = next((c.get('detail') for c in report['dry_run']['checks']
+                            if c['key'] == 'capacity'), None)
+    if finish_current_cache_unit(prior, own_coordination, result['capacity'], capacity_detail):
+        result['capacity'] = 'pass'
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
     automation=load_automation(profile=PROFILE)

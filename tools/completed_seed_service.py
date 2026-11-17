@@ -8,6 +8,8 @@ The existing scheduler is the only scheduler; this module creates no cron job.
 import fcntl
 from collections import Counter
 import time
+import shutil
+from cache_hysteresis import evaluate, limits
 
 import completed_seed_pilot as pilot
 
@@ -21,6 +23,15 @@ def configured(settings):
     return value
 
 
+def sync_cycle(settings):
+    usage = shutil.disk_usage(n.POOL_ROOT)
+    path = n.BASE / 'completed-cache-cycle.json'
+    scope = {k: getattr(n.PROFILE, k) for k in ('pool', 'share', 'torrent_container')}
+    state = evaluate(settings, n.read_json(path, {}), usage.total, usage.free, scope)
+    n.atomic_json(path, state)
+    return state
+
+
 def run():
     settings = n.read_json(n.CONFIG, {})
     if not configured(settings):
@@ -31,6 +42,9 @@ def run():
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         if n.PID.exists() or n.needs_inspection(n.read_json(n.LAST, {})):
             return {'state': 'blocked', 'reason': 'mover_or_inspection'}
+        cycle = sync_cycle(settings)
+        if not cycle['active']:
+            return {'state': 'deferred', 'reason': 'cache_cycle_inactive', 'cache_cycle': cycle}
         guards = n.guards()
         if any(state != 'pass' for state in guards.values()):
             return {'state': 'deferred', 'reason': 'native_guard_not_passed'}
@@ -39,11 +53,13 @@ def run():
         units = [unit for unit in pilot.plan() if unit['bytes'] <= limit]
         if not units:
             return {'state': 'nothing_eligible', 'reason': 'no_bounded_complete_unit'}
-        prepared = pilot.prepare(units[0]['unit_digest'])
+        prepared = pilot.prepare(units[0]['unit_digest'], service_settings=settings)
         # Record cooldown before taking native intent. The host then repeats all
         # guards under the normal mover/integrity/configuration locks.
         n.atomic_json(n.ATTEMPT, int(time.time()))
-        return pilot.run(prepared['authorization'])
+        result = pilot.run(prepared['authorization'])
+        result['cache_cycle'] = sync_cycle(settings)
+        return result
 
 
 def preview(report, update=False):
@@ -57,6 +73,7 @@ def preview(report, update=False):
     forecast = report['forecast']
     forecast['completed_seed_mode'] = True
     forecast['completed_seed_limit_bytes'] = limit
+    forecast['cache_start_percent'], forecast['cache_stop_percent'] = limits(settings)
     for row in forecast['rows']:
         row.update(age_ready_at=None, ratio_target_met=False, unit_blockers=[], unit_blocker_count=0)
         unit = members.get(n.ROOT + '/' + row['file'])

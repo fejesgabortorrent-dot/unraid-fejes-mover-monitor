@@ -193,7 +193,7 @@ def plan():
     return sorted(result, key=lambda x: -x['bytes'])
 
 
-def prepare(chosen):
+def prepare(chosen, service_settings=None):
     root = environment()
     if n.PID.exists() or n.needs_inspection(read_json(n.LAST, {})):
         raise ValueError('Existing mover/inspection')
@@ -204,6 +204,11 @@ def prepare(chosen):
     if len(units) != 1:
         raise ValueError('Chosen unit changed or is unavailable')
     unit = units[0]
+    if service_settings is not None:
+        if (n.read_json(n.CONFIG, {}) != service_settings
+                or service_settings.get('completed_seed_mode') is not True):
+            raise ValueError('Configured service settings changed')
+        unit['service_settings'] = dict(service_settings)
     directory = root / ('fejes-completed-seed-pilot-' + str(time.time_ns()))
     directory.mkdir(mode=0o700)
     archive = directory / 'rollback.tgz'
@@ -247,6 +252,9 @@ class Evidence:
         self.post_uploaded = None
 
     def snapshot(self):
+        if ('service_settings' in self.unit
+                and n.read_json(n.CONFIG, {}) != self.unit['service_settings']):
+            raise ValueError('Configured service settings changed')
         files, current, torrents, mounts = collect(self.inventory)
         groups = [g for g in unit_groups(files, n.ROOT, torrents, mounts) if set(g).intersection(self.keys)]
         if len(groups) != 1 or set(groups[0]) != set(self.keys):

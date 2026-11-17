@@ -3,6 +3,7 @@
 <CHANGES>
 ### 2026.11.17.1 (unreleased completed-seed candidate)
 - Add explicit completed-download mode: per-torrent stop, verified native movement and resume without age or ratio waiting.
+- Add configurable cache fill start/stop percentages, default 75/65, with a durable drain cycle.
 - Keep existing scheduling and every maintenance guard; bound each invocation to one unit, 32 GiB and 128 files.
 - Preserve durable native failure reasons and verified manual inspection recovery.
 - Verify fresh isolated peer continuity and complete torrents spanning cache and array; power-loss acceptance remains pending.
@@ -1526,11 +1527,13 @@ echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $t=$fmc['t'];$e=$fmc['esc'];echo $fmc['banner'];
 $path='/boot/config/plugins/fejes.mover.monitor/selective.json';
-$raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;$ratioTarget=0;$batchGiB=16;$completedSeedMode=false;
+$raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;$ratioTarget=0;$batchGiB=16;$completedSeedMode=false;$cacheStart=75;$cacheStop=65;
 try {
  if(is_link($path)||($raw===false&&file_exists($path)))throw new RuntimeException('Configuration unavailable');
  if($raw!==false){$settings=json_decode($raw,true,512,JSON_THROW_ON_ERROR);if(($settings['version']??null)!==1||!in_array($settings['age_days']??null,[1,7,14,30],true))throw new RuntimeException('Invalid configuration');$days=$settings['age_days'];$batchGiB=$settings['batch_gib']??16;if(!in_array($batchGiB,[16,32,64,128],true))throw new RuntimeException('Invalid batch size');$ratioTarget=$settings['ratio_target']??0;if((!is_int($ratioTarget)&&!is_float($ratioTarget))||!is_finite((float)$ratioTarget)||$ratioTarget<0||$ratioTarget>100)throw new RuntimeException('Invalid ratio target');}
  if(isset($settings['completed_seed_mode'])){if(!is_bool($settings['completed_seed_mode']))throw new RuntimeException('Invalid completed seed mode');$completedSeedMode=$settings['completed_seed_mode'];}
+ $cacheStart=$settings['cache_start_percent']??75;$cacheStop=$settings['cache_stop_percent']??65;
+ if(!is_int($cacheStart)||!is_int($cacheStop)||$cacheStop<1||$cacheStart>99||$cacheStop>=$cacheStart)throw new RuntimeException('Invalid cache percentages');
  if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   if($fmc['error']||$fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||!$fmc['mounted'])throw new RuntimeException('Advanced cache mode required');
   if(!is_string($_POST['fejes_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fejes_csrf']))throw new RuntimeException('Invalid session');
@@ -1538,6 +1541,8 @@ try {
   if($action==='save'){
    $new=$_POST['age_days']??(string)$days;if(!is_string($new)||!in_array($new,['1','7','14','30'],true))throw new RuntimeException('Invalid age');
    $seedMode=$_POST['completed_seed_mode']??'0';if(!is_string($seedMode)||!in_array($seedMode,['0','1'],true))throw new RuntimeException('Invalid completed seed mode');
+   $start=$_POST['cache_start_percent']??(string)$cacheStart;$stop=$_POST['cache_stop_percent']??(string)$cacheStop;
+   if(!is_string($start)||!is_string($stop)||!preg_match('/^[0-9]{1,2}$/D',$start)||!preg_match('/^[0-9]{1,2}$/D',$stop)||(int)$stop<1||(int)$stop>=(int)$start||(int)$start>99)throw new RuntimeException('Invalid cache percentages');
    $batch=$_POST['batch_gib']??(string)$batchGiB;if(!is_string($batch)||!in_array($batch,['16','32','64','128'],true))throw new RuntimeException('Invalid batch size');
    if($seedMode==='1'&&(int)$batch>32)$batch='32';
    $ratio=$_POST['ratio_target']??(string)$ratioTarget;if(!is_string($ratio)||!preg_match('/^(?:[0-9]{1,3})(?:\.[0-9]{1,2})?$/D',$ratio)||(float)$ratio>100)throw new RuntimeException('Invalid ratio target');
@@ -1546,6 +1551,7 @@ try {
     $current=@file_get_contents($path);if($current!==$raw||!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
     $nextSettings=array_replace($settings??[],['version'=>1,'age_days'=>(int)$new,'ratio_target'=>(float)$ratio,'batch_gib'=>(int)$batch]);
     if($seedMode==='1'||array_key_exists('completed_seed_mode',$settings??[]))$nextSettings['completed_seed_mode']=$seedMode==='1';
+    if($seedMode==='1'||array_key_exists('cache_start_percent',$settings??[])){$nextSettings['cache_start_percent']=(int)$start;$nextSettings['cache_stop_percent']=(int)$stop;}
     $data=json_encode($nextSettings,JSON_THROW_ON_ERROR)."\n";
     if($data!==$raw){
      if($raw!==false){$backup=$path.'.before-'.date('Ymd-His').'-'.bin2hex(random_bytes(3));if(file_put_contents($backup,$raw,LOCK_EX)!==strlen($raw)||file_get_contents($backup)!==$raw)throw new RuntimeException('Backup failed');}
@@ -1553,7 +1559,7 @@ try {
      try{if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$path))throw new RuntimeException('Save failed');}finally{if(is_file($tmp))unlink($tmp);}
      if(file_get_contents($path)!==$data)throw new RuntimeException('Readback failed');$raw=$data;
     }
-    $days=(int)$new;$ratioTarget=(float)$ratio;$batchGiB=(int)$batch;$completedSeedMode=$seedMode==='1';$message=$t('Mozgatási beállítások elmentve.','Movement settings saved.','Verschiebeeinstellungen gespeichert.');
+    $days=(int)$new;$ratioTarget=(float)$ratio;$batchGiB=(int)$batch;$completedSeedMode=$seedMode==='1';$cacheStart=(int)$start;$cacheStop=(int)$stop;$message=$t('Mozgatási beállítások elmentve.','Movement settings saved.','Verschiebeeinstellungen gespeichert.');
    }finally{flock($lock,LOCK_UN);fclose($lock);}
   }elseif(in_array($action,['preview','observe','run'],true)){
    if(!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
@@ -1580,6 +1586,7 @@ if(!is_array($forecast)){
 }
 if(!is_array($forecast)||($forecast['version']??null)!==1||($forecast['age_days']??null)!==$days||(float)($forecast['ratio_target']??0)!==(float)$ratioTarget||($forecast['max_bytes']??17179869184)!==$batchGiB*1073741824||!is_array($forecast['rows']??null))$forecast=null;
 if($forecast!==null&&($forecast['completed_seed_mode']??false)!==$completedSeedMode)$forecast=null;
+if($forecast!==null&&$completedSeedMode&&(($forecast['cache_start_percent']??null)!==$cacheStart||($forecast['cache_stop_percent']??null)!==$cacheStop))$forecast=null;
 $skipLabels=[
  'completed_seed_unverified'=>$t('Még nem teljes, nem ellenőrzött vagy a körkorlátba nem férő egység','Incomplete, unverified or over-limit unit','Unvollständige, ungeprüfte oder zu große Einheit'),
  'ratio_not_met'=>$t('A torrent aránya alacsony vagy nem ellenőrizhető','Torrent ratio below target or unavailable','Torrent-Verhältnis zu niedrig oder unbekannt'),
@@ -1648,7 +1655,7 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <div data-fms-status-card><span><?=$e($t('Legutóbbi Mover-állapot','Last Mover status','Letzter Mover-Status'))?></span><strong><?=$e($states[$last['state']??'unknown']??$t('Nem ellenőrizhető','Unverifiable','Nicht überprüfbar'))?></strong></div>
 <div data-fms-space-card><span><?=$e($t('Cache szabad hely','Cache free space','Freier Cache-Speicher'))?></span><strong><?=$cacheFree===false?'—':$e(number_format($cacheFree/1073741824,1)).' GiB'?></strong></div>
 <div><span><?=$e($t('Felmért várakozó tartalom','Observed waiting content','Erfasste wartende Inhalte'))?></span><strong><?=$forecast===null?'—':$e(count($queueRows)).' · '.$e(number_format(($forecast['total_bytes']??0)/1073741824,2)).' GiB'?></strong><?php if(!$completedSeedMode):?><small><?=$e($t('Fiatal','Young','Jung'))?>: <?=$young?> · <?=$e($t('Torrentvédelem','Torrent protection','Torrent-Schutz'))?>: <?=$protected?></small><?php endif?></div>
-<?php if($completedSeedMode):?><div><span><?=$e($t('Mozgatási mód','Movement mode','Verschiebemodus'))?></span><strong><?=$e($t('Letöltés után','After completion','Nach Downloadabschluss'))?></strong><small><?=$e($t('Korhatár és aránycél nélkül','No age or ratio target wait','Ohne Alters- oder Verhältniswartezeit'))?></small></div><?php else:?>
+<?php if($completedSeedMode):?><div><span><?=$e($t('Cache telítettségi határok','Cache fill thresholds','Cache-Füllgrenzen'))?></span><strong><?=$e($cacheStart.'% → '.$cacheStop.'%')?></strong><small><?=$e($t('Indítás → ürítési cél','Start → drain target','Start → Leerungsziel'))?></small></div><?php else:?>
 <div><span><?=$e($t('Következő korhatár lejárta','Next age eligibility','Nächste Altersfreigabe'))?></span><strong><?php if($nextAge!==null):?><time data-fms-time="<?=$e($nextAge)?>"><?=$e(date('Y-m-d H:i',(int)$nextAge))?></time><?php else:?>—<?php endif?></strong><small><?=$e($t('Nem garantált indulási idő','Not a guaranteed start time','Kein garantierter Startzeitpunkt'))?></small></div>
 <?php endif?>
 </div>
@@ -1704,6 +1711,10 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <details class="fms-panel"><summary><?=$e($t('Mozgatási mód és korlátok','Movement mode and limits','Verschiebemodus und Grenzen'))?></summary>
 <p><label><input type="checkbox" name="completed_seed_mode" value="1" <?=$completedSeedMode?'checked':''?>> <?=$e($t('Letöltés után HDD-re, seedelés folytatásával','Move completed downloads to HDD and continue seeding','Fertige Downloads auf HDD verschieben und weiter seeden'))?></label></p>
 <p><?=$e($t('Bekapcsolva a korhatár és aránycél nem késlelteti a teljes torrenteket. Kikapcsolva a korábbi korhatáros szabályok érvényesek.','When enabled, age and ratio targets do not delay complete torrents. When disabled, the original age-based rules apply.','Aktiviert verzögern Alter und Verhältnisziel vollständige Torrents nicht. Deaktiviert gelten die bisherigen Altersregeln.'))?></p>
+<fieldset><legend><?=$e($t('Cache telítettségi határok','Cache fill thresholds','Cache-Füllgrenzen'))?></legend>
+<label for="fms-cache-start"><?=$e($t('Indítás ettől (%)','Start at (%)','Start ab (%)'))?></label> <input id="fms-cache-start" type="number" name="cache_start_percent" min="2" max="99" step="1" value="<?=$e($cacheStart)?>">
+<label for="fms-cache-stop"><?=$e($t('Ürítés eddig (%)','Drain to (%)','Leeren bis (%)'))?></label> <input id="fms-cache-stop" type="number" name="cache_stop_percent" min="1" max="98" step="1" value="<?=$e($cacheStop)?>">
+<p><?=$e($t('A letöltés utáni módban a felső határnál indul, és az alsó határig folytatja. Az alsó érték legyen kisebb. Az éppen mozgatott teljes egységet befejezi, ezért valamivel az alsó érték alá is kerülhet.','In completed-download mode, starts at the upper threshold and continues to the lower one. The lower value must be smaller. Finishes the current whole unit, so fill may end slightly below the lower value.','Im Abschlussmodus startet das Leeren an der oberen und endet an der unteren Grenze. Der untere Wert muss kleiner sein. Die aktuelle ganze Einheit wird beendet; der Füllstand kann etwas unter die Grenze fallen.'))?></p></fieldset>
 <fieldset <?=$completedSeedMode?'disabled':''?>><legend><?=$e($t('Torrent minimumkor','Torrent minimum age','Torrent-Mindestalter'))?></legend>
 <?php foreach([1,7,14,30] as $choice):?><label style="margin-right:22px"><input type="radio" name="age_days" value="<?=$choice?>" <?=$days===$choice?'checked':''?>> <?=$choice?> <?=$e($t('nap','days','Tage'))?></label><?php endforeach?>
 </fieldset>
@@ -2257,6 +2268,43 @@ echo $fmc['banner'];
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
 ]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.17.1/cache_hysteresis.py"><INLINE><![CDATA["""Pure start/stop policy for completed-seed cache draining; no I/O."""
+
+
+def limits(settings):
+    enabled = settings.get('completed_seed_mode', False)
+    if type(enabled) is not bool:
+        raise ValueError('Invalid completed seed mode')
+    if not enabled:
+        return None
+    start = settings.get('cache_start_percent', 75)
+    stop = settings.get('cache_stop_percent', 65)
+    if type(start) is not int or type(stop) is not int or not 1 <= stop < start <= 99:
+        raise ValueError('Cache percentages must satisfy 1 <= stop < start <= 99')
+    return start, stop
+
+
+def evaluate(settings, previous, total, free, scope):
+    bounds = limits(settings)
+    if bounds is None:
+        return None
+    if type(total) is not int or type(free) is not int or total <= 0 or not 0 <= free <= total:
+        raise ValueError('Cache capacity unavailable')
+    if not isinstance(previous, dict):
+        raise ValueError('Invalid cache cycle state')
+    if previous and (type(previous.get('version')) is not int or previous.get('version') != 1 or type(previous.get('active')) is not bool
+                     or not isinstance(previous.get('scope'), dict)):
+        raise ValueError('Unknown cache cycle state')
+    start, stop = bounds
+    same = (previous.get('scope') == scope and previous.get('start_percent') == start
+            and previous.get('stop_percent') == stop)
+    active = same and previous.get('active') is True
+    used = 100 * (total - free) / total
+    active = used >= start or (active and used > stop)
+    return {'version': 1, 'scope': scope, 'start_percent': start,
+            'stop_percent': stop, 'active': active, 'used_percent': used,
+            'stop_reached': used <= stop}
+]]></INLINE></FILE>
 <FILE Name="/tmp/fejes-mover-monitor-2026.11.17.1/torrent_preflight.py"><INLINE><![CDATA[#!/usr/bin/env python3
 """Read-only, conservative qBittorrent gate for an external Mover launcher."""
 import argparse
@@ -2728,6 +2776,7 @@ from wire_integrity_cron import ORIGINAL, REPLACEMENT, rewrite_cron
 from wire_mover_gate import rewrite_launcher
 from selective_profile import load_profile
 from managed_schedule import load as load_automation
+from cache_hysteresis import evaluate as evaluate_cycle, limits as cache_limits
 
 ROOT = Path('/boot/config/plugins/dynamix.file.integrity')
 PROFILE = load_profile()
@@ -2740,6 +2789,8 @@ MDSTAT = Path('/proc/mdstat')
 ATTEMPT = Path('/var/run/filmek_mover_last_attempt')
 MOVER_PID = Path('/var/run/mover.pid')
 SHARE = Path(PROFILE.canonical)
+SELECTIVE = Path('/boot/config/plugins/fejes.mover.monitor/selective.json')
+CYCLE = SELECTIVE.parent / 'completed-cache-cycle.json'
 
 
 def dry_run(container=None, include_items=False):
@@ -2773,8 +2824,26 @@ def dry_run(container=None, include_items=False):
     if report.get('cache') != 'available' or type(free) is not int or threshold is None:
         add('capacity', 'unknown')
     else:
-        add('capacity', 'pass' if free < threshold*1024**3 else 'wait',
-            {'free_gib': round(free/1024**3, 1), 'threshold_gib': threshold})
+        try:
+            if SELECTIVE.is_symlink():
+                raise ValueError('Linked selective configuration')
+            settings = json.loads(SELECTIVE.read_text()) if SELECTIVE.exists() else {}
+            previous = {}
+            if cache_limits(settings) is not None:
+                if CYCLE.is_symlink():
+                    raise ValueError('Linked cache cycle')
+                previous = json.loads(CYCLE.read_text()) if CYCLE.exists() else {}
+            scope = {k: getattr(PROFILE, k) for k in ('pool', 'share', 'torrent_container')}
+            cycle = evaluate_cycle(settings, previous, report.get('cache_total_bytes'), free, scope)
+            if cycle is None:
+                add('capacity', 'pass' if free < threshold*1024**3 else 'wait',
+                    {'free_gib': round(free/1024**3, 1), 'threshold_gib': threshold})
+            else:
+                cycle.update(free_gib=round(free/1024**3, 1),
+                    threshold_gib=round(report['cache_total_bytes'] * (100-cycle['stop_percent']) / (100*1024**3), 1))
+                add('capacity', 'pass' if cycle['active'] else 'wait', cycle)
+        except ERRORS:
+            add('capacity', 'unknown')
     decision = report.get('torrent')
     add('torrent', 'pass' if decision == 'no_torrent_blocker' else
         'wait' if decision == 'defer' else 'unknown', report.get('blocking_torrents'))
@@ -3864,6 +3933,14 @@ def cooldown_duration_seconds(automation, launcher_text):
     return seconds
 
 
+def finish_current_cache_unit(prior, own_coordination, state, detail):
+    return (own_coordination and prior.get('stage') == 'completed_seed_coordination'
+            and prior.get('requires_inspection') is True
+            and type(prior.get('moved_files')) is int and prior['moved_files'] > 0
+            and state == 'wait' and isinstance(detail, dict)
+            and detail.get('stop_reached') is True)
+
+
 def guards(owned=False):
     prior=read_json(LAST,{})
     own_coordination = (owned and PID.is_file() and PID.read_text() == str(os.getpid())
@@ -3887,6 +3964,12 @@ def guards(owned=False):
     report=dry_run()
     checks={x['key']:x['state'] for x in report['dry_run']['checks']}
     result={key:checks.get(key,'unknown') for key in ('backup','parity','mover','cooldown','capacity')}
+    # Finish an already partially moved, owned unit at the lower drain target.
+    # This only defers a cycle stop, never unknown capacity or another guard.
+    capacity_detail = next((c.get('detail') for c in report['dry_run']['checks']
+                            if c['key'] == 'capacity'), None)
+    if finish_current_cache_unit(prior, own_coordination, result['capacity'], capacity_detail):
+        result['capacity'] = 'pass'
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
     automation=load_automation(profile=PROFILE)
@@ -6017,7 +6100,7 @@ def plan():
     return sorted(result, key=lambda x: -x['bytes'])
 
 
-def prepare(chosen):
+def prepare(chosen, service_settings=None):
     root = environment()
     if n.PID.exists() or n.needs_inspection(read_json(n.LAST, {})):
         raise ValueError('Existing mover/inspection')
@@ -6028,6 +6111,11 @@ def prepare(chosen):
     if len(units) != 1:
         raise ValueError('Chosen unit changed or is unavailable')
     unit = units[0]
+    if service_settings is not None:
+        if (n.read_json(n.CONFIG, {}) != service_settings
+                or service_settings.get('completed_seed_mode') is not True):
+            raise ValueError('Configured service settings changed')
+        unit['service_settings'] = dict(service_settings)
     directory = root / ('fejes-completed-seed-pilot-' + str(time.time_ns()))
     directory.mkdir(mode=0o700)
     archive = directory / 'rollback.tgz'
@@ -6071,6 +6159,9 @@ class Evidence:
         self.post_uploaded = None
 
     def snapshot(self):
+        if ('service_settings' in self.unit
+                and n.read_json(n.CONFIG, {}) != self.unit['service_settings']):
+            raise ValueError('Configured service settings changed')
         files, current, torrents, mounts = collect(self.inventory)
         groups = [g for g in unit_groups(files, n.ROOT, torrents, mounts) if set(g).intersection(self.keys)]
         if len(groups) != 1 or set(groups[0]) != set(self.keys):
@@ -6190,6 +6281,8 @@ The existing scheduler is the only scheduler; this module creates no cron job.
 import fcntl
 from collections import Counter
 import time
+import shutil
+from cache_hysteresis import evaluate, limits
 
 import completed_seed_pilot as pilot
 
@@ -6203,6 +6296,15 @@ def configured(settings):
     return value
 
 
+def sync_cycle(settings):
+    usage = shutil.disk_usage(n.POOL_ROOT)
+    path = n.BASE / 'completed-cache-cycle.json'
+    scope = {k: getattr(n.PROFILE, k) for k in ('pool', 'share', 'torrent_container')}
+    state = evaluate(settings, n.read_json(path, {}), usage.total, usage.free, scope)
+    n.atomic_json(path, state)
+    return state
+
+
 def run():
     settings = n.read_json(n.CONFIG, {})
     if not configured(settings):
@@ -6213,6 +6315,9 @@ def run():
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         if n.PID.exists() or n.needs_inspection(n.read_json(n.LAST, {})):
             return {'state': 'blocked', 'reason': 'mover_or_inspection'}
+        cycle = sync_cycle(settings)
+        if not cycle['active']:
+            return {'state': 'deferred', 'reason': 'cache_cycle_inactive', 'cache_cycle': cycle}
         guards = n.guards()
         if any(state != 'pass' for state in guards.values()):
             return {'state': 'deferred', 'reason': 'native_guard_not_passed'}
@@ -6221,11 +6326,13 @@ def run():
         units = [unit for unit in pilot.plan() if unit['bytes'] <= limit]
         if not units:
             return {'state': 'nothing_eligible', 'reason': 'no_bounded_complete_unit'}
-        prepared = pilot.prepare(units[0]['unit_digest'])
+        prepared = pilot.prepare(units[0]['unit_digest'], service_settings=settings)
         # Record cooldown before taking native intent. The host then repeats all
         # guards under the normal mover/integrity/configuration locks.
         n.atomic_json(n.ATTEMPT, int(time.time()))
-        return pilot.run(prepared['authorization'])
+        result = pilot.run(prepared['authorization'])
+        result['cache_cycle'] = sync_cycle(settings)
+        return result
 
 
 def preview(report, update=False):
@@ -6239,6 +6346,7 @@ def preview(report, update=False):
     forecast = report['forecast']
     forecast['completed_seed_mode'] = True
     forecast['completed_seed_limit_bytes'] = limit
+    forecast['cache_start_percent'], forecast['cache_stop_percent'] = limits(settings)
     for row in forecast['rows']:
         row.update(age_ready_at=None, ratio_target_met=False, unit_blockers=[], unit_blocker_count=0)
         unit = members.get(n.ROOT + '/' + row['file'])
@@ -6259,7 +6367,7 @@ test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }
 tools=/boot/config/plugins/fejes.mover.monitor/tools
 command -v python3 >/dev/null || exit 1
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py active_seed_policy.py active_seed_runner.py active_seed_native.py active_seed_host.py seed_coordination.py qbit_seed_transport.py completed_seed_pilot.py completed_seed_service.py; do
+for name in cache_hysteresis.py torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py active_seed_policy.py active_seed_runner.py active_seed_native.py active_seed_host.py seed_coordination.py qbit_seed_transport.py completed_seed_pilot.py completed_seed_service.py; do
   python3 -c 'import sys; compile(open(sys.argv[1], "rb").read(), sys.argv[1], "exec")' "$src/$name"
 done
 for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
@@ -6267,7 +6375,7 @@ for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page 
  done
 install -d -m 0755 "$dst"
 install -d -m 0700 "$tools"
-for name in torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py active_seed_policy.py active_seed_runner.py active_seed_native.py active_seed_host.py seed_coordination.py qbit_seed_transport.py completed_seed_pilot.py completed_seed_service.py; do
+for name in cache_hysteresis.py torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py active_seed_policy.py active_seed_runner.py active_seed_native.py active_seed_host.py seed_coordination.py qbit_seed_transport.py completed_seed_pilot.py completed_seed_service.py; do
   if [[ -f "$tools/$name" ]] && ! cmp -s "$src/$name" "$tools/$name"; then
     backup=$(mktemp "$tools/$name.before-XXXXXXXX")
     cp -p -- "$tools/$name" "$backup"

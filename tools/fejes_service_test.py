@@ -12,6 +12,31 @@ import wire_integrity_cron as wire
 
 
 class ServiceTest(unittest.TestCase):
+    def setUp(self):
+        directory=tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.selective=Path(directory.name)/'selective.json'
+        self.cycle=Path(directory.name)/'cycle.json'
+        for name,value in [('SELECTIVE',self.selective),('CYCLE',self.cycle)]:
+            patched=patch.object(service,name,value);patched.start();self.addCleanup(patched.stop)
+
+    def test_percent_cycle_replaces_legacy_trigger_but_keeps_stop_boundary(self):
+        settings={'completed_seed_mode':True,'cache_start_percent':75,'cache_stop_percent':65}
+        self.selective.write_text(json.dumps(settings))
+        scope={k:getattr(service.PROFILE,k) for k in ('pool','share','torrent_container')}
+        for used,prior,expected in [(76,{},'pass'),(70,service.evaluate_cycle(settings,{},100,20,scope),'pass'),(65,service.evaluate_cycle(settings,{},100,20,scope),'wait')]:
+            if prior:self.cycle.write_text(json.dumps(prior))
+            elif self.cycle.exists():self.cycle.unlink()
+            report={'cache':'available','cache_free_bytes':(100-used)*1024**3,
+                    'cache_total_bytes':100*1024**3,'torrent':'no_torrent_blocker'}
+            with patch.object(service,'load_automation',return_value={'enabled':True,'threshold_gib':1,'cooldown_minutes':1}), \
+                 patch.object(service,'SHARE',self.selective.parent), \
+                 patch.object(service,'status',return_value=report):
+                result=service.dry_run()
+            capacity=next(c for c in result['dry_run']['checks'] if c['key']=='capacity')
+            self.assertEqual(capacity['state'],expected)
+            self.assertEqual(capacity['detail']['stop_percent'],65)
+
     def test_read_only_cooldown_uses_legacy_seconds(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)

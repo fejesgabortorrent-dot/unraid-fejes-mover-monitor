@@ -9,6 +9,15 @@ import completed_seed_pilot as pilot
 
 
 class RetainedArrayMembers(unittest.TestCase):
+    def test_changed_service_settings_block_before_collecting_or_stopping(self):
+        evidence=pilot.Evidence.__new__(pilot.Evidence)
+        evidence.unit={'service_settings':{'completed_seed_mode':True,'cache_start_percent':75}}
+        with patch.object(pilot.n,'read_json',return_value={'completed_seed_mode':False}), \
+             patch.object(pilot,'collect') as collect:
+            with self.assertRaisesRegex(ValueError,'settings changed'):
+                evidence.snapshot()
+        collect.assert_not_called()
+
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)

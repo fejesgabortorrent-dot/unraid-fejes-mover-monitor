@@ -19,11 +19,13 @@ echo $fmLanguageSelector;
 $fmc=require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php';
 $t=$fmc['t'];$e=$fmc['esc'];echo $fmc['banner'];
 $path='/boot/config/plugins/fejes.mover.monitor/selective.json';
-$raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;$ratioTarget=0;$batchGiB=16;$completedSeedMode=false;
+$raw=@file_get_contents($path);$error='';$message='';$report=null;$days=7;$ratioTarget=0;$batchGiB=16;$completedSeedMode=false;$cacheStart=75;$cacheStop=65;
 try {
  if(is_link($path)||($raw===false&&file_exists($path)))throw new RuntimeException('Configuration unavailable');
  if($raw!==false){$settings=json_decode($raw,true,512,JSON_THROW_ON_ERROR);if(($settings['version']??null)!==1||!in_array($settings['age_days']??null,[1,7,14,30],true))throw new RuntimeException('Invalid configuration');$days=$settings['age_days'];$batchGiB=$settings['batch_gib']??16;if(!in_array($batchGiB,[16,32,64,128],true))throw new RuntimeException('Invalid batch size');$ratioTarget=$settings['ratio_target']??0;if((!is_int($ratioTarget)&&!is_float($ratioTarget))||!is_finite((float)$ratioTarget)||$ratioTarget<0||$ratioTarget>100)throw new RuntimeException('Invalid ratio target');}
  if(isset($settings['completed_seed_mode'])){if(!is_bool($settings['completed_seed_mode']))throw new RuntimeException('Invalid completed seed mode');$completedSeedMode=$settings['completed_seed_mode'];}
+ $cacheStart=$settings['cache_start_percent']??75;$cacheStop=$settings['cache_stop_percent']??65;
+ if(!is_int($cacheStart)||!is_int($cacheStop)||$cacheStop<1||$cacheStart>99||$cacheStop>=$cacheStart)throw new RuntimeException('Invalid cache percentages');
  if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
   if($fmc['error']||$fmc['mode']!=='advanced'||$fmc['pool']!=='cache'||!$fmc['mounted'])throw new RuntimeException('Advanced cache mode required');
   if(!is_string($_POST['fejes_csrf']??null)||!is_string($fmc['token'])||$fmc['token']===''||!hash_equals($fmc['token'],$_POST['fejes_csrf']))throw new RuntimeException('Invalid session');
@@ -31,6 +33,8 @@ try {
   if($action==='save'){
    $new=$_POST['age_days']??(string)$days;if(!is_string($new)||!in_array($new,['1','7','14','30'],true))throw new RuntimeException('Invalid age');
    $seedMode=$_POST['completed_seed_mode']??'0';if(!is_string($seedMode)||!in_array($seedMode,['0','1'],true))throw new RuntimeException('Invalid completed seed mode');
+   $start=$_POST['cache_start_percent']??(string)$cacheStart;$stop=$_POST['cache_stop_percent']??(string)$cacheStop;
+   if(!is_string($start)||!is_string($stop)||!preg_match('/^[0-9]{1,2}$/D',$start)||!preg_match('/^[0-9]{1,2}$/D',$stop)||(int)$stop<1||(int)$stop>=(int)$start||(int)$start>99)throw new RuntimeException('Invalid cache percentages');
    $batch=$_POST['batch_gib']??(string)$batchGiB;if(!is_string($batch)||!in_array($batch,['16','32','64','128'],true))throw new RuntimeException('Invalid batch size');
    if($seedMode==='1'&&(int)$batch>32)$batch='32';
    $ratio=$_POST['ratio_target']??(string)$ratioTarget;if(!is_string($ratio)||!preg_match('/^(?:[0-9]{1,3})(?:\.[0-9]{1,2})?$/D',$ratio)||(float)$ratio>100)throw new RuntimeException('Invalid ratio target');
@@ -39,6 +43,7 @@ try {
     $current=@file_get_contents($path);if($current!==$raw||!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
     $nextSettings=array_replace($settings??[],['version'=>1,'age_days'=>(int)$new,'ratio_target'=>(float)$ratio,'batch_gib'=>(int)$batch]);
     if($seedMode==='1'||array_key_exists('completed_seed_mode',$settings??[]))$nextSettings['completed_seed_mode']=$seedMode==='1';
+    if($seedMode==='1'||array_key_exists('cache_start_percent',$settings??[])){$nextSettings['cache_start_percent']=(int)$start;$nextSettings['cache_stop_percent']=(int)$stop;}
     $data=json_encode($nextSettings,JSON_THROW_ON_ERROR)."\n";
     if($data!==$raw){
      if($raw!==false){$backup=$path.'.before-'.date('Ymd-His').'-'.bin2hex(random_bytes(3));if(file_put_contents($backup,$raw,LOCK_EX)!==strlen($raw)||file_get_contents($backup)!==$raw)throw new RuntimeException('Backup failed');}
@@ -46,7 +51,7 @@ try {
      try{if(!chmod($tmp,0600)||file_put_contents($tmp,$data)!==strlen($data)||file_get_contents($tmp)!==$data||!rename($tmp,$path))throw new RuntimeException('Save failed');}finally{if(is_file($tmp))unlink($tmp);}
      if(file_get_contents($path)!==$data)throw new RuntimeException('Readback failed');$raw=$data;
     }
-    $days=(int)$new;$ratioTarget=(float)$ratio;$batchGiB=(int)$batch;$completedSeedMode=$seedMode==='1';$message=$t('Mozgatási beállítások elmentve.','Movement settings saved.','Verschiebeeinstellungen gespeichert.');
+    $days=(int)$new;$ratioTarget=(float)$ratio;$batchGiB=(int)$batch;$completedSeedMode=$seedMode==='1';$cacheStart=(int)$start;$cacheStop=(int)$stop;$message=$t('Mozgatási beállítások elmentve.','Movement settings saved.','Verschiebeeinstellungen gespeichert.');
    }finally{flock($lock,LOCK_UN);fclose($lock);}
   }elseif(in_array($action,['preview','observe','run'],true)){
    if(!is_string($_POST['source_hash']??null)||!hash_equals(hash('sha256',$raw===false?'':$raw),$_POST['source_hash']))throw new RuntimeException('Configuration changed');
@@ -73,6 +78,7 @@ if(!is_array($forecast)){
 }
 if(!is_array($forecast)||($forecast['version']??null)!==1||($forecast['age_days']??null)!==$days||(float)($forecast['ratio_target']??0)!==(float)$ratioTarget||($forecast['max_bytes']??17179869184)!==$batchGiB*1073741824||!is_array($forecast['rows']??null))$forecast=null;
 if($forecast!==null&&($forecast['completed_seed_mode']??false)!==$completedSeedMode)$forecast=null;
+if($forecast!==null&&$completedSeedMode&&(($forecast['cache_start_percent']??null)!==$cacheStart||($forecast['cache_stop_percent']??null)!==$cacheStop))$forecast=null;
 $skipLabels=[
  'completed_seed_unverified'=>$t('Még nem teljes, nem ellenőrzött vagy a körkorlátba nem férő egység','Incomplete, unverified or over-limit unit','Unvollständige, ungeprüfte oder zu große Einheit'),
  'ratio_not_met'=>$t('A torrent aránya alacsony vagy nem ellenőrizhető','Torrent ratio below target or unavailable','Torrent-Verhältnis zu niedrig oder unbekannt'),
@@ -141,7 +147,7 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <div data-fms-status-card><span><?=$e($t('Legutóbbi Mover-állapot','Last Mover status','Letzter Mover-Status'))?></span><strong><?=$e($states[$last['state']??'unknown']??$t('Nem ellenőrizhető','Unverifiable','Nicht überprüfbar'))?></strong></div>
 <div data-fms-space-card><span><?=$e($t('Cache szabad hely','Cache free space','Freier Cache-Speicher'))?></span><strong><?=$cacheFree===false?'—':$e(number_format($cacheFree/1073741824,1)).' GiB'?></strong></div>
 <div><span><?=$e($t('Felmért várakozó tartalom','Observed waiting content','Erfasste wartende Inhalte'))?></span><strong><?=$forecast===null?'—':$e(count($queueRows)).' · '.$e(number_format(($forecast['total_bytes']??0)/1073741824,2)).' GiB'?></strong><?php if(!$completedSeedMode):?><small><?=$e($t('Fiatal','Young','Jung'))?>: <?=$young?> · <?=$e($t('Torrentvédelem','Torrent protection','Torrent-Schutz'))?>: <?=$protected?></small><?php endif?></div>
-<?php if($completedSeedMode):?><div><span><?=$e($t('Mozgatási mód','Movement mode','Verschiebemodus'))?></span><strong><?=$e($t('Letöltés után','After completion','Nach Downloadabschluss'))?></strong><small><?=$e($t('Korhatár és aránycél nélkül','No age or ratio target wait','Ohne Alters- oder Verhältniswartezeit'))?></small></div><?php else:?>
+<?php if($completedSeedMode):?><div><span><?=$e($t('Cache telítettségi határok','Cache fill thresholds','Cache-Füllgrenzen'))?></span><strong><?=$e($cacheStart.'% → '.$cacheStop.'%')?></strong><small><?=$e($t('Indítás → ürítési cél','Start → drain target','Start → Leerungsziel'))?></small></div><?php else:?>
 <div><span><?=$e($t('Következő korhatár lejárta','Next age eligibility','Nächste Altersfreigabe'))?></span><strong><?php if($nextAge!==null):?><time data-fms-time="<?=$e($nextAge)?>"><?=$e(date('Y-m-d H:i',(int)$nextAge))?></time><?php else:?>—<?php endif?></strong><small><?=$e($t('Nem garantált indulási idő','Not a guaranteed start time','Kein garantierter Startzeitpunkt'))?></small></div>
 <?php endif?>
 </div>
@@ -197,6 +203,10 @@ $cacheFree=($fmc['mounted']??false)?@disk_free_space('/mnt/'.$fmc['pool']):false
 <details class="fms-panel"><summary><?=$e($t('Mozgatási mód és korlátok','Movement mode and limits','Verschiebemodus und Grenzen'))?></summary>
 <p><label><input type="checkbox" name="completed_seed_mode" value="1" <?=$completedSeedMode?'checked':''?>> <?=$e($t('Letöltés után HDD-re, seedelés folytatásával','Move completed downloads to HDD and continue seeding','Fertige Downloads auf HDD verschieben und weiter seeden'))?></label></p>
 <p><?=$e($t('Bekapcsolva a korhatár és aránycél nem késlelteti a teljes torrenteket. Kikapcsolva a korábbi korhatáros szabályok érvényesek.','When enabled, age and ratio targets do not delay complete torrents. When disabled, the original age-based rules apply.','Aktiviert verzögern Alter und Verhältnisziel vollständige Torrents nicht. Deaktiviert gelten die bisherigen Altersregeln.'))?></p>
+<fieldset><legend><?=$e($t('Cache telítettségi határok','Cache fill thresholds','Cache-Füllgrenzen'))?></legend>
+<label for="fms-cache-start"><?=$e($t('Indítás ettől (%)','Start at (%)','Start ab (%)'))?></label> <input id="fms-cache-start" type="number" name="cache_start_percent" min="2" max="99" step="1" value="<?=$e($cacheStart)?>">
+<label for="fms-cache-stop"><?=$e($t('Ürítés eddig (%)','Drain to (%)','Leeren bis (%)'))?></label> <input id="fms-cache-stop" type="number" name="cache_stop_percent" min="1" max="98" step="1" value="<?=$e($cacheStop)?>">
+<p><?=$e($t('A letöltés utáni módban a felső határnál indul, és az alsó határig folytatja. Az alsó érték legyen kisebb. Az éppen mozgatott teljes egységet befejezi, ezért valamivel az alsó érték alá is kerülhet.','In completed-download mode, starts at the upper threshold and continues to the lower one. The lower value must be smaller. Finishes the current whole unit, so fill may end slightly below the lower value.','Im Abschlussmodus startet das Leeren an der oberen und endet an der unteren Grenze. Der untere Wert muss kleiner sein. Die aktuelle ganze Einheit wird beendet; der Füllstand kann etwas unter die Grenze fallen.'))?></p></fieldset>
 <fieldset <?=$completedSeedMode?'disabled':''?>><legend><?=$e($t('Torrent minimumkor','Torrent minimum age','Torrent-Mindestalter'))?></legend>
 <?php foreach([1,7,14,30] as $choice):?><label style="margin-right:22px"><input type="radio" name="age_days" value="<?=$choice?>" <?=$days===$choice?'checked':''?>> <?=$choice?> <?=$e($t('nap','days','Tage'))?></label><?php endforeach?>
 </fieldset>

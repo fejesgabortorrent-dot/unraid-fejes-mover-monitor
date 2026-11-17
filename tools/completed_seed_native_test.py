@@ -17,6 +17,17 @@ class CompletedSeedAdmission(unittest.TestCase):
     expected = {'signature': [1, 2, 10, 3, 4], 'first_seen': 999.0}
     info = SimpleNamespace(st_dev=1, st_ino=2, st_size=10, st_mtime_ns=3, st_ctime_ns=4)
 
+    def test_lower_fill_target_can_only_finish_an_owned_already_partial_unit(self):
+        prior={'stage':'completed_seed_coordination','requires_inspection':True,'moved_files':1}
+        self.assertTrue(native.finish_current_cache_unit(prior,True,'wait',{'stop_reached':True}))
+        for payload,owned,state,detail in [(prior,False,'wait',{'stop_reached':True}),
+                (dict(prior,moved_files=0),True,'wait',{'stop_reached':True}),
+                (dict(prior,stage='file_preflight'),True,'wait',{'stop_reached':True}),
+                (dict(prior,requires_inspection=False),True,'wait',{'stop_reached':True}),
+                (prior,True,'unknown',{'stop_reached':True}),
+                (prior,True,'wait',{'stop_reached':False})]:
+            self.assertFalse(native.finish_current_cache_unit(payload,owned,state,detail))
+
     def test_transient_integrity_activity_retries_only_before_native_intent(self):
         with patch.object(native, '_execute_file', side_effect=[native.IntegrityBusy(), {'state': 'moved'}]) as execute, \
              patch.object(native.time, 'sleep') as sleep:

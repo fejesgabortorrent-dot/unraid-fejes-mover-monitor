@@ -37,10 +37,11 @@ class CompletedSeedWorker(unittest.TestCase):
         self.assertFalse(out['forecast']['rows'][0]['ratio_target_met'])
         write.assert_called_once()
 
-    def invoke(self, settings, units=None, latch=False, guard='pass'):
+    def invoke(self, settings, units=None, latch=False, guard='pass', cycle=True):
         units = units if units is not None else [{'unit_digest': 'a', 'bytes': 1024}]
         configured = {'version': 1, 'batch_gib': 16, **settings}
         with patch.object(service.n, 'read_json', side_effect=lambda path, default: configured if path == service.n.CONFIG else {}), \
+             patch.object(service, 'sync_cycle', return_value={'active': cycle}), \
              patch.object(service.n.PID.__class__, 'exists', return_value=False), \
              patch.object(service.n, 'needs_inspection', return_value=latch), \
              patch.object(service.n, 'guards', return_value={'backup': guard}), \
@@ -64,7 +65,7 @@ class CompletedSeedWorker(unittest.TestCase):
                 service.configured({'completed_seed_mode': value})
 
     def test_existing_inspection_or_guard_blocks_before_backup_and_movement(self):
-        for kwargs in ({'latch': True}, {'guard': 'wait'}):
+        for kwargs in ({'latch': True}, {'guard': 'wait'}, {'cycle': False}):
             result, collect, cooldown, environment, prepare, run = self.invoke({'completed_seed_mode': True}, **kwargs)
             for method in (collect, cooldown, prepare, run): method.assert_not_called()
 
@@ -80,6 +81,6 @@ class CompletedSeedWorker(unittest.TestCase):
         result, collect, cooldown, environment, prepare, run = self.invoke({'completed_seed_mode': True})
         self.assertEqual(result['state'], 'completed_seed_ready')
         collect.assert_called_once_with(update=True)
-        prepare.assert_called_once_with('a')
+        prepare.assert_called_once_with('a', service_settings={'version':1,'batch_gib':16,'completed_seed_mode':True})
         cooldown.assert_called_once()
         run.assert_called_once_with('/private/authorization.json')
