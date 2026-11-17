@@ -54,6 +54,8 @@ class SelectiveInterface(unittest.TestCase):
             self.assertIn('value="1" checked',result['html'])
             self.assertEqual(result['html'].count('id="fms-run"'),1)
             self.assertFalse(result['calls'])
+            self.assertNotIn('Torrent: saved age applies.',result['html'])
+            self.assertNotIn('Torrent: a beállított korhatár érvényes.',result['html'])
 
     def test_completed_mode_save_requires_session_and_caps_bounded_worker(self):
         request=dict(fejes_csrf='test-token',source_hash='CURRENT',fms_action='save',completed_seed_mode='1',batch_gib='64')
