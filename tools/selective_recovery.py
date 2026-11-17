@@ -76,6 +76,102 @@ def validate_report(report):
     return rows
 
 
+def validate_pilot_report(report, unit):
+    """Translate only a fully journaled, restored, pre-native pilot deferral.
+
+    Original source signatures and checksums come from the private preparation
+    snapshot, never from the current files. Physical verification is separate.
+    """
+    if (report.get('version') != 2 or report.get('state') != 'inspection_required'
+            or report.get('stage') != 'completed_seed_coordination'
+            or report.get('active_file_started') is not False
+            or report.get('requires_inspection') is not True
+            or report.get('active_sha256')):
+        raise ValueError('Pilot has unresolved native intent')
+    coordination = report.get('coordination', {})
+    paths, owners = unit.get('paths'), unit.get('owners')
+    if (not isinstance(paths, list) or not paths or len(paths) > 128
+            or len(paths) != len(set(paths)) or set(paths) != set(report.get('scope_paths', []))
+            or any(not isinstance(p, str) or not p.startswith(mover.ROOT + '/')
+                   or '..' in p.split('/') or any(c in p for c in ('\n', '\r', '\x00')) for p in paths)
+            or not isinstance(owners, list) or not owners or len(owners) != len(set(owners))
+            or any(not isinstance(h, str) or not re.fullmatch('[a-fA-F0-9]{40}', h) for h in owners)
+            or coordination.get('phase') != 'restored' or coordination.get('quiesced') is not True
+            or sorted(coordination.get('owners', [])) != sorted(owners)
+            or sorted(coordination.get('resume', [])) != sorted(owners)):
+        raise ValueError('Pilot scope or restoration evidence incomplete')
+    if report.get('active_file') not in paths:
+        raise ValueError('Pilot deferral file missing')
+    inventory, hashes = unit.get('inventory', {}), unit.get('sha256', {})
+    if set(inventory) != set(paths) or set(hashes) != set(paths):
+        raise ValueError('Preparation snapshot incomplete')
+    for p in paths:
+        signature = inventory[p].get('signature')
+        if (not isinstance(signature, list) or len(signature) != 5
+                or any(type(v) is not int or v < 0 for v in signature)
+                or not isinstance(hashes[p], str) or not VALID_SHA.fullmatch(hashes[p])):
+            raise ValueError('Invalid preparation evidence')
+    rows = report.get('verified_files', [])
+    if (not rows or len(rows) >= len(paths) or report['active_file'] in {r.get('source') for r in rows}
+            or sum(inventory[p]['signature'][2] for p in paths) > 32 * 1024**3):
+        raise ValueError('Pilot is not a bounded partial unit')
+    enriched = []
+    for row in rows:
+        src = row.get('source')
+        if src not in inventory or row.get('sha256') != hashes[src]:
+            raise ValueError('Ledger differs from original preparation')
+        enriched.append(dict(row, source_signature=inventory[src]['signature']))
+    translated = dict(report, state='error', stage='file_preflight',
+        error_code='required_state_unverified', verified_files=enriched,
+        scope=f'{mover.PROFILE.pool}/{mover.PROFILE.share} -> Array; selected files only')
+    return validate_report(translated)
+
+
+def pilot_evidence(directory, report):
+    directory = Path(directory)
+    if (any(p.is_symlink() for p in (directory, *directory.parents))
+            or directory.stat().st_uid != 0 or directory.stat().st_mode & 0o077):
+        raise ValueError('Pilot evidence directory is not private')
+    def load(name):
+        path = directory / name
+        if path.is_symlink() or path.stat().st_uid != 0:
+            raise ValueError('Untrusted pilot evidence')
+        return json.loads(path.read_text())
+    unit = load('unit.json')
+    original = load('active-seed-pilot-last.json')
+    authorization = load('authorization.json')
+    if (authorization.get('host') != os.uname().nodename
+            or authorization.get('profile') != {'pool': mover.PROFILE.pool,
+                'share': mover.PROFILE.share, 'torrent_container': mover.PROFILE.torrent_container}
+            or authorization.get('scope_paths') != unit.get('paths')
+            or any(report.get(k) != original.get(k) for k in original if k != 'version')):
+        raise ValueError('Pilot and installed report differ')
+    archive = directory / 'rollback.tgz'
+    if archive.is_symlink():
+        raise ValueError('Linked rollback archive')
+    with archive.open('rb') as stream:
+        if hashlib.file_digest(stream, 'sha256').hexdigest() != authorization.get('rollback_sha256'):
+            raise ValueError('Rollback archive changed')
+    return unit, validate_pilot_report(report, unit)
+
+
+def check_retained(unit, rows):
+    moved = {r['source'] for r in rows}
+    retained = 0
+    for key in unit['paths']:
+        if key in moved:
+            continue
+        path = mover.SOURCE / Path(key).relative_to(mover.ROOT)
+        signature = unit['inventory'][key]['signature']
+        if (mover.signature(mover.valid_file(path)) != signature or mover.destinations(path)
+                or mover.sha256(path) != unit['sha256'][key]
+                or mover.sha256(Path(key)) != unit['sha256'][key]
+                or mover.signature(mover.valid_file(path)) != signature):
+            raise ValueError('Retained file changed or has an array copy')
+        retained += 1
+    return retained
+
+
 def current_torrent_evidence(rows):
     """Read-only qBittorrent audit for each original torrent file in touched units."""
     items, mounts = mover.torrent_snapshot()
@@ -198,15 +294,20 @@ def read_report():
     return raw, hashlib.sha256(raw).hexdigest(),json.loads(raw)
 
 
-def inspect_locked():
+def inspect_locked(pilot_directory=None):
     storage_quiet()
     raw, digest, report = read_report()
-    rows = validate_report(report)
+    if pilot_directory is None:
+        rows = validate_report(report)
+        retained = {}
+    else:
+        unit, rows = pilot_evidence(pilot_directory, report)
+        retained = {'checked_retained_files': check_retained(unit, rows)}
     checked = check_media(rows)
     torrents = current_torrent_evidence(rows)
     if hashlib.sha256(mover.LAST.read_bytes()).hexdigest() != digest:
         raise ValueError('Prior report changed during inspection')
-    return raw, digest, report, {'checked_destinations':checked,**torrents}
+    return raw, digest, report, {'checked_destinations':checked,**torrents,**retained}
 
 
 def backup_locked(raw, digest):
@@ -234,7 +335,7 @@ def backup_locked(raw, digest):
     return path
 
 
-def run(action, approval=None, confirm=None):
+def run(action, approval=None, confirm=None, pilot_directory=None):
     locks=[]
     try:
         for name in LOCKS:
@@ -244,7 +345,7 @@ def run(action, approval=None, confirm=None):
         lock=open('/var/run/fejes-mover-config.lock','a')
         locks.append(lock)
         fcntl.flock(lock,fcntl.LOCK_SH|fcntl.LOCK_NB)
-        raw,digest,prior,checks=inspect_locked()
+        raw,digest,prior,checks=inspect_locked(pilot_directory) if pilot_directory else inspect_locked()
         if action == 'inspect':
             return {'eligible':True,'requires_explicit_approval':True,
                     'report_sha256':digest,**checks}
@@ -252,7 +353,7 @@ def run(action, approval=None, confirm=None):
                 confirm != CONFIRM):
             raise ValueError('Explicit matching approval token required')
         # Reinspect under the same coordination locks; do not act on stale results.
-        raw2,digest2,prior2,checks2=inspect_locked()
+        raw2,digest2,prior2,checks2=inspect_locked(pilot_directory) if pilot_directory else inspect_locked()
         if digest2 != digest or checks2 != checks or raw2 != raw:
             raise ValueError('Evidence changed before recovery')
         backup=backup_locked(raw,digest)
@@ -289,9 +390,10 @@ def main():
     parser.add_argument('action',choices=['inspect','recover'])
     parser.add_argument('--approve',default=None,help='Exact SHA256 from a successful inspect')
     parser.add_argument('--confirm',default=None,help='Explicit risk acknowledgement')
+    parser.add_argument('--pilot-directory',default=None,help='Private original bounded-pilot evidence directory')
     args=parser.parse_args()
     try:
-        output=run(args.action,args.approve,args.confirm)
+        output=run(args.action,args.approve,args.confirm,args.pilot_directory)
         print(json.dumps(output,sort_keys=True))
         return 0
     except (OSError,ValueError,TypeError,KeyError,RuntimeError,

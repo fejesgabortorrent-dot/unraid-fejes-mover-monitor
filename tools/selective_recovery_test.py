@@ -23,6 +23,37 @@ def prior(**overrides):
 
 
 class RecoveryPolicy(unittest.TestCase):
+    def pilot(self):
+        a, b = '/mnt/user/Filmek/unit/movie.mkv', '/mnt/user/Filmek/unit/movie.nfo'
+        unit = {'paths': [a, b], 'owners': ['1' * 40],
+                'inventory': {a: {'signature': [1, 2, 100, 3, 4]},
+                              b: {'signature': [1, 3, 10, 3, 4]}},
+                'sha256': {a: 'a' * 64, b: 'b' * 64}}
+        report = prior(state='inspection_required', stage='completed_seed_coordination',
+            active_file=b, scope_paths=[a, b], coordination={'phase': 'restored',
+            'quiesced': True, 'owners': ['1' * 40], 'resume': ['1' * 40]},
+            verified_files=[{'source': a, 'destination': '/mnt/disk4/Filmek/unit/movie.mkv',
+                             'bytes': 100, 'sha256': 'a' * 64}])
+        return report, unit
+
+    def test_restored_pilot_uses_original_preparation_signatures(self):
+        report, unit = self.pilot()
+        rows = recovery.validate_pilot_report(report, unit)
+        self.assertEqual(rows[0]['source_signature'], [1, 2, 100, 3, 4])
+        self.assertNotIn('source_signature', report['verified_files'][0])
+
+    def test_pilot_recovery_rejects_intent_missing_restore_scope_or_hash(self):
+        for field in ('intent', 'restore', 'scope', 'hash', 'signature', 'active_moved'):
+            report, unit = self.pilot()
+            if field == 'intent': report['active_file_started'] = True
+            if field == 'restore': report['coordination']['phase'] = 'before_restore'
+            if field == 'scope': report['scope_paths'] = []
+            if field == 'hash': unit['sha256'][unit['paths'][0]] = 'c' * 64
+            if field == 'signature': unit['inventory'][unit['paths'][0]]['signature'][2] = 99
+            if field == 'active_moved': report['active_file'] = unit['paths'][0]
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                recovery.validate_pilot_report(report, unit)
+
     def test_exact_pre_native_ledger_is_eligible(self):
         self.assertEqual(len(recovery.validate_report(prior())),1)
 
