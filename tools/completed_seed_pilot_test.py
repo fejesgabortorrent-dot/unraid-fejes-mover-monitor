@@ -24,6 +24,9 @@ class RetainedArrayMembers(unittest.TestCase):
             patched = patch.object(pilot.n, name, value)
             patched.start()
             self.addCleanup(patched.stop)
+        logical = patch.object(pilot, 'validate_retained_logical')
+        logical.start()
+        self.addCleanup(logical.stop)
 
     def test_complete_existing_array_member_is_bound_without_movement(self):
         with patch.object(pilot.n, 'sha256') as digest:
@@ -47,3 +50,8 @@ class RetainedArrayMembers(unittest.TestCase):
     def test_unselected_member_cannot_escape_profile(self):
         with self.assertRaises(ValueError):
             pilot.retained_members({'/mnt/user/Other/movie.mkv': 9}, [])
+
+    def test_unavailable_logical_member_is_rejected(self):
+        with patch.object(pilot, 'validate_retained_logical', side_effect=ValueError('unavailable')):
+            with self.assertRaises(ValueError):
+                pilot.retained_members({self.key: 9}, [])

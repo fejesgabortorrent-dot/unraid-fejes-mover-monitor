@@ -105,6 +105,15 @@ def no_writers(keys):
     return True
 
 
+def validate_retained_logical(key, size):
+    path = Path(key)
+    if any(p.is_symlink() for p in (path, *path.parents)):
+        raise ValueError('Linked retained logical path')
+    info = path.lstat()
+    if not stat.S_ISREG(info.st_mode) or info.st_size != size:
+        raise ValueError('Retained logical file absent or wrong size')
+
+
 def retained_members(members, selected):
     """Bind existing array members without moving or claiming to rehash them.
 
@@ -119,6 +128,8 @@ def retained_members(members, selected):
         if not key.startswith(n.ROOT + '/') or '..' in key.split('/'):
             raise ValueError('Retained member outside profile')
         source = n.SOURCE / Path(key).relative_to(n.ROOT)
+        if any(p.is_symlink() for p in source.parents):
+            raise ValueError('Linked retained cache parent')
         targets = n.destinations(source)
         if source.exists() or source.is_symlink() or len(targets) != 1:
             raise ValueError('Retained member missing or duplicated')
@@ -128,6 +139,7 @@ def retained_members(members, selected):
         info = target.lstat()
         if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size != size:
             raise ValueError('Retained member type or size changed')
+        validate_retained_logical(key, size)
         retained[key] = {'destination': str(target), 'signature': n.signature(info)}
     return retained
 
