@@ -91,7 +91,11 @@ def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
             if not isinstance(values, dict):
                 raise ValueError("host evidence invalid")
             measured = native.guards(owned=True)
-            if not isinstance(measured, dict):
+            required_native = ("backup", "parity", "integrity", "mount",
+                               "mover", "cooldown", "capacity",
+                               "open_files", "namespace")
+            if (not isinstance(measured, dict)
+                    or any(measured.get(k) != "pass" for k in required_native)):
                 raise ValueError("native guards unavailable")
             guards = values.get("guards")
             if not isinstance(guards, dict):
