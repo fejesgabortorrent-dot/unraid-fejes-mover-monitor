@@ -1,4 +1,9 @@
-# Release status — 2026.11.17.1
+# Release status — 2026.11.18.1
+
+18.1 adds persistent private run logs, readable localized events, terminal
+hangup protection and explicit backed-up recovery after coordinator loss.
+See [November 18 evidence](ACCEPTANCE-20261118.md) for the observed production
+incident, isolated recovery fixture, fresh installed-scheduler test and limits.
 
 The completed-download release adds explicit opt-in movement with resumed
 seeding and configurable 75% / 65% cache hysteresis. Fresh VM peer continuity,
