@@ -25,6 +25,8 @@ class SelectiveInterface(unittest.TestCase):
             source=(ROOT/'src/FejesMoverSelective.page').read_text().split('---\n',1)[1]
             source=source.replace('<?php','<?php namespace Fixture; use \\RuntimeException; use \\Throwable;',1)
             source=source.replace('/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php',str(lab/'runtime.php'))
+            source=source.replace('/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverScheduleForm.php',(ROOT/'src/FejesMoverScheduleForm.php').as_posix())
+            source=source.replace('/boot/config/plugins/fejes.mover.monitor/automation.json',(lab/'automation.json').as_posix())
             source=source.replace('/boot/config/plugins/fejes.mover.monitor/selective',str(lab/'selective'))
             source=source.replace('/var/run/fejes-selective-inventory.lock',str(lab/'inventory.lock'))
             page=lab/'page.php';page.write_text(source)

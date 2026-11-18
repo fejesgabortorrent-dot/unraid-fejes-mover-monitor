@@ -58,6 +58,8 @@ class Demo:
         free=0 if state=='full' else 350*1073741824
         source=source.replace('namespace BrowserDemo;',f'namespace BrowserDemo; function disk_total_space($p){{return {1000*1073741824};}} function disk_free_space($p){{return {free};}}',1)
         replacements={
+            '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverScheduleForm.php':ROOT/'src/FejesMoverScheduleForm.php',
+            '/boot/config/plugins/fejes.mover.monitor/automation.json':lab/'automation.json',
             '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php':lab/'FejesMoverRuntime.php',
             '/boot/config/plugins/fejes.mover.monitor/settings.json':lab/'config/settings.json',
             '/boot/config/plugins/fejes.mover.monitor/selective.json':lab/'config/selective.json',

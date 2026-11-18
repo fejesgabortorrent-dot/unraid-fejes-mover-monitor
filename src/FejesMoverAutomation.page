@@ -41,12 +41,4 @@ if(($_SERVER['REQUEST_METHOD']??'GET')==='POST'){
 <p><a href="/Tools/FejesMoverProfile"><?=$esc($t('Profil beállítása','Configure profile','Profil einstellen'))?></a> · <a href="/Tools/FejesMoverSetup"><?=$esc($t('Mód és pool','Mode and pool','Modus und Pool'))?></a></p>
 <?php if($message):?><p role="status"><?=$esc($message)?></p><?php endif?>
 <?php if($error):?><p role="alert"><?=$esc($error)?></p><?php endif?>
-<form method="post">
-<input type="hidden" name="fmc_csrf" value="<?=$esc($runtime['token']??'')?>">
-<p><label><input type="checkbox" name="enabled" value="1" <?=($data['enabled']??false)===true?'checked':''?>> <?=$esc($t('Automatikus mozgatás engedélyezése','Enable automatic movement','Automatische Bewegung aktivieren'))?></label></p>
-<?php foreach(['threshold_gib'=>[$t('Szabadhely-küszöb (GiB)','Free space threshold (GiB)','Freier Speicher: Schwelle (GiB)'),300,1048576],'cooldown_minutes'=>[$t('Két kör között (perc)','Between batches (minutes)','Zwischen Durchläufen (Minuten)'),60,10080]] as $key=>$v):?>
-<p><label><?=$esc($v[0])?><br><input type="number" name="<?=$key?>" min="1" max="<?=$v[2]?>" required value="<?=$esc($data[$key]??$v[1])?>"></label></p>
-<?php endforeach?>
-<p><label><?=$esc($t('Ellenőrzés időköze (perc)','Check interval (minutes)','Prüfintervall (Minuten)'))?> <select name="interval_minutes"><?php foreach([5,10,15,30] as $n):?><option value="<?=$n?>" <?=($data['interval_minutes']??15)===$n?'selected':''?>><?=$n?></option><?php endforeach?></select></label></p>
-<button type="submit"><?=$esc($t('Mentés','Save','Speichern'))?></button>
-</form></main>
+<?php require '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverScheduleForm.php'; ?></main>
