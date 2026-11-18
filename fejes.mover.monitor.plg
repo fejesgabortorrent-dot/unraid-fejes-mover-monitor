@@ -4759,7 +4759,8 @@ def validate_pilot_report(report, unit):
     Original source signatures and checksums come from the private preparation
     snapshot, never from the current files. Physical verification is separate.
     """
-    if (report.get('version') != 2 or report.get('state') != 'inspection_required'
+    complete = report.get('state') == 'native_verified'
+    if (report.get('version') != 2 or report.get('state') not in {'inspection_required', 'native_verified'}
             or report.get('stage') != 'completed_seed_coordination'
             or report.get('active_file_started') is not False
             or report.get('requires_inspection') is not True
@@ -4777,7 +4778,7 @@ def validate_pilot_report(report, unit):
             or sorted(coordination.get('owners', [])) != sorted(owners)
             or sorted(coordination.get('resume', [])) != sorted(owners)):
         raise ValueError('Pilot scope or restoration evidence incomplete')
-    if report.get('active_file') not in paths:
+    if not complete and report.get('active_file') not in paths:
         raise ValueError('Pilot deferral file missing')
     inventory, hashes = unit.get('inventory', {}), unit.get('sha256', {})
     if set(inventory) != set(paths) or set(hashes) != set(paths):
@@ -4789,7 +4790,11 @@ def validate_pilot_report(report, unit):
                 or not isinstance(hashes[p], str) or not VALID_SHA.fullmatch(hashes[p])):
             raise ValueError('Invalid preparation evidence')
     rows = report.get('verified_files', [])
-    if (not rows or len(rows) >= len(paths) or report['active_file'] in {r.get('source') for r in rows}
+    if (not rows or (len(rows) != len(paths) if complete else len(rows) >= len(paths))
+            or (not complete and report['active_file'] in {r.get('source') for r in rows})
+            or (complete and (report.get('active_file') is not None
+                             or report.get('native_outcome', {}).get('state') != 'moved'
+                             or {r.get('source') for r in rows} != set(paths)))
             or sum(inventory[p]['signature'][2] for p in paths) > 32 * 1024**3):
         raise ValueError('Pilot is not a bounded partial unit')
     enriched = []
@@ -4942,8 +4947,23 @@ def check_media(rows):
     return checked
 
 
-def storage_quiet():
-    if mover.PID.exists() or Path('/var/run/fejes-selective-last-attempt.lock').exists():
+def orphan_pid(report):
+    """Only an absent exact coordinator PID may be inspected; never signal it."""
+    if not mover.PID.exists():
+        return None
+    if mover.PID.is_symlink():
+        raise ValueError('Linked Mover PID')
+    value = mover.PID.read_text()
+    pid = report.get('coordination_pid')
+    if (report.get('state') != 'native_verified' or type(pid) is not int or pid <= 1
+            or value != str(pid) or Path('/proc', str(pid)).exists()):
+        raise ValueError('Mover activity cannot be excluded')
+    return value
+
+
+def storage_quiet(report=None):
+    stale = orphan_pid(report or {})
+    if Path('/var/run/fejes-selective-last-attempt.lock').exists():
         raise ValueError('Mover activity cannot be excluded')
     scrub = subprocess.check_output(['btrfs','scrub','status',str(mover.POOL_ROOT)],
                                     timeout=12,text=True)
@@ -4972,7 +4992,6 @@ def read_report():
 
 
 def inspect_locked(pilot_directory=None):
-    storage_quiet()
     raw, digest, report = read_report()
     if pilot_directory is None:
         rows = validate_report(report)
@@ -5000,6 +5019,8 @@ def inspect_locked(pilot_directory=None):
         if not no_writers(set(unit['paths'])):
             raise ValueError('Unit has an active writer')
         retained = {'checked_retained_files': check_retained(unit, rows)}
+    storage_quiet(report if pilot_directory else None)
+    stale_pid = orphan_pid(report if pilot_directory else {})
     checked = check_media(rows)
     torrents = current_torrent_evidence(rows)
     if pilot_directory is not None:
@@ -5012,7 +5033,10 @@ def inspect_locked(pilot_directory=None):
             raise ValueError('Unit changed during recovery inspection')
     if hashlib.sha256(mover.LAST.read_bytes()).hexdigest() != digest:
         raise ValueError('Prior report changed during inspection')
-    return raw, digest, report, {'checked_destinations':checked,**torrents,**retained}
+    if orphan_pid(report if pilot_directory else {}) != stale_pid:
+        raise ValueError('Mover PID changed during inspection')
+    return raw, digest, report, {'checked_destinations':checked,**torrents,**retained,
+                                **({'orphan_pid': stale_pid} if stale_pid is not None else {})}
 
 
 def backup_locked(raw, digest):
@@ -5062,6 +5086,15 @@ def run(action, approval=None, confirm=None, pilot_directory=None):
         if digest2 != digest or checks2 != checks or raw2 != raw:
             raise ValueError('Evidence changed before recovery')
         backup=backup_locked(raw,digest)
+        stale_pid = checks.get('orphan_pid')
+        if stale_pid is not None:
+            if orphan_pid(prior2) != stale_pid:
+                raise ValueError('Mover PID changed before recovery')
+            pid_backup = backup.with_suffix('.pid')
+            with pid_backup.open('x') as out:
+                out.write(stale_pid); out.flush(); os.fsync(out.fileno())
+            if pid_backup.read_text() != stale_pid:
+                raise ValueError('PID backup readback mismatch')
         if hashlib.sha256(mover.LAST.read_bytes()).hexdigest() != digest:
             raise ValueError('Report changed before atomic update')
         # Cooldown before unlocking: failed recoveries may only cause a longer wait.
@@ -5080,6 +5113,10 @@ def run(action, approval=None, confirm=None, pilot_directory=None):
                             'historical_torrent_continuity':'not_available',
                             'operator_approved':True}
         mover.atomic_json(mover.LAST,record)
+        if stale_pid is not None:
+            if orphan_pid(prior2) != stale_pid:
+                raise ValueError('Mover PID changed before cleanup')
+            mover.PID.unlink()
         if mover.needs_inspection(mover.read_json(mover.LAST,{})):
             raise ValueError('Post-recovery latch state could not be verified')
         return {'recovered':True,'prior_sha256':digest,

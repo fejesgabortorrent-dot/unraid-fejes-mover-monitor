@@ -65,6 +65,48 @@ class RecoveryPolicy(unittest.TestCase):
     def test_exact_pre_native_ledger_is_eligible(self):
         self.assertEqual(len(recovery.validate_report(prior())),1)
 
+    def complete_pilot(self):
+        report, unit = self.pilot()
+        report.update(state='native_verified', native_outcome={'state':'moved'},
+                      moved_files=2, moved_bytes=110)
+        report.pop('active_file')
+        report['verified_files'].append({'source':unit['paths'][1],
+            'destination':'/mnt/disk4/Filmek/unit/movie.nfo', 'bytes':10,'sha256':'b'*64})
+        return report, unit
+
+    def test_restored_complete_native_ledger_can_be_reinspected(self):
+        report, unit = self.complete_pilot()
+        self.assertEqual(len(recovery.validate_pilot_report(report, unit)),2)
+
+    def test_complete_recovery_requires_exact_full_ledger_and_restoration(self):
+        for field in ('missing', 'duplicate', 'intent', 'restore', 'outcome'):
+            report, unit = self.complete_pilot()
+            if field == 'missing': report['verified_files'].pop()
+            if field == 'duplicate': report['verified_files'][1] = report['verified_files'][0]
+            if field == 'intent': report['active_file_started'] = True
+            if field == 'restore': report['coordination']['phase'] = 'before_restore'
+            if field == 'outcome': report['native_outcome']['state'] = 'unknown'
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                recovery.validate_pilot_report(report, unit)
+
+    def test_only_absent_exact_coordinator_pid_is_inspectable(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            pidfile = Path(tmp)/'mover.pid'
+            pidfile.write_text('2147483647')
+            report = {'state':'native_verified','coordination_pid':2147483647}
+            with patch.object(recovery.mover,'PID',pidfile):
+                self.assertEqual(recovery.orphan_pid(report),'2147483647')
+                for changed in (dict(report,state='native_intent'),
+                                dict(report,coordination_pid=1),
+                                dict(report,coordination_pid=True)):
+                    with self.assertRaises(ValueError): recovery.orphan_pid(changed)
+                import os
+                pidfile.write_text(str(os.getpid()))
+                with self.assertRaises(ValueError):
+                    recovery.orphan_pid(dict(report,coordination_pid=os.getpid()))
+
     def test_native_intent_never_recovers(self):
         for fields in (dict(active_file_started=True),dict(active_sha256='a'*64),
                        dict(stage='native_move_or_verification'),
