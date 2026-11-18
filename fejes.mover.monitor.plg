@@ -1609,6 +1609,17 @@ $auditNames=[
  'seed_ready_verified'=>$t('Seedelésre kész állapot igazolva','Seed readiness verified','Seed-Bereitschaft geprüft'),
  'worker_finished'=>$t('Futás lezárva','Run finished','Lauf abgeschlossen'),
  'worker_failed'=>$t('Futás hibával leállt','Run failed','Lauf fehlgeschlagen')];
+$auditPhases=['before_stop'=>$t('Torrent megállítása előtt','Before stopping torrent','Vor Torrent-Stopp'),'stopped'=>$t('Torrent megállítva','Torrent stopped','Torrent gestoppt'),'before_restore'=>$t('Torrent visszaindítása','Resuming torrent','Torrent fortsetzen'),'restored'=>$t('Torrent visszaindítva','Torrent resumed','Torrent fortgesetzt')];
+$auditStates=['checking'=>$t('Előellenőrzés','Preflight checks','Vorprüfung'),'native_intent'=>$t('Áthelyezés és ellenőrzés','Movement and verification','Verschieben und Prüfen'),'native_verified'=>$t('Áthelyezés ellenőrizve','Movement verified','Verschieben geprüft'),'completed'=>$t('Befejezve','Completed','Abgeschlossen'),'completed_seed_ready'=>$t('Kész, seedelésre alkalmas','Completed, ready to seed','Fertig, bereit zum Seeden'),'deferred'=>$t('Biztonsági halasztás','Safety deferral','Sicherheitsbedingter Aufschub'),'blocked'=>$t('Indítás tiltva','Start blocked','Start gesperrt')];
+$auditDetail=static function($row)use($t,$auditPhases,$auditStates){$parts=[];
+ if(isset($row['step'],$row['files']))$parts[]=$t('Ellenőrizve: ','Verified: ','Geprüft: ').(int)$row['step'].' / '.(int)$row['files'];
+ elseif(isset($row['files']))$parts[]=(int)$row['files'].' '.$t('fájl','files','Dateien');
+ if(isset($row['bytes']))$parts[]=number_format((float)$row['bytes']/1073741824,3).' GiB';
+ if(isset($auditPhases[$row['phase']??'']))$parts[]=$auditPhases[$row['phase']];
+ if(isset($auditStates[$row['state']??'']))$parts[]=$auditStates[$row['state']];
+ if(isset($row['error_type']))$parts[]=$t('Hibaazonosító: ','Error identifier: ','Fehlerkennung: ').substr((string)$row['error_type'],0,80);
+ if(isset($row['reason'])&&$row['reason']!=='none')$parts[]=$t('Ok: ','Reason: ','Grund: ').substr((string)$row['reason'],0,80);
+ return $parts?implode(' · ',$parts):'—';};
 $forecast=$report['forecast']??null;
 if(!is_array($forecast)){
  $forecastPath='/boot/config/plugins/fejes.mover.monitor/selective-forecast.json';
@@ -1782,8 +1793,8 @@ $lastDisplay=!empty($fmc['liveSeedWorker'])?$t('Ellenőrzés vagy mozgatás foly
 <p role="alert"><?=$e($t('A naplóhoz tartozó folyamat már nem fut, végső lezárás nincs rögzítve. Ellenőrzés szükséges.','The logged process is no longer running and has no final completion record. Inspection is required.','Der protokollierte Prozess läuft nicht mehr; ein Abschluss fehlt. Prüfung erforderlich.'))?></p>
 <?php endif?>
 <table><thead><tr><th><?=$e($t('Időpont','Time','Zeit'))?></th><th><?=$e($t('Lépés','Step','Schritt'))?></th><th><?=$e($t('Részletek','Details','Details'))?></th></tr></thead><tbody>
-<?php foreach($auditRows as $row):if(!is_array($row))continue;$detail=array_intersect_key($row,array_flip(['step','files','bytes','state','phase','reason','error_type']));?>
-<tr><td><?=$e(date('Y-m-d H:i:s',(int)($row['time']??0)))?></td><td><?=$e($auditNames[$row['event']??'']??$t('Esemény','Event','Ereignis'))?></td><td><?=$e(json_encode($detail,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES))?></td></tr>
+<?php foreach($auditRows as $row):if(!is_array($row))continue;?>
+<tr><td><?=$e(date('Y-m-d H:i:s',(int)($row['time']??0)))?></td><td><?=$e($auditNames[$row['event']??'']??$t('Esemény','Event','Ereignis'))?></td><td><?=$e($auditDetail($row))?></td></tr>
 <?php endforeach?></tbody></table>
 <?php else:?><p><?=$e($t('Ehhez a korábbi futáshoz még nincs részletes eseménynapló. Az új naplózás a frissítés utáni futásokra érvényes.','This earlier run has no detailed event log. New logging applies to runs after the update.','Für diesen älteren Lauf gibt es kein Ereignisprotokoll. Die neue Protokollierung gilt für Läufe nach dem Update.'))?></p><?php endif?>
 <h3><?=$e($t('Utolsó szelektív futás','Last selective run','Letzter selektiver Lauf'))?></h3>
