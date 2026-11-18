@@ -685,6 +685,10 @@ def main():
                     start_new_session=True,close_fds=True)
             output={'state':'requested','pid':child.pid,'message':'The worker will recheck every guard before movement.'}
         elif args.action=='run':
+            # Closing a diagnostic terminal must not kill an in-flight worker.
+            # The supported UI start already launches a detached session.
+            import signal
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
             output=run_configured()
         elif args.action=='status': output=read_json(LAST,{'state':'not_run'})
         else:

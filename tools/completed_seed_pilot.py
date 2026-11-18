@@ -28,6 +28,28 @@ RUNNING = {'uploading', 'stalledUP', 'queuedUP'}
 LIMIT = 32 * 1024**3
 
 
+def event(directory, name, **fields):
+    """Durable private run journal plus a bounded, filename-free UI summary."""
+    allowed = {'step', 'files', 'bytes', 'state', 'reason', 'error_type', 'phase'}
+    if (not isinstance(name, str) or not name.replace('_', '').isalnum()
+            or set(fields) - allowed
+            or any(type(v) not in (str, int, bool) for v in fields.values())):
+        raise ValueError('Invalid run event')
+    directory = Path(directory)
+    if any(p.is_symlink() for p in (directory, *directory.parents)):
+        raise ValueError('Linked event directory')
+    row = dict(time=time.time(), pid=os.getpid(), event=name, **fields)
+    path = directory / 'events.jsonl'
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, 'a') as out:
+        out.write(json.dumps(row, allow_nan=False) + '\n'); out.flush(); os.fsync(out.fileno())
+    summary = n.BASE / 'completed-seed-events.json'
+    previous = read_json(summary, {})
+    history = previous.get('events', []) if previous.get('run_id') == directory.name else []
+    atomic_json(summary, {'version':1, 'run_id':directory.name,
+                          'events':(history + [row])[-40:]})
+
+
 def environment():
     host = os.uname().nodename
     if host == 'FejesMover-Test':
@@ -211,6 +233,7 @@ def prepare(chosen, service_settings=None):
         unit['service_settings'] = dict(service_settings)
     directory = root / ('fejes-completed-seed-pilot-' + str(time.time_ns()))
     directory.mkdir(mode=0o700)
+    event(directory, 'preparing', files=unit['files'], bytes=unit['bytes'])
     archive = directory / 'rollback.tgz'
     with tarfile.open(archive, 'x:gz') as tar:
         for p in (n.BASE, Path('/boot/config/plugins/fejes.mover.monitor.plg'),
@@ -239,6 +262,7 @@ def prepare(chosen, service_settings=None):
     atomic_json(directory / 'authorization.json', {'version': 1, 'host': os.uname().nodename,
         'profile': {'pool': n.PROFILE.pool, 'share': n.PROFILE.share, 'torrent_container': n.PROFILE.torrent_container},
         'scope_paths': unit['paths'], 'rollback_sha256': backup_digest})
+    event(directory, 'prepared', files=unit['files'], bytes=unit['bytes'])
     return {'authorization': str(directory / 'authorization.json'),
             'bytes': unit['bytes'], 'files': unit['files']}
 
@@ -290,11 +314,14 @@ class Evidence:
                 'no_writers': no_writers(set(self.keys) | set(retained)), 'namespace_unchanged': True}
 
     def verify_files(self):
-        for key in self.keys:
+        event(self.directory, 'post_resume_verification', files=len(self.keys))
+        for step, key in enumerate(self.keys, 1):
+            event(self.directory, 'file_verification_started', step=step, files=len(self.keys))
             p = n.SOURCE / Path(key).relative_to(n.ROOT)
             targets = n.destinations(p)
             if p.exists() or len(targets) != 1 or n.sha256(targets[0]) != self.unit['sha256'][key] or n.sha256(Path(key)) != self.unit['sha256'][key]:
                 raise ValueError('Post-move file verification failed')
+            event(self.directory, 'file_verified', step=step, files=len(self.keys))
         torrents, mounts = n.torrent_snapshot()
         rows = {t['hash']: t for t in torrents if t['hash'] in self.unit['owners']}
         if sorted(rows) != self.unit['owners']:
@@ -311,6 +338,7 @@ class Evidence:
                 raise ValueError('Post-move retained array members changed')
         self.post_uploaded = {digest: t['uploaded'] for digest, t in rows.items()}
         atomic_json(self.directory / 'seed-ready.json', {'verified': True, 'peer_upload_baseline': self.post_uploaded})
+        event(self.directory, 'seed_ready_verified')
         return {'hashes_match': True, 'logical_paths_unchanged': True, 'all_complete': True, 'resumed': True}
 
     def verify_peer(self, hashes):
@@ -331,12 +359,23 @@ def run(authorization):
     environment()
     directory = Path(authorization).parent
     evidence = Evidence(directory)
-    result = run_owner_pilot(authorization=authorization, report_path=directory / 'active-seed-pilot-last.json',
-        initial_evidence=evidence.snapshot, fresh_evidence=evidence.snapshot,
-        transport=DockerQbitTransport(n.PROFILE.torrent_container), inventory=evidence.inventory,
-        verify_files=evidence.verify_files, verify_peer=evidence.verify_peer, sleep=time.sleep,
-        native_module=n)
+    event(directory, 'worker_started', files=len(evidence.keys))
+    def state_event(state):
+        event(directory, 'native_state', state=state.get('state', 'unknown'),
+              step=len(state.get('verified_files', [])), files=len(evidence.keys),
+              phase=state.get('coordination', {}).get('phase', 'none'))
+    try:
+        result = run_owner_pilot(authorization=authorization, report_path=directory / 'active-seed-pilot-last.json',
+            initial_evidence=evidence.snapshot, fresh_evidence=evidence.snapshot,
+            transport=DockerQbitTransport(n.PROFILE.torrent_container), inventory=evidence.inventory,
+            verify_files=evidence.verify_files, verify_peer=evidence.verify_peer, sleep=time.sleep,
+            native_module=n, on_state=state_event)
+    except BaseException as error:
+        event(directory, 'worker_failed', error_type=type(error).__name__)
+        raise
     atomic_json(directory / 'outcome.json', result)
+    event(directory, 'worker_finished', state=result.get('state', 'unknown'),
+          reason=result.get('reason', 'none'))
     return result
 
 

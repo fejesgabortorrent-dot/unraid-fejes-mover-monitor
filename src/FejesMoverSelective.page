@@ -70,6 +70,21 @@ $lastPath='/boot/config/plugins/fejes.mover.monitor/selective-last.json';
 $lastRaw=is_link($lastPath)?false:@file_get_contents($lastPath);
 $last=is_string($lastRaw)?json_decode($lastRaw,true):['state'=>'not_run'];
 if(!is_array($last))$last=['state'=>'unknown'];
+$auditPath='/boot/config/plugins/fejes.mover.monitor/completed-seed-events.json';
+$auditRaw=(!is_link($auditPath)&&is_file($auditPath)&&filesize($auditPath)<=65536)?@file_get_contents($auditPath):false;
+$audit=is_string($auditRaw)?json_decode($auditRaw,true):null;
+$auditRows=is_array($audit)&&($audit['version']??null)===1&&is_array($audit['events']??null)?array_slice($audit['events'],-40):[];
+$auditNames=[
+ 'preparing'=>$t('Mentés és előkészítés','Backup and preparation','Sicherung und Vorbereitung'),
+ 'prepared'=>$t('Előkészítés kész','Preparation complete','Vorbereitung abgeschlossen'),
+ 'worker_started'=>$t('Mozgató elindult','Worker started','Prozess gestartet'),
+ 'native_state'=>$t('Natív mozgatás / torrentállapot','Native movement / torrent state','Natives Verschieben / Torrentstatus'),
+ 'post_resume_verification'=>$t('Visszaindítás utáni ellenőrzés','Verification after resume','Prüfung nach Fortsetzung'),
+ 'file_verification_started'=>$t('Fájlellenőrzés indul','File verification started','Dateiprüfung gestartet'),
+ 'file_verified'=>$t('Fájl ellenőrizve','File verified','Datei geprüft'),
+ 'seed_ready_verified'=>$t('Seedelésre kész állapot igazolva','Seed readiness verified','Seed-Bereitschaft geprüft'),
+ 'worker_finished'=>$t('Futás lezárva','Run finished','Lauf abgeschlossen'),
+ 'worker_failed'=>$t('Futás hibával leállt','Run failed','Lauf fehlgeschlagen')];
 $forecast=$report['forecast']??null;
 if(!is_array($forecast)){
  $forecastPath='/boot/config/plugins/fejes.mover.monitor/selective-forecast.json';
@@ -236,6 +251,17 @@ $lastDisplay=!empty($fmc['liveSeedWorker'])?$t('Ellenőrzés vagy mozgatás foly
 <p><?=$e($t('A szabad hely küszöbe és a várakozási idő is érvényes. Mentés, scrub, paritás, másik Mover vagy bizonytalan állapot esetén nincs indulás. Egy kör méretkorlátja: '.$batchGiB.' GiB.','Free-space threshold and cooldown also apply. Backup, scrub, parity, another Mover or unknown state prevents starting. Each batch is limited to '.$batchGiB.' GiB.','Freiplatzgrenze und Wartezeit gelten ebenfalls. Backup, Scrub, Parität, anderer Mover oder unbekannter Zustand verhindern den Start. Pro Lauf höchstens '.$batchGiB.' GiB.'))?></p>
 </details><?php endif?>
 <details class="fms-panel"><summary><?=$e($t('Utolsó futás részletei és napló','Last run details and log','Letzter Lauf und Protokoll'))?></summary><section id="fms-last" style="border:1px solid #8886;padding:18px;margin-top:24px">
+<?php if($auditRows):$auditLast=end($auditRows);$auditPid=$auditLast['pid']??0;?>
+<h3><?=$e($t('Tartós futási napló','Persistent run log','Dauerhaftes Laufprotokoll'))?></h3>
+<p><?=$e($t('A teljes privát napló a lemezen marad; itt az utolsó 40 esemény látható, médiafájlnevek és belépési adatok nélkül.','The full private log stays on disk; the latest 40 events are shown here without media filenames or credentials.','Das vollständige private Protokoll bleibt auf der Festplatte; hier stehen die letzten 40 Ereignisse ohne Mediendateinamen oder Zugangsdaten.'))?></p>
+<?php if(is_int($auditPid)&&$auditPid>1&&!is_dir('/proc/'.$auditPid)&&!in_array($auditLast['event']??'',['worker_finished','worker_failed'],true)):?>
+<p role="alert"><?=$e($t('A naplóhoz tartozó folyamat már nem fut, végső lezárás nincs rögzítve. Ellenőrzés szükséges.','The logged process is no longer running and has no final completion record. Inspection is required.','Der protokollierte Prozess läuft nicht mehr; ein Abschluss fehlt. Prüfung erforderlich.'))?></p>
+<?php endif?>
+<table><thead><tr><th><?=$e($t('Időpont','Time','Zeit'))?></th><th><?=$e($t('Lépés','Step','Schritt'))?></th><th><?=$e($t('Részletek','Details','Details'))?></th></tr></thead><tbody>
+<?php foreach($auditRows as $row):if(!is_array($row))continue;$detail=array_intersect_key($row,array_flip(['step','files','bytes','state','phase','reason','error_type']));?>
+<tr><td><?=$e(date('Y-m-d H:i:s',(int)($row['time']??0)))?></td><td><?=$e($auditNames[$row['event']??'']??$t('Esemény','Event','Ereignis'))?></td><td><?=$e(json_encode($detail,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES))?></td></tr>
+<?php endforeach?></tbody></table>
+<?php else:?><p><?=$e($t('Ehhez a korábbi futáshoz még nincs részletes eseménynapló. Az új naplózás a frissítés utáni futásokra érvényes.','This earlier run has no detailed event log. New logging applies to runs after the update.','Für diesen älteren Lauf gibt es kein Ereignisprotokoll. Die neue Protokollierung gilt für Läufe nach dem Update.'))?></p><?php endif?>
 <h3><?=$e($t('Utolsó szelektív futás','Last selective run','Letzter selektiver Lauf'))?></h3>
 <p><?=$e($lastDisplay)?></p>
 <p><?=$e($t('Ellenőrzötten áthelyezve','Verified movement','Geprüft verschoben'))?>: <?=$e($last['moved_files']??0)?> <?=$e($t('fájl','files','Dateien'))?> · <?=$e(number_format(($last['moved_bytes']??0)/1073741824,3))?> GiB</p>

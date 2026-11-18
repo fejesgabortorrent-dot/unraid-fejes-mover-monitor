@@ -46,7 +46,7 @@ def run_vm_trial(*, marker, report_path, initial_evidence, fresh_evidence,
 
 def run_owner_pilot(*, authorization, report_path, initial_evidence, fresh_evidence,
                     transport, inventory, verify_files, verify_peer, sleep,
-                    native_module=None):
+                    native_module=None, on_state=None):
     """One owner-authorized unit; never a scheduler or automatic rollout.
 
     A root-only authorization binds the exact unit/profile, a verified rollback
@@ -95,14 +95,14 @@ def run_owner_pilot(*, authorization, report_path, initial_evidence, fresh_evide
         days=1, verify_files=verify_files, verify_peer=verify_peer, sleep=sleep,
         native_module=native_module, completed_seed=True,
         report_name=report.name, mirror_native=True, approved_paths=paths,
-        require_peer_upload=False)
+        require_peer_upload=False, on_state=on_state)
 
 
 def _run_trial(*, report_path, initial_evidence, fresh_evidence, transport,
                inventory, days, verify_files, verify_peer, sleep,
                native_module=None, completed_seed=False,
                report_name='active-seed-vm-last.json', mirror_native=False,
-               approved_paths=None, require_peer_upload=True):
+               approved_paths=None, require_peer_upload=True, on_state=None):
     """Wire the real execute_file protocol behind locks and a durable journal.
 
     Callbacks are provided by a disposable-guest harness:
@@ -206,6 +206,8 @@ def _run_trial(*, report_path, initial_evidence, fresh_evidence, transport,
                     active_file_started=state.get('active_file_started', False))
                 atomic_json(native.LAST, mirrored)
             last_durable[0] = dict(state)
+            if on_state is not None:
+                on_state(state)
 
         def journal(value):
             coordination[0] = dict(value)
