@@ -20,11 +20,12 @@ TREE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TREE / 'tools'))
 import selective_recovery as r
 n = r.mover
-BASE = Path('/mnt/disk1/fm-acceptance/pr48-postrestore-recovery-v1')
+BASE = Path('/mnt/disk1/fm-acceptance/pr48-postrestore-recovery-v2')
 
 
 def main():
     h.lab.environment()
+    h.lab.authenticate(h.lab.SEED)
     assert os.uname().nodename == 'FejesMover-Test'
     assert n.ROOT == '/mnt/user/fejesmover' and n.PROFILE.torrent_container == 'fm-qbit'
     assert not BASE.exists() and not n.PID.exists()
