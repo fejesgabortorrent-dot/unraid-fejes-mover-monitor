@@ -1,4 +1,4 @@
-# Release status — 2026.11.18.1
+# Release status — 2026.11.18.2
 
 18.1 adds persistent private run logs, readable localized events, terminal
 hangup protection and explicit backed-up recovery after coordinator loss.
