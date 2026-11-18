@@ -20,7 +20,7 @@ TREE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TREE / 'tools'))
 import selective_recovery as r
 n = r.mover
-BASE = Path('/mnt/disk1/fm-acceptance/pr48-postrestore-recovery-v2')
+BASE = Path('/mnt/disk1/fm-acceptance/pr48-postrestore-recovery-v3')
 
 
 def main():
@@ -74,6 +74,7 @@ def main():
     try:
         assert not Path('/proc',str(child)).exists() and n.PID.read_text()==str(child)
         r.BACKUP_DIR=BASE/'recovery-backups'
+        r.BACKUP_DISK=Path('/mnt/disk1')
         before = n.LAST.read_bytes()
         checked=r.run('inspect',pilot_directory=directory)
         assert n.LAST.read_bytes()==before and n.PID.read_text()==str(child)

@@ -4700,7 +4700,8 @@ from selective_preview import atomic_json
 from torrent_preflight import host_path, SEED_STATES
 import selective_mover as mover
 
-BACKUP_DIR = Path('/mnt/disk5/biztonsagi_mentesek/fejes-mover-recovery')
+BACKUP_DISK = Path('/mnt/disk5')
+BACKUP_DIR = BACKUP_DISK / 'biztonsagi_mentesek/fejes-mover-recovery'
 LOCKS = ('fejes-mover-launch.lock', 'fejes-integrity-cron.lock',
          'fejes-selective-inventory.lock')
 CONFIRM = 'I_UNDERSTAND_RECOVERY'
@@ -5040,7 +5041,7 @@ def inspect_locked(pilot_directory=None):
 
 
 def backup_locked(raw, digest):
-    if not Path('/mnt/disk5').is_mount():
+    if not BACKUP_DISK.is_mount():
         raise ValueError('Physical backup disk5 is not mounted')
     if BACKUP_DIR.is_symlink():
         raise ValueError('Recovery backup directory is a symlink')
