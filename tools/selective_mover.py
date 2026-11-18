@@ -10,6 +10,7 @@ from collections import Counter
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -39,7 +40,6 @@ POOL_ROOT = Path('/mnt') / PROFILE.pool
 ENGINE = '/usr/libexec/unraid/move'
 PID = Path('/var/run/mover.pid')
 ATTEMPT = Path('/var/run/fejes-selective-last-attempt')
-MAX_FILES = 8
 MAX_BYTES = 16*1024**3
 ERRORS = (OSError, ValueError, TypeError, KeyError, AttributeError, RuntimeError,
           subprocess.SubprocessError)
@@ -139,9 +139,40 @@ def torrent_snapshot():
     return items,converted
 
 
+def cooldown_duration_seconds(automation, launcher_text):
+    """Legacy launcher is seconds; managed automation is explicitly minutes."""
+    if automation is not None:
+        if not automation['enabled']:
+            raise ValueError('Managed automation disabled')
+        value=automation['cooldown_minutes']
+        if type(value) is not int:
+            raise ValueError('Managed cooldown invalid')
+        seconds=value*60
+    else:
+        if not isinstance(launcher_text,str):
+            raise ValueError('Launcher configuration missing')
+        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher_text,re.M)
+        if len(wait)!=1:
+            raise ValueError('Cooldown unavailable')
+        seconds=int(wait[0])
+    if not 0 <= seconds <= 86400:
+        raise ValueError('Cooldown duration invalid')
+    return seconds
+
+
+def finish_current_cache_unit(prior, own_coordination, state, detail):
+    return (own_coordination and prior.get('stage') == 'completed_seed_coordination'
+            and prior.get('requires_inspection') is True
+            and type(prior.get('moved_files')) is int and prior['moved_files'] > 0
+            and state == 'wait' and isinstance(detail, dict)
+            and detail.get('stop_reached') is True)
+
+
 def guards(owned=False):
     prior=read_json(LAST,{})
-    if prior.get('requires_inspection') or (not owned and needs_inspection(prior)):
+    own_coordination = (owned and PID.is_file() and PID.read_text() == str(os.getpid())
+                        and prior.get('coordination_pid') == os.getpid())
+    if (prior.get('requires_inspection') and not own_coordination) or (not owned and needs_inspection(prior)):
         raise InspectionRequired('Previous movement requires inspection')
     runtime=read_json(BASE/'settings.json',{})
     if runtime.get('version')!=1 or runtime.get('mode')!='advanced' or runtime.get('pool')!='cache':
@@ -160,21 +191,20 @@ def guards(owned=False):
     report=dry_run()
     checks={x['key']:x['state'] for x in report['dry_run']['checks']}
     result={key:checks.get(key,'unknown') for key in ('backup','parity','mover','cooldown','capacity')}
+    # Finish an already partially moved, owned unit at the lower drain target.
+    # This only defers a cycle stop, never unknown capacity or another guard.
+    capacity_detail = next((c.get('detail') for c in report['dry_run']['checks']
+                            if c['key'] == 'capacity'), None)
+    if finish_current_cache_unit(prior, own_coordination, result['capacity'], capacity_detail):
+        result['capacity'] = 'pass'
     if owned and PID.exists() and PID.read_text()==str(os.getpid()): result['mover']='pass'
     if checks.get('launcher')!='pass': raise ValueError('Legacy safety settings unavailable')
     automation=load_automation(profile=PROFILE)
-    if automation is not None:
-        if not automation['enabled']:raise ValueError('Managed automation disabled')
-        wait_minutes=automation['cooldown_minutes']
-    else:
-        launcher=PROFILE.launcher.read_text()
-        wait=re.findall(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$',launcher,re.M)
-        if len(wait)!=1: raise ValueError('Cooldown unavailable')
-        wait_minutes=int(wait[0])
+    wait_seconds=cooldown_duration_seconds(automation, PROFILE.launcher.read_text() if automation is None else None)
     if not owned and ATTEMPT.exists():
         last=ATTEMPT.read_text().strip()
         if not last.isdigit() or int(last)>time.time(): raise ValueError('Invalid selective timestamp')
-        if time.time()-int(last)<wait_minutes*60: result['cooldown']='wait'
+        if time.time()-int(last)<wait_seconds: result['cooldown']='wait'
     scrub=subprocess.check_output(['btrfs','scrub','status',str(POOL_ROOT)],text=True,timeout=10)
     if not re.search(r'^Status:\s+finished$',scrub,re.M) or 'no errors found' not in scrub:
         raise ValueError('Cache scrub active or unhealthy')
@@ -216,7 +246,7 @@ def collect(update=False,owned=False):
     files,current=inventory_adapter.inventory(now,previous['files'])
     items,mounts=torrent_snapshot()
     protection=guards(owned)
-    selection=plan(files,items,mounts,protection,days=days,now=time.time(),observed_at=now,root=ROOT)
+    selection=plan(files,items,mounts,protection,days=days,now=time.time(),observed_at=now,root=ROOT,target_ratio=target)
     selection['ratio_target']=target
     selection['max_bytes']=limit
     selection['candidates']=prioritize(selection['candidates'],items,mounts,target,
@@ -230,12 +260,19 @@ def collect(update=False,owned=False):
 
 def preview(update=False):
     selection,files,current,items,mounts,protection=collect(update)
-    return {'execution_allowed':False,'live_movement':'available','age_days':selection['age_days'],
+    result = {'execution_allowed':False,'live_movement':'available','age_days':selection['age_days'],
             'decision':selection['decision'],'candidate_count':len(selection['candidates']),
             'file_count':len(files),'skipped_counts':dict(Counter(x['reason'] for x in selection['skipped'])),
             'blockers':selection['blockers'],'guards':protection,'inventory_updated':update,
             'forecast':waiting_table(files,items,mounts,current,protection,
                                      days=selection['age_days'],now=time.time(),root=ROOT,target_ratio=selection['ratio_target'],max_bytes=selection['max_bytes'])}
+    completed_mode=read_json(CONFIG, {}).get('completed_seed_mode', False)
+    if type(completed_mode) is not bool:
+        raise ValueError('Completed seed mode must be explicitly boolean')
+    if completed_mode:
+        import completed_seed_service
+        return completed_seed_service.preview(result, update)
+    return result
 
 
 def fresh_candidate(key,expected,days,owned=True):
@@ -248,7 +285,10 @@ def fresh_candidate(key,expected,days,owned=True):
     now=time.time()
     item=dict(path=key,regular=True,symlink=False,nlink=info.st_nlink,open=key in opened,
               stable=True,mtime=info.st_mtime,first_seen=expected['first_seen'])
-    selection=plan([item],items,mounts,protection,days=days,now=now,observed_at=now,root=ROOT)
+    settings=read_json(CONFIG,{'version':1,'age_days':7})
+    if settings.get('version')!=1: raise ValueError('Unknown configuration')
+    target=ratio_target(settings.get('ratio_target',0))
+    selection=plan([item],items,mounts,protection,days=days,now=now,observed_at=now,root=ROOT,target_ratio=target)
     return path,selection['candidates']==[key]
 
 
@@ -304,14 +344,92 @@ class NativeMoveError(RuntimeError):
 
 
 def execute_file(key,expected,days,before_native=None):
-    path,eligible=fresh_candidate(key,expected,days)
-    if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
+    return _execute_file(key, expected, days, before_native, fresh_candidate)
+
+
+def completed_seed_candidate(key, expected, days, owned=True, rejection=None):
+    """Explicit seed transaction: completion replaces age/ratio, never guards.
+
+    Only the opt-in coordinator calls this after stopping every unit owner.
+    The complete unit and API file list must also be checked by its host adapter.
+    A real second inventory signature, no open handles, a complete stopped seed,
+    stable logical namespace and every existing native guard are still required.
+    """
+    path = SOURCE / Path(key).relative_to(ROOT)
+    def reject(reason):
+        if rejection is not None:
+            rejection.append(reason)
+        return path, False
+    info = valid_file(path)
+    first = expected.get('first_seen')
+    if signature(info) != expected.get('signature'):
+        return reject('source_signature_changed')
+    if (type(first) not in (int, float) or not math.isfinite(first) or
+            not 0 <= first < time.time()):
+        return reject('inventory_time_unverified')
+    if key in inventory_adapter.open_paths():
+        return reject('source_open')
+    items, mounts = torrent_snapshot()
+    protection = guards(owned)
+    for g in (
+            'backup', 'parity', 'integrity', 'mount', 'mover', 'cooldown',
+            'capacity', 'open_files', 'namespace'):
+        if protection.get(g) != 'pass':
+            return reject('guard_' + g)
+    owners = [t for t in items if within(key, host_path(t['content_path'], mounts))
+              or within(host_path(t['content_path'], mounts), key)]
+    if not owners:
+        return reject('owner_missing')
+    for t in owners:
+        if (t.get('state') not in {'stoppedUP', 'pausedUP'} or
+                type(t.get('progress')) not in (int, float) or
+                t['progress'] != 1 or
+                type(t.get('dlspeed')) is not int or t['dlspeed'] != 0 or
+                type(t.get('upspeed')) is not int or t['upspeed'] != 0):
+            return reject('owner_not_quiescent_complete_seed')
+    return path, True
+
+
+def execute_completed_seed_file(key, expected, days, before_native=None):
+    """VM-only opt-in completed-seed path; not wired to run() or scheduler."""
+    if before_native is None:
+        return _execute_file(key, expected, days, before_native, completed_seed_candidate)
+    deadline = time.monotonic() + 120
+    intent = False
+    def journal(checksum):
+        nonlocal intent
+        intent = True
+        before_native(checksum)
+    while True:
+        try:
+            return _execute_file(key, expected, days, journal, completed_seed_candidate)
+        except IntegrityBusy:
+            # File Integrity's event watcher may start between files despite the
+            # shared scheduling lock. Retry only admission, never native intent.
+            if intent or time.monotonic() >= deadline:
+                raise
+            time.sleep(2)
+
+
+def _execute_file(key, expected, days, before_native, candidate):
+    rejection = []
+    def refresh():
+        if candidate is completed_seed_candidate:
+            return candidate(key, expected, days, rejection=rejection)
+        return candidate(key, expected, days)
+    def deferred():
+        result = {'state':'skipped','reason':'fresh_conditions_changed'}
+        if rejection:
+            result['admission_reason'] = rejection[-1]
+        return result
+    path,eligible=refresh()
+    if not eligible: return deferred()
     if destinations(path): return {'state':'skipped','reason':'existing_array_copy'}
     before=valid_file(path)
     attrs={key:os.getxattr(path,key) for key in os.listxattr(path)}
     checksum=sha256(path)
-    path,eligible=fresh_candidate(key,expected,days)
-    if not eligible: return {'state':'skipped','reason':'fresh_conditions_changed'}
+    path,eligible=refresh()
+    if not eligible: return deferred()
     if destinations(path) or signature(path.stat())!=signature(before):
         return {'state':'skipped','reason':'source_or_destination_changed'}
     opened=subprocess.run(['fuser','-s',str(path)],capture_output=True)
@@ -343,6 +461,29 @@ def execute_file(key,expected,days,before_native=None):
     if any(os.getxattr(target,key)!=value for key,value in attrs.items()):
         raise RuntimeError('Extended metadata mismatch; destination retained')
     return {'state':'moved','bytes':after.st_size,'sha256':checksum,'destination':str(target)}
+
+
+def safe_pre_native_partial_deferral(report, moved_in_unit, outcome):
+    """Only a verified, pre-native skip may defer the rest of a partly moved unit.
+
+    The completed native moves remain subject to the final torrent-continuity
+    check; any native intent or ambiguous result must retain the inspection latch.
+    """
+    if outcome.get('state') != 'skipped' or outcome.get('reason') not in {
+            'fresh_conditions_changed', 'source_or_destination_changed', 'open_file'}:
+        return False
+    if report.get('active_file_started') is not False:
+        return False
+    evidence = report.get('verified_files')
+    if not isinstance(evidence, list) or not isinstance(moved_in_unit, int) or moved_in_unit < 1:
+        return False
+    if len(evidence) != report.get('moved_files'):
+        return False
+    if any(not isinstance(row, dict) or type(row.get('bytes')) is not int or
+           row['bytes'] < 0 or not row.get('sha256') or not row.get('destination')
+           for row in evidence):
+        return False
+    return sum(row['bytes'] for row in evidence) == report.get('moved_bytes')
 
 
 def run():
@@ -392,8 +533,6 @@ def run():
             if not selected.issuperset(group):
                 skips['unit_not_ready']+=len(group);continue
             unit_size=sum(current[key]['signature'][2] for key in group)
-            if len(group)>MAX_FILES-report['moved_files']:
-                skips['batch_file_limit' if len(group)==1 else 'unit_file_limit']+=len(group);continue
             if unit_size>limit-report['moved_bytes']:
                 skips['file_exceeds_batch_limit' if len(group)==1 and unit_size>limit else ('batch_size_limit' if len(group)==1 else 'unit_size_limit')]+=len(group);continue
             # Recheck every member before allowing the first native file move.
@@ -428,11 +567,24 @@ def run():
                     log(f'verified file #{report["moved_files"]}, bytes={outcome["bytes"]}, sha256={outcome["sha256"]}')
                 elif outcome['state']=='skipped':
                     reason=outcome['reason']
+                    if report['active_file_started'] and moved_in_unit:
+                        # After an earlier verified move, ambiguous native
+                        # intent for this file must retain inspection.
+                        raise RuntimeError('Native outcome requires inspection')
+                    if moved_in_unit and not safe_pre_native_partial_deferral(report,moved_in_unit,outcome):
+                        raise RuntimeError('Unit partially moved; inspect before another run')
+                    # Preserve the historical no-files-moved behavior for a
+                    # retained source with no destination and no prior move.
                     report['active_file_started']=False
                     for field in ('active_file','active_signature','active_sha256'):report.pop(field,None)
                     skips[reason if len(group)==1 else 'unit_changed']+=len(group)-moved_in_unit
                     if moved_in_unit:
-                        raise RuntimeError('Unit partially moved; inspect before another run')
+                        # Do not claim the unit is complete. Preserve verified
+                        # transfers and re-evaluate remaining files on a later run.
+                        skips['partial_unit_pre_native_deferred']+=1
+                        log('partially moved unit deferred before native intent; final torrent verification required')
+                    report['skipped']=dict(skips)
+                    atomic_json(LAST,report)
                     break
                 else:raise RuntimeError('Unrecognized native outcome')
                 report['active_file_started']=False
@@ -509,6 +661,17 @@ def run():
     return report
 
 
+def run_configured():
+    """One dispatch point shared by manual and scheduled worker entrypoints."""
+    completed_mode=read_json(CONFIG, {}).get('completed_seed_mode', False)
+    if type(completed_mode) is not bool:
+        raise ValueError('Completed seed mode must be explicitly boolean')
+    if completed_mode:
+        import completed_seed_service
+        return completed_seed_service.run()
+    return run()
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action',choices=['preview','observe','start','run','status'])
@@ -521,7 +684,12 @@ def main():
                     stdin=subprocess.DEVNULL,stdout=logfile,stderr=subprocess.STDOUT,
                     start_new_session=True,close_fds=True)
             output={'state':'requested','pid':child.pid,'message':'The worker will recheck every guard before movement.'}
-        elif args.action=='run': output=run()
+        elif args.action=='run':
+            # Closing a diagnostic terminal must not kill an in-flight worker.
+            # The supported UI start already launches a detached session.
+            import signal
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
+            output=run_configured()
         elif args.action=='status': output=read_json(LAST,{'state':'not_run'})
         else:
             with open('/var/run/fejes-selective-inventory.lock','a') as lock:

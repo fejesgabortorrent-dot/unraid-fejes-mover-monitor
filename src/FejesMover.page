@@ -36,7 +36,7 @@ $fmRead=static fn($p)=>@file_get_contents($p)?:'';
 $fmEsc=static fn($s)=>htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
 $fmRaw=trim($fmRead('/var/run/mover.pid'));$fmPid=ctype_digit($fmRaw)?(int)$fmRaw:0;
 $fmCmd=$fmPid?str_replace(chr(0),' ',$fmRead("/proc/$fmPid/cmdline")):'';
-$fmRun=$fmPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmCmd);
+$fmRun=$fmPid>1&&(preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmCmd)||!empty($fmc['liveSeedWorker']));
 $fmIds=[];$fmFiles=[];
 if($fmRun){
 $fmIds[$fmPid]=true;$fmParents=[];
@@ -135,7 +135,7 @@ $fmRead=static fn($p)=>@file_get_contents($p)?:'';
 $fmEsc=static fn($s)=>htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
 $fmRaw=trim($fmRead('/var/run/mover.pid'));$fmPid=ctype_digit($fmRaw)?(int)$fmRaw:0;
 $fmCmd=$fmPid?str_replace(chr(0),' ',$fmRead("/proc/$fmPid/cmdline")):'';
-$fmRun=$fmPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmCmd);
+$fmRun=$fmPid>1&&(preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmCmd)||!empty($fmc['liveSeedWorker']));
 $fmIds=[];$fmFiles=[];
 if($fmRun){
 $fmIds[$fmPid]=true;$fmParents=[];
@@ -234,7 +234,7 @@ $fmRead=static fn($p)=>@file_get_contents($p)?:'';
 $fmEsc=static fn($s)=>htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
 $fmRaw=trim($fmRead('/var/run/mover.pid'));$fmPid=ctype_digit($fmRaw)?(int)$fmRaw:0;
 $fmCmd=$fmPid?str_replace(chr(0),' ',$fmRead("/proc/$fmPid/cmdline")):'';
-$fmRun=$fmPid>1&&preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmCmd);
+$fmRun=$fmPid>1&&(preg_match('~(?:^|[ /])(?:mover|selective_mover[.]py)(?: |$)~',$fmCmd)||!empty($fmc['liveSeedWorker']));
 $fmIds=[];$fmFiles=[];
 if($fmRun){
 $fmIds[$fmPid]=true;$fmParents=[];

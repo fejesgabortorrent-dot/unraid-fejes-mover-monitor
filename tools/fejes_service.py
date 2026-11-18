@@ -16,6 +16,7 @@ from wire_integrity_cron import ORIGINAL, REPLACEMENT, rewrite_cron
 from wire_mover_gate import rewrite_launcher
 from selective_profile import load_profile
 from managed_schedule import load as load_automation
+from cache_hysteresis import evaluate as evaluate_cycle, limits as cache_limits
 
 ROOT = Path('/boot/config/plugins/dynamix.file.integrity')
 PROFILE = load_profile()
@@ -28,6 +29,8 @@ MDSTAT = Path('/proc/mdstat')
 ATTEMPT = Path('/var/run/filmek_mover_last_attempt')
 MOVER_PID = Path('/var/run/mover.pid')
 SHARE = Path(PROFILE.canonical)
+SELECTIVE = Path('/boot/config/plugins/fejes.mover.monitor/selective.json')
+CYCLE = SELECTIVE.parent / 'completed-cache-cycle.json'
 
 
 def dry_run(container=None, include_items=False):
@@ -37,21 +40,21 @@ def dry_run(container=None, include_items=False):
     checks = []
     def add(key, state, detail=''):
         checks.append({'key': key, 'state': state, 'detail': detail})
-    threshold = wait = None
+    threshold = wait_seconds = None
     try:
         automation = load_automation(profile=PROFILE)
         if automation is not None:
             if not automation['enabled']:
                 raise ValueError('Managed automation disabled')
             threshold = automation['threshold_gib']
-            wait = automation['cooldown_minutes']
+            wait_seconds = automation['cooldown_minutes'] * 60
         else:
             if LAUNCHER.is_symlink():
                 raise ValueError('Symlink')
             source = LAUNCHER.read_text()
             rewrite_launcher(source)
             threshold = int(re.search(r'^KUSZOB_GIB=([0-9]+)$', source, re.M)[1])
-            wait = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
+            wait_seconds = int(re.search(r'^UJRA_PROBALKOZAS_MP=([0-9]+)$', source, re.M)[1])
         if not SHARE.is_dir():
             raise ValueError('Required share unavailable')
         add('launcher', 'pass')
@@ -61,8 +64,26 @@ def dry_run(container=None, include_items=False):
     if report.get('cache') != 'available' or type(free) is not int or threshold is None:
         add('capacity', 'unknown')
     else:
-        add('capacity', 'pass' if free < threshold*1024**3 else 'wait',
-            {'free_gib': round(free/1024**3, 1), 'threshold_gib': threshold})
+        try:
+            if SELECTIVE.is_symlink():
+                raise ValueError('Linked selective configuration')
+            settings = json.loads(SELECTIVE.read_text()) if SELECTIVE.exists() else {}
+            previous = {}
+            if cache_limits(settings) is not None:
+                if CYCLE.is_symlink():
+                    raise ValueError('Linked cache cycle')
+                previous = json.loads(CYCLE.read_text()) if CYCLE.exists() else {}
+            scope = {k: getattr(PROFILE, k) for k in ('pool', 'share', 'torrent_container')}
+            cycle = evaluate_cycle(settings, previous, report.get('cache_total_bytes'), free, scope)
+            if cycle is None:
+                add('capacity', 'pass' if free < threshold*1024**3 else 'wait',
+                    {'free_gib': round(free/1024**3, 1), 'threshold_gib': threshold})
+            else:
+                cycle.update(free_gib=round(free/1024**3, 1),
+                    threshold_gib=round(report['cache_total_bytes'] * (100-cycle['stop_percent']) / (100*1024**3), 1))
+                add('capacity', 'pass' if cycle['active'] else 'wait', cycle)
+        except ERRORS:
+            add('capacity', 'unknown')
     decision = report.get('torrent')
     add('torrent', 'pass' if decision == 'no_torrent_blocker' else
         'wait' if decision == 'defer' else 'unknown', report.get('blocking_torrents'))
@@ -89,13 +110,13 @@ def dry_run(container=None, include_items=False):
         add('parity', 'unknown')
     add('mover', 'wait' if MOVER_PID.exists() else 'pass')
     try:
-        if wait is None:
-            raise ValueError('Retry interval unknown')
+        if type(wait_seconds) is not int or not 0 <= wait_seconds <= 86400:
+            raise ValueError('Retry interval invalid')
         if ATTEMPT.exists():
             raw = ATTEMPT.read_text().strip()
             if not raw.isdigit():
                 raise ValueError('Invalid timestamp')
-            remaining = max(0, int(raw)+wait*60-int(time.time()))
+            remaining = max(0, int(raw)+wait_seconds-int(time.time()))
             add('cooldown', 'wait' if remaining else 'pass', {'remaining_seconds': remaining})
         else:
             add('cooldown', 'pass', {'remaining_seconds': 0})

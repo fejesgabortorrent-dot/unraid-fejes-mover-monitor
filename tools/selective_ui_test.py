@@ -10,10 +10,11 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 
 class SelectiveInterface(unittest.TestCase):
-    def render(self,post=None,mode='advanced',lang='hu',last=None,forecast=None):
+    def render(self,post=None,mode='advanced',lang='hu',last=None,forecast=None,config_extra=None):
         with tempfile.TemporaryDirectory(prefix='fejes-selective-ui-') as folder:
             lab=Path(folder)
             config='{"version":1,"age_days":7}'
+            if config_extra is not None:config=json.dumps({'version':1,'age_days':7,**config_extra})
             (lab/'selective.json').write_text(config)
             (lab/'selective-last.json').write_text(json.dumps(last if last is not None else {'state':'nothing_eligible','skipped':{'too_young':4}}))
             if forecast is not None:(lab/'selective-forecast.json').write_text(json.dumps(forecast))
@@ -46,6 +47,42 @@ class SelectiveInterface(unittest.TestCase):
     def request(self,**extra):
         return dict(fejes_csrf='test-token',source_hash='CURRENT',action='run',**extra)
 
+    def test_completed_mode_is_localized_and_never_enabled_by_get(self):
+        for lang,label in [('hu','Letöltés után HDD-re'),('en','Move completed downloads to HDD'),('de','Fertige Downloads auf HDD')]:
+            result=self.render(lang=lang,config_extra={'completed_seed_mode':True,'batch_gib':32})
+            self.assertIn(label,result['html'])
+            self.assertIn('value="1" checked',result['html'])
+            self.assertEqual(result['html'].count('id="fms-run"'),1)
+            self.assertFalse(result['calls'])
+            self.assertNotIn('Torrent: saved age applies.',result['html'])
+            self.assertNotIn('Torrent: a beállított korhatár érvényes.',result['html'])
+
+    def test_completed_mode_save_requires_session_and_caps_bounded_worker(self):
+        request=dict(fejes_csrf='test-token',source_hash='CURRENT',fms_action='save',completed_seed_mode='1',batch_gib='64')
+        result=self.render(request)
+        self.assertTrue(result['config']['completed_seed_mode'])
+        self.assertEqual(result['config']['batch_gib'],32)
+        self.assertEqual(result['config']['age_days'],7)
+        self.assertEqual(result['config']['cache_start_percent'],75)
+        self.assertEqual(result['config']['cache_stop_percent'],65)
+        self.assertFalse(result['calls'])
+        request['fejes_csrf']='wrong'
+        self.assertNotIn('completed_seed_mode',self.render(request)['config'])
+
+    def test_completed_mode_can_be_disabled_without_losing_legacy_settings(self):
+        result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',fms_action='save'),
+            config_extra={'completed_seed_mode':True,'ratio_target':1.25,'batch_gib':32})
+        self.assertFalse(result['config']['completed_seed_mode'])
+        self.assertEqual(result['config']['ratio_target'],1.25)
+        self.assertEqual(result['config']['age_days'],7)
+
+    def test_invalid_percent_order_and_types_cannot_be_saved(self):
+        for start,stop in [('65','75'),('75','75'),('100','65'),('75','0'),([], '65')]:
+            result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',fms_action='save',
+                completed_seed_mode='1',cache_start_percent=start,cache_stop_percent=stop))
+            self.assertEqual(result['config'],{'version':1,'age_days':7})
+            self.assertFalse(result['calls'])
+
     def test_get_never_executes_helper_in_all_languages(self):
         for language,label in [('hu','Koralapú szelektív'),('en','Age-filtered selective'),('de','Altersabhängiges selektives')]:
             result=self.render(lang=language)
@@ -67,6 +104,11 @@ class SelectiveInterface(unittest.TestCase):
             result=self.render(lang=lang,last={'state':'deferred','blockers':['integrity','cooldown'],'moved_files':0,'moved_bytes':0})
             self.assertIn(label,result['html'])
             self.assertFalse(result['calls'])
+
+    def test_stale_native_intent_keeps_inspection_status_visible(self):
+        result=self.render(lang='en',last={'state':'native_intent','requires_inspection':True})
+        self.assertIn('Inspection required',result['html'])
+        self.assertFalse(result['calls'])
 
     def test_observer_cannot_launch(self):
         self.assertFalse(self.render(self.request(),mode='observer')['calls'])
@@ -151,7 +193,7 @@ class SelectiveInterface(unittest.TestCase):
     def test_larger_batch_is_explicit_and_saved_without_movement(self):
         result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='7',ratio_target='1',batch_gib='32'))
         self.assertEqual(result['config']['batch_gib'],32)
-        self.assertIn('8 fájl / 32 GiB',result['html'])
+        self.assertIn('32 GiB',result['html'])
         self.assertFalse(result['calls'])
         for value in ['0','-1','256','32.0',[]]:
             result=self.render(dict(fejes_csrf='test-token',source_hash='CURRENT',action='save',age_days='7',batch_gib=value))

@@ -73,10 +73,12 @@ def prioritize(candidates, torrents, mounts, target=0, sizes=None):
 
 
 def unit_groups(files, root, torrents=None, mounts=None):
-    """Keep folders, exact-name sidecars and shared torrent owners together.
+    """Keep exact-name companions and overlapping torrent owners together.
 
-    Observation time is not evidence that independent files belong together.
-    Overlapping folder/owner relationships are merged transitively.
+    Independent media stems in one folder can move as separate units. Unknown
+    directory-level companions keep the entire directory conservative. Torrent
+    owner overlap is still merged transitively and cannot be split by filenames.
+    Observation time never establishes ownership.
     """
     root = absolute_path(root)
     parents = {}
@@ -98,12 +100,44 @@ def unit_groups(files, root, torrents=None, mounts=None):
             raise ValueError('Duplicate or out-of-root unit')
         parents[path] = path
         relative = path[len(root)+1:]
-        # A directory remains a conservative unit. At the root, matching stems
-        # preserve video/subtitle sidecars without grouping unrelated arrivals.
-        key = ('folder', relative.split('/', 1)[0]) if '/' in relative else ('stem', relative.rsplit('.', 1)[0])
+        # Match video/subtitle/metadata companions by exact basename, including
+        # nested folders. Only known media/sidecar extensions may split a folder.
+        # An unknown or directory-wide file retains the conservative folder unit.
+        directory, _, name = relative.rpartition('/')
+        stem, sep, extension = name.rpartition('.')
+        known = {'mkv', 'mp4', 'avi', 'mov', 'm4v', 'ts', 'wmv',
+                 'srt', 'ass', 'ssa', 'sub', 'idx', 'vtt',
+                 'nfo', 'bif', 'jpg', 'jpeg', 'png', 'webp'}
+        generic = {'poster', 'folder', 'fanart', 'banner', 'backdrop',
+                   'clearart', 'clearlogo', 'landscape', 'thumb'}
+        if relative == 'EMBY':
+            key = ('excluded', path)
+        elif not sep or extension.lower() not in known or stem.lower() in generic:
+            key = ('directory-wide', directory)
+        else:
+            key = ('stem', directory, stem)
         buckets.setdefault(key, []).append(path)
     for paths in buckets.values():
         join(paths)
+    # Language/forced suffixes on sidecars still belong to the media stem.
+    # If several media names match, merge all of them conservatively.
+    media_ext = {'mkv', 'mp4', 'avi', 'mov', 'm4v', 'ts', 'wmv'}
+    sidecar_ext = {'srt', 'ass', 'ssa', 'sub', 'idx', 'vtt', 'nfo', 'bif', 'jpg', 'jpeg', 'png', 'webp'}
+    for path in parents:
+        directory, _, name = path.rpartition('/')
+        stem, sep, ext = name.rpartition('.')
+        if sep and ext.lower() in sidecar_ext:
+            related = [other for other in parents
+                       if other.rpartition('/')[0] == directory
+                       and other.rpartition('/')[2].rpartition('.')[2].lower() in media_ext
+                       and stem.startswith(other.rpartition('/')[2].rpartition('.')[0] + '.')]
+            join([path] + related)
+    # Never detach an unknown/generic companion from the folder it describes.
+    for key, paths in buckets.items():
+        if key[0] == 'directory-wide':
+            directory = key[1]
+            join([p for p in parents
+                  if p[len(root)+1:].rpartition('/')[0] == directory])
     for owner in owners:
         join([path for path in parents if within(path, owner) or within(owner, path)])
     groups = {}
@@ -140,7 +174,7 @@ def protected_content(torrents, mounts, now, days):
 
 
 def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
-         observed_at, root):
+         observed_at, root, target_ratio=0):
     """Return private candidate paths, not an execution manifest or permission.
 
     Age uses the most recent of mtime, first_seen and known torrent completion.
@@ -152,6 +186,7 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
               'age_days': days, 'candidates': [], 'skipped': [], 'blockers': []}
     try:
         days = age_days(days)
+        target_ratio = ratio_target(target_ratio)
         now, observed_at = timestamp(now), timestamp(observed_at)
         if not 0 <= now - observed_at <= 30:
             raise ValueError('Snapshot stale or from the future')
@@ -182,6 +217,8 @@ def plan(files, torrents, mounts, guards, *, days=DEFAULT_AGE_DAYS, now,
                 reason = 'excluded_directory'
             elif any(within(path, p) or within(p, path) for p in protected):
                 reason = 'protected_content'
+            elif target_ratio and torrent_owner(path, torrents, mounts) and (content_ratio(path, torrents, mounts) is None or content_ratio(path, torrents, mounts) < target_ratio):
+                reason = 'ratio_not_met'
             elif (item.get('regular') is not True or item.get('symlink') is not False
                   or type(item.get('nlink')) is not int or item['nlink'] != 1):
                 reason = 'unsupported_file'
@@ -222,7 +259,7 @@ def waiting_table(files, torrents, mounts, inventory, guards, *, days, now, root
     """Private read-only age forecast, never an execution time or authorization."""
     target_ratio = ratio_target(target_ratio)
     diagnostic = plan(files,torrents,mounts,{k:'pass' for k in REQUIRED_GUARDS},
-                      days=days,now=now,observed_at=now,root=root)
+                      days=days,now=now,observed_at=now,root=root,target_ratio=target_ratio)
     if diagnostic['decision']=='unknown':
         raise ValueError('Forecast snapshot unavailable')
     reasons={x['path']:x['reason'] for x in diagnostic['skipped']}

@@ -1,4 +1,19 @@
-# Release status — stable 2026.11.14.3
+# Release status — 2026.11.18.1
+
+18.1 adds persistent private run logs, readable localized events, terminal
+hangup protection and explicit backed-up recovery after coordinator loss.
+See [November 18 evidence](ACCEPTANCE-20261118.md) for the observed production
+incident, isolated recovery fixture, fresh installed-scheduler test and limits.
+
+The completed-download release adds explicit opt-in movement with resumed
+seeding and configurable 75% / 65% cache hysteresis. Fresh VM peer continuity,
+hybrid placement and installed-scheduler acceptance passed on Unraid 7.3.4;
+see [November 17 evidence and limits](ACCEPTANCE-20261117.md).
+Each invocation handles one complete unit up to 32 GiB / 128 files.
+Physical power loss, mid-native-I/O termination and direct-to-HDD downloading
+of oversized incomplete torrents remain outside the certified scope.
+
+The sections below preserve previous stable-build acceptance history.
 
 ## Scheduler fix and VM acceptance — 2026-11-14
 

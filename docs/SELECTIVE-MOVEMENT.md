@@ -1,4 +1,17 @@
-# Selective native movement — RC1 (current build 2026.10.25.4)
+# Selective native movement — 2026.11.17.1
+
+The optional completed-download mode is documented in
+[current acceptance and limits](ACCEPTANCE-20261117.md). Enable it in Advanced
+movement settings: default cache limits are 75% start / 65% stop, with one
+complete unit per invocation, at most 32 GiB and 128 files. The affected torrent
+is briefly stopped, its cache members are natively moved and verified, then
+seeding is restored. Age and ratio are not eligibility conditions in this mode.
+Incomplete or oversized units wait; direct HDD downloading is not implemented.
+Existing schedules and all maintenance protections remain in force.
+
+The following historical RC1 description applies to the older age-filtered
+path and its original acceptance; it does not override the current mode's
+documented limits above.
 
 See [release status and acceptance limits](RELEASE-STATUS.md). This is an RC1 prerelease.
 
