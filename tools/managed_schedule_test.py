@@ -57,7 +57,7 @@ class ManagedSchedule(unittest.TestCase):
     def test_enabled_tick_uses_existing_guarded_executor(self):
         self.path.touch()
         with patch.object(scheduler,'load',return_value=self.data),patch.object(scheduler,'RUNTIME',self.path),patch('selective_mover.run_configured',return_value={'state':'deferred','blockers':['parity']}) as run:
-            self.assertEqual(scheduler.tick()['blockers'],['parity']);run.assert_called_once_with()
+            self.assertEqual(scheduler.tick()['blockers'],['parity']);run.assert_called_once_with(origin='scheduled')
 
 class ScheduleLifecycle(ManagedSchedule):
     def configure_here(self, fail=False):

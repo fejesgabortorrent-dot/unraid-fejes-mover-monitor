@@ -661,14 +661,14 @@ def run():
     return report
 
 
-def run_configured():
+def run_configured(origin='manual'):
     """One dispatch point shared by manual and scheduled worker entrypoints."""
     completed_mode=read_json(CONFIG, {}).get('completed_seed_mode', False)
     if type(completed_mode) is not bool:
         raise ValueError('Completed seed mode must be explicitly boolean')
     if completed_mode:
         import completed_seed_service
-        return completed_seed_service.run()
+        return completed_seed_service.run(origin=origin)
     return run()
 
 

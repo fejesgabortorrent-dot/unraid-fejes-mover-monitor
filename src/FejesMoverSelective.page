@@ -87,6 +87,12 @@ $auditNames=[
  'worker_failed'=>$t('Futás hibával leállt','Run failed','Lauf fehlgeschlagen')];
 $auditPhases=['before_stop'=>$t('Torrent megállítása előtt','Before stopping torrent','Vor Torrent-Stopp'),'stopped'=>$t('Torrent megállítva','Torrent stopped','Torrent gestoppt'),'before_restore'=>$t('Torrent visszaindítása','Resuming torrent','Torrent fortsetzen'),'restored'=>$t('Torrent visszaindítva','Torrent resumed','Torrent fortgesetzt')];
 $auditStates=['checking'=>$t('Előellenőrzés','Preflight checks','Vorprüfung'),'native_intent'=>$t('Áthelyezés és ellenőrzés','Movement and verification','Verschieben und Prüfen'),'native_verified'=>$t('Áthelyezés ellenőrizve','Movement verified','Verschieben geprüft'),'completed'=>$t('Befejezve','Completed','Abgeschlossen'),'completed_seed_ready'=>$t('Kész, seedelésre alkalmas','Completed, ready to seed','Fertig, bereit zum Seeden'),'deferred'=>$t('Biztonsági halasztás','Safety deferral','Sicherheitsbedingter Aufschub'),'blocked'=>$t('Indítás tiltva','Start blocked','Start gesperrt')];
+$origins=[
+  'manual'=>$t('Kézi indítás','Manual start','Manueller Start'),
+  'scheduled'=>$t('Ütemezett indítás','Scheduled start','Geplanter Start'),
+  'pilot'=>$t('Diagnosztikai indítás','Diagnostic start','Diagnosestart'),
+ ];
+
 $auditDetail=static function($row)use($t,$auditPhases,$auditStates){$parts=[];
  if(isset($row['step'],$row['files']))$parts[]=$t('Ellenőrizve: ','Verified: ','Geprüft: ').(int)$row['step'].' / '.(int)$row['files'];
  elseif(isset($row['files']))$parts[]=(int)$row['files'].' '.$t('fájl','files','Dateien');
@@ -333,6 +339,7 @@ $lastDisplay=!empty($fmc['liveSeedWorker'])?$t('Ellenőrzés vagy mozgatás foly
 <details class="fms-panel"><summary><?=$e($t('Utolsó futás részletei és napló','Last run details and log','Letzter Lauf und Protokoll'))?></summary><section id="fms-last" style="border:1px solid #8886;padding:18px;margin-top:24px">
 <?php if($auditRows):$auditLast=end($auditRows);$auditPid=$auditLast['pid']??0;?>
 <h3><?=$e($t('Tartós futási napló','Persistent run log','Dauerhaftes Laufprotokoll'))?></h3>
+<p><?=$e($t('Indítás forrása','Start source','Startquelle'))?>: <?=$e($origins[$audit['origin']??'']??$t('Ismeretlen','Unknown','Unbekannt'))?></p>
 <p><?=$e($t('A teljes privát napló a lemezen marad; itt az utolsó 40 esemény látható, médiafájlnevek és belépési adatok nélkül.','The full private log stays on disk; the latest 40 events are shown here without media filenames or credentials.','Das vollständige private Protokoll bleibt auf der Festplatte; hier stehen die letzten 40 Ereignisse ohne Mediendateinamen oder Zugangsdaten.'))?></p>
 <?php if(is_int($auditPid)&&$auditPid>1&&!is_dir('/proc/'.$auditPid)&&!in_array($auditLast['event']??'',['worker_finished','worker_failed'],true)):?>
 <p role="alert"><?=$e($t('A naplóhoz tartozó folyamat már nem fut, végső lezárás nincs rögzítve. Ellenőrzés szükséges.','The logged process is no longer running and has no final completion record. Inspection is required.','Der protokollierte Prozess läuft nicht mehr; ein Abschluss fehlt. Prüfung erforderlich.'))?></p>
