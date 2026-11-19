@@ -32,7 +32,7 @@ def sync_cycle(settings):
     return state
 
 
-def run():
+def run(origin='manual'):
     settings = n.read_json(n.CONFIG, {})
     if not configured(settings):
         return {'state': 'blocked', 'reason': 'completed_seed_mode_not_enabled'}
@@ -53,7 +53,7 @@ def run():
         units = [unit for unit in pilot.plan() if unit['bytes'] <= limit]
         if not units:
             return {'state': 'nothing_eligible', 'reason': 'no_bounded_complete_unit'}
-        prepared = pilot.prepare(units[0]['unit_digest'], service_settings=settings)
+        prepared = pilot.prepare(units[0]['unit_digest'], service_settings=settings, origin=origin)
         # Record cooldown before taking native intent. The host then repeats all
         # guards under the normal mover/integrity/configuration locks.
         n.atomic_json(n.ATTEMPT, int(time.time()))

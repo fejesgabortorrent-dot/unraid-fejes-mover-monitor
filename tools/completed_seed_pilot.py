@@ -30,7 +30,7 @@ LIMIT = 32 * 1024**3
 
 def event(directory, name, **fields):
     """Durable private run journal plus a bounded, filename-free UI summary."""
-    allowed = {'step', 'files', 'bytes', 'state', 'reason', 'error_type', 'phase'}
+    allowed = {'step', 'files', 'bytes', 'state', 'reason', 'error_type', 'phase', 'origin'}
     if (not isinstance(name, str) or not name.replace('_', '').isalnum()
             or set(fields) - allowed
             or any(type(v) not in (str, int, bool) for v in fields.values())):
@@ -46,7 +46,8 @@ def event(directory, name, **fields):
     summary = n.BASE / 'completed-seed-events.json'
     previous = read_json(summary, {})
     history = previous.get('events', []) if previous.get('run_id') == directory.name else []
-    atomic_json(summary, {'version':1, 'run_id':directory.name,
+    origin = row.get('origin') if not history else previous.get('origin')
+    atomic_json(summary, {'version':1, 'run_id':directory.name, 'origin':origin,
                           'events':(history + [row])[-40:]})
 
 
@@ -215,7 +216,9 @@ def plan():
     return sorted(result, key=lambda x: -x['bytes'])
 
 
-def prepare(chosen, service_settings=None):
+def prepare(chosen, service_settings=None, origin='pilot'):
+    if origin not in ('manual', 'scheduled', 'pilot'):
+        raise ValueError('Unsupported run origin')
     root = environment()
     if n.PID.exists() or n.needs_inspection(read_json(n.LAST, {})):
         raise ValueError('Existing mover/inspection')
@@ -233,7 +236,7 @@ def prepare(chosen, service_settings=None):
         unit['service_settings'] = dict(service_settings)
     directory = root / ('fejes-completed-seed-pilot-' + str(time.time_ns()))
     directory.mkdir(mode=0o700)
-    event(directory, 'preparing', files=unit['files'], bytes=unit['bytes'])
+    event(directory, 'preparing', files=unit['files'], bytes=unit['bytes'], origin=origin)
     archive = directory / 'rollback.tgz'
     with tarfile.open(archive, 'x:gz') as tar:
         for p in (n.BASE, Path('/boot/config/plugins/fejes.mover.monitor.plg'),

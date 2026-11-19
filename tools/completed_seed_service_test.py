@@ -81,6 +81,6 @@ class CompletedSeedWorker(unittest.TestCase):
         result, collect, cooldown, environment, prepare, run = self.invoke({'completed_seed_mode': True})
         self.assertEqual(result['state'], 'completed_seed_ready')
         collect.assert_called_once_with(update=True)
-        prepare.assert_called_once_with('a', service_settings={'version':1,'batch_gib':16,'completed_seed_mode':True})
+        prepare.assert_called_once_with('a', service_settings={'version':1,'batch_gib':16,'completed_seed_mode':True}, origin='manual')
         cooldown.assert_called_once()
         run.assert_called_once_with('/private/authorization.json')
