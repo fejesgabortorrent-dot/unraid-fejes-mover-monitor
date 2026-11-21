@@ -322,6 +322,13 @@ def read_report():
     return raw, hashlib.sha256(raw).hexdigest(),json.loads(raw)
 
 
+def restoration_is_live(report, owners):
+    from completed_seed_pilot import RUNNING
+    return (report['coordination']['phase'] != 'stopped'
+            or all(t.get('state') in RUNNING for t in owners
+                   if t['hash'] in report['coordination']['resume']))
+
+
 def inspect_locked(pilot_directory=None):
     raw, digest, report = read_report()
     if pilot_directory is None:
@@ -360,6 +367,7 @@ def inspect_locked(pilot_directory=None):
         if (sorted(t['hash'] for t in owners) != sorted(unit['owners'])
                 or any(t.get('progress') != 1 or t.get('state') not in SEED_STATES
                        for t in owners)
+                or not restoration_is_live(report, owners)
                 or any({k: t.get(k) for k in ('content_path', 'save_path')}
                        != unit['logical_paths'].get(t['hash']) for t in owners)
                 or physical_snapshot() != before or not no_writers(set(unit['paths']))):

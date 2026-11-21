@@ -60,6 +60,17 @@ class RecoveryPolicy(unittest.TestCase):
         with self.assertRaises(ValueError):
             recovery.validate_pilot_report(report, unit)
 
+    def test_stopped_pilot_requires_resumed_running_owners(self):
+        report, unit = self.pilot()
+        report['coordination']['phase'] = 'stopped'
+        owner = {'hash': unit['owners'][0]}
+        for state in ('stoppedUP', 'pausedUP', 'checkingUP', 'unknown'):
+            with self.subTest(state=state):
+                self.assertFalse(recovery.restoration_is_live(report, [dict(owner, state=state)]))
+        for state in ('uploading', 'stalledUP', 'queuedUP'):
+            with self.subTest(state=state):
+                self.assertTrue(recovery.restoration_is_live(report, [dict(owner, state=state)]))
+
     def test_pilot_recovery_rejects_intent_missing_restore_scope_or_hash(self):
         for field in ('intent', 'restore', 'scope', 'hash', 'signature', 'active_moved'):
             report, unit = self.pilot()
