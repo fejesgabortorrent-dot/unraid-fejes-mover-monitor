@@ -1461,7 +1461,9 @@ HTML;
             if(($last['state']??'')==='completed'&&is_numeric($last['moved_files']??null)&&is_numeric($last['moved_bytes']??null)){
                 $bytes=max(0,(float)$last['moved_bytes']);$unit=0;$units=['B','KiB','MiB','GiB','TiB'];
                 while($bytes>=1024&&$unit<count($units)-1){$bytes/=1024;$unit++;}
-                $size=number_format($bytes,$unit===0?0:2,$language==='en'?'.':',','').' '.$units[$unit];
+                // Keep the dashboard's machine-stable decimal format while
+                // scaling small verified transfers instead of rounding to 0 GiB.
+                $size=number_format($bytes,$unit===0?0:2,'.','').' '.$units[$unit];
                 $detail=($detail!==''?$detail.' · ':'').$last['moved_files'].' '.$t('fájl','files','Dateien').' · '.$size;
             }
             if(($last['state']??'')==='completed'&&empty($last['requires_inspection'])&&is_numeric($last['moved_bytes']??null)&&($last['moved_bytes']??0)>0&&is_numeric($last['started']??null)&&is_numeric($last['finished']??null)&&$last['finished']>$last['started']){

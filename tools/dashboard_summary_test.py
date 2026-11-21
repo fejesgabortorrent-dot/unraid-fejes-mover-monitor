@@ -32,6 +32,18 @@ class DashboardSummary(unittest.TestCase):
     self.assertIn('fm-hover-help',rendered)
     self.assertIn('/Tools/FejesMoverSelective',rendered)
 
+ def test_small_completed_report_uses_mib_instead_of_zero_gib(self):
+  with tempfile.TemporaryDirectory() as folder:
+   lab=Path(folder);demo=Demo(lab)
+   (lab/'config/settings.json').write_text('{"version":1,"mode":"advanced","pool":"cache"}')
+   report={'state':'completed','started':1700000000,'moved_files':5,'moved_bytes':2537758}
+   (lab/'config/selective-last.json').write_text(json.dumps(report))
+   for lang in ('hu','en','de'):
+    rendered=demo.render('FejesMover.Dashboard.page','idle',lang,None)
+    self.assertIn('5 ',rendered)
+    self.assertIn('2.42 MiB',rendered)
+    self.assertNotIn('0.00 GiB',rendered)
+
  def test_inspection_error_is_visible_without_claiming_transfer(self):
   with tempfile.TemporaryDirectory() as folder:
    lab=Path(folder);demo=Demo(lab)
