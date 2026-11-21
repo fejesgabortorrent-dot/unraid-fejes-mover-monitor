@@ -1,15 +1,22 @@
 # Fejes Mover Monitor
 
-**Release 2026.11.18.2 · Unraid 7.x · Magyar / English (US) / Deutsch**
+**Release 2026.11.20.1 · Unraid 7.x · Magyar / English (US) / Deutsch**
 
 Monitor cache capacity and optionally move completed downloads to the array, then resume seeding, in the documented reviewed setup. Completed-download mode uses configurable cache fill start/stop limits (default 75% / 65%).
 
-[Release](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.18.2) · [Current acceptance and limits](docs/ACCEPTANCE-20261118.md) · [Movement guide](docs/SELECTIVE-MOVEMENT.md) · [Reboot recovery](docs/REBOOT-RECOVERY.md)
+[Release](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.20.1) · [Current acceptance and limits](docs/ACCEPTANCE-20261118.md) · [Movement guide](docs/SELECTIVE-MOVEMENT.md) · [Reboot recovery](docs/REBOOT-RECOVERY.md)
 
 Version 18.1 adds persistent private run events, readable phase history in the
 movement page, terminal hangup protection, and explicit fully verified recovery
 of a restored complete unit after coordinator loss. A missing completion record
 remains an inspection condition; it is never silently converted into success.
+
+Version 2026.11.20.1 adds bounded pre-native quiescence retries and stricter
+partial-unit inspection protection. Recovery still requires explicit approval,
+original checksums and fresh physical/torrent verification. The three deployed
+modules passed 31 targeted Linux regression tests; a new end-to-end movement
+trial for this patch is not yet established. Earlier acceptance evidence remains
+dated and does not certify power-loss recovery.
 
 ## Completed-download mode
 
@@ -97,10 +104,10 @@ This does not certify public tracker credit, production VPN behavior, physical p
 Read the [movement guide](docs/SELECTIVE-MOVEMENT.md) and retain a backup. Find **Fejes Mover Monitor** in Community Applications, or use **Plugins → Install Plugin**:
 
 ```
-https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v2026.11.18.2/fejes.mover.monitor.plg
+https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/v2026.11.20.1/fejes.mover.monitor.plg
 ```
 
-See [release assets](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.18.2) for the manifest, source ZIP and SHA-256 checksum files.
+See [release assets](https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/releases/tag/v2026.11.20.1) for the manifest, source ZIP and SHA-256 checksum files.
 
 Open **Tools → Mover figyelő** or the dashboard card. The self-contained manifest supplies the runtime. Start in Observer mode and review the compatibility limits before Advanced mode.
 

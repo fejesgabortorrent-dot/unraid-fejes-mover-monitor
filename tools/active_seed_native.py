@@ -50,7 +50,8 @@ def move_verified_unit(*, expected_paths, inventory, days, execute_file,
     persist(state)
     for path in expected_paths:
         state.update(state="checking", active_file=path,
-                     active_file_started=False, requires_inspection=False)
+                     active_file_started=False,
+                     requires_inspection=bool(state["verified_files"]))
         persist(state)
         intent = [False]
         def before_native(source_sha256):

@@ -257,7 +257,14 @@ HTML;
             elseif(($last['requires_inspection']??false)===true)$status=$t('Beavatkozás szükséges · mozgatás tiltva','Inspection required · movement blocked','Prüfung erforderlich · Verschieben gesperrt');
             if(!empty($last['inspection_resolution'])&&($last['state']??'')==='error'&&empty($last['requires_inspection']))$status=$t('Helyreállítás ellenőrizve · új körre vár','Recovery inspected · awaiting a new run','Wiederherstellung geprüft · wartet auf neuen Lauf');
             if(is_numeric($last['started']??null))$detail=$t('Jelentés ideje: ','Report time: ','Berichtszeit: ').date('Y-m-d H:i',(int)$last['started']);
-            if(($last['state']??'')==='completed'&&is_numeric($last['moved_files']??null)&&is_numeric($last['moved_bytes']??null))$detail.=' · '.$last['moved_files'].' '.$t('fájl','files','Dateien').' · '.number_format($last['moved_bytes']/1073741824,2).' GiB';
+            if(($last['state']??'')==='completed'&&is_numeric($last['moved_files']??null)&&is_numeric($last['moved_bytes']??null)){
+                $bytes=max(0,(float)$last['moved_bytes']);$unit=0;$units=['B','KiB','MiB','GiB','TiB'];
+                while($bytes>=1024&&$unit<count($units)-1){$bytes/=1024;$unit++;}
+                // Keep the dashboard's machine-stable decimal format while
+                // scaling small verified transfers instead of rounding to 0 GiB.
+                $size=number_format($bytes,$unit===0?0:2,'.','').' '.$units[$unit];
+                $detail=($detail!==''?$detail.' · ':'').$last['moved_files'].' '.$t('fájl','files','Dateien').' · '.$size;
+            }
             if(($last['state']??'')==='completed'&&empty($last['requires_inspection'])&&is_numeric($last['moved_bytes']??null)&&($last['moved_bytes']??0)>0&&is_numeric($last['started']??null)&&is_numeric($last['finished']??null)&&$last['finished']>$last['started']){
                 $average=($last['moved_bytes']/1048576)/($last['finished']-$last['started']);
                 $detail.=' · '.$t('Legutóbbi igazolt futás átlaga: ','Last verified run average: ','Durchschnitt des letzten geprüften Laufs: ').number_format($average,1,'.','').' MiB/s';
