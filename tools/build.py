@@ -17,6 +17,7 @@ parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 ### 2026.11.20.1 (bounded admission retry and verified recovery)
 - Retry transient completed-seed quiescence rejection up to three times before native intent; keep every guard and never retry ambiguous movement.
 - Preserve inspection protection after a partially verified unit.
+- Display small completed transfers in appropriate byte units instead of rounded zero GiB.
 - Allow explicit recovery of an exact pre-native stopped-pilot deferral only after independent physical and torrent-state checks.
 
 ### 2026.11.19.1 (movement run origin)
