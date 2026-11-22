@@ -21,6 +21,7 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
     lab = Path(directory)
     paths = {
         '/etc/cron.d/root': str(lab/'active-cron'),
+        '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverStatistics.php': str(lab/'FejesMoverStatistics.php'),
         '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php': str(lab/'FejesMoverRuntime.php'),
         '/boot/config/plugins/fejes.mover.monitor/settings.json': str(lab/'config.json'),
         '/boot/config/pools/': str(lab/'pools')+'/',
@@ -36,6 +37,7 @@ with tempfile.TemporaryDirectory(prefix='fejesmover-app-') as directory:
         '/mnt/cache': str(lab / 'cache'),
         '/proc/': str(lab / 'proc') + '/',
     }
+    (lab/'FejesMoverStatistics.php').write_text((ROOT/'src/FejesMoverStatistics.php').read_text(encoding='utf-8').replace('/boot/config/plugins/fejes.mover.monitor/',lab.as_posix()+'/'),encoding='utf-8')
     (lab / 'var.ini').write_text('csrf_token="test-token"\n')
     (lab / 'syslog').write_text('Oct 17 mover: <script>alert("test")</script>\n')
     (lab / 'automation').mkdir()

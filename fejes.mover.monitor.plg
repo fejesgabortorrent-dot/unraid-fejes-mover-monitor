@@ -294,6 +294,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover Monitor</h2><p class="fm-sub">FejesNAS · Live status · Monitoring only</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Settings</a><button type="button" id="fm-toggle">Auto-refresh: ON (5 sec)</button> <span>Data timestamp: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
+<?php include '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverStatistics.php'; ?>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ ARRAY</span></div><p class="fm-note">Cache / array illustration; actual direction may vary by share · <?=$fmRun?'Mover is active.':'Currently idle.'?></p><div class="fm-grid">
 <section class="fm-card"><div class="fm-label">MOVER STATUS</div><div class="fm-value" style="color:<?=$fmRun?'#f2b84b':'#64b99b'?>"><?=$fmRun?'● Mover running':($fmRaw?'⚠ Unverified PID':'● Not running')?></div><p><?=$fmRun?count($fmIds).' related processes · PID '.$fmPid:'No active transfer is currently confirmed.'?></p></section>
 <section class="fm-card"><div class="fm-label">CACHE USAGE</div><div class="fm-donut" style="--used:<?=$fmUsed??0?>"><span><?=$fmUsed!==null?$fmUsed.'%':'—'?></span></div><?php if($fmUsed!==null):?><progress max="100" value="<?=$fmUsed?>"></progress><p><?=$fmGiB($fmTotal-$fmFree)?> / <?=$fmGiB($fmTotal)?> GiB<br>Free: <?=$fmGiB($fmFree)?> GiB</p><?php endif?></section>
@@ -393,6 +394,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover-Monitor</h2><p class="fm-sub">FejesNAS · Live-Status · Nur Überwachung</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Einstellungen</a><button type="button" id="fm-toggle">Automatische Aktualisierung: AN (5 Sek.)</button> <span>Datenstand: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
+<?php include '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverStatistics.php'; ?>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ ARRAY</span></div><p class="fm-note">Cache-/Array-Darstellung; die tatsächliche Richtung kann je Freigabe abweichen · <?=$fmRun?'Mover ist aktiv.':'Derzeit im Leerlauf.'?></p><div class="fm-grid">
 <section class="fm-card"><div class="fm-label">MOVER-STATUS</div><div class="fm-value" style="color:<?=$fmRun?'#f2b84b':'#64b99b'?>"><?=$fmRun?'● Mover läuft':($fmRaw?'⚠ PID nicht verifiziert':'● Nicht aktiv')?></div><p><?=$fmRun?count($fmIds).' zugehörige Prozesse · PID '.$fmPid:'Derzeit ist keine aktive Übertragung bestätigt.'?></p></section>
 <section class="fm-card"><div class="fm-label">CACHE-BELEGUNG</div><div class="fm-donut" style="--used:<?=$fmUsed??0?>"><span><?=$fmUsed!==null?$fmUsed.'%':'—'?></span></div><?php if($fmUsed!==null):?><progress max="100" value="<?=$fmUsed?>"></progress><p><?=$fmGiB($fmTotal-$fmFree)?> / <?=$fmGiB($fmTotal)?> GiB<br>Frei: <?=$fmGiB($fmFree)?> GiB</p><?php endif?></section>
@@ -492,6 +494,7 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover figyelő</h2><p class="fm-sub">FejesNAS · Élő állapot · Csak megfigyelés</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Beállítások</a><button type="button" id="fm-toggle">Automatikus frissítés: BE (5 mp)</button> <span>Adatok ideje: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
+<?php include '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverStatistics.php'; ?>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ LEMEZTÖMB</span></div><p class="fm-note">Cache / lemeztömb szemléltetés; a tényleges irány megosztásonként eltérhet · <?=$fmRun?'A mover aktív.':'Jelenleg várakozik.'?></p><div class="fm-grid">
 <section class="fm-card"><div class="fm-label">MOVER ÁLLAPOTA</div><div class="fm-value" style="color:<?=$fmRun?'#f2b84b':'#64b99b'?>"><?=$fmRun?'● Mover fut':($fmRaw?'⚠ Nem ellenőrizhető PID':'● Nem fut')?></div><p><?=$fmRun?count($fmIds).' kapcsolódó folyamat · PID '.$fmPid:'Jelenleg nincs igazolt aktív mozgatás.'?></p></section>
 <section class="fm-card"><div class="fm-label">CACHE FOGLALTSÁGA</div><div class="fm-donut" style="--used:<?=$fmUsed??0?>"><span><?=$fmUsed!==null?$fmUsed.'%':'—'?></span></div><?php if($fmUsed!==null):?><progress max="100" value="<?=$fmUsed?>"></progress><p><?=$fmGiB($fmTotal-$fmFree)?> / <?=$fmGiB($fmTotal)?> GiB<br>Szabad: <?=$fmGiB($fmFree)?> GiB</p><?php endif?></section>
@@ -2391,6 +2394,52 @@ echo $fmc['banner'];
 
 <?php } ?>
 <script>(()=>{document.querySelectorAll('link[rel~="icon"]').forEach(e=>e.remove());const link=document.createElement("link");link.rel="icon";link.type="image/svg+xml";link.href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZNIOKAlCBGZWplcyBNb3ZlciI+Cjx0aXRsZT5GZWplcyBNb3ZlcjwvdGl0bGU+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiMyODM3NDciLz4KPHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjI0OCIgaGVpZ2h0PSIyNDgiIHJ4PSI0MCIgZmlsbD0iIzMzNDU1NSIgc3Ryb2tlPSIjNzg5MWE2IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTQ2IDQ5IEw5NyA0OSBMOTcgNjMgTDYyIDYzIEw2MiA3OSBMOTEgNzkgTDkxIDkzIEw2MiA5MyBMNjIgMTE5IEw0NiAxMTkgWiIgZmlsbD0iI2Y0ZjdmYSIvPgo8cGF0aCBkPSJNMTExIDExOSBMMTExIDQ5IEwxMjkgNDkgTDE1MSA4MyBMMTczIDQ5IEwxOTEgNDkgTDE5MSAxMTkgTDE3NSAxMTkgTDE3NSA3NiBMMTUxIDExMSBMMTI3IDc2IEwxMjcgMTE5IFoiIGZpbGw9IiNmNGY3ZmEiLz4KPHJlY3QgeD0iMzIiIHk9IjE1MCIgd2lkdGg9IjgxIiBoZWlnaHQ9IjU2IiByeD0iMTAiIGZpbGw9IiM0OTYwNzQiIHN0cm9rZT0iI2FmYzRkNCIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik00NCAxNjZoNDUiIHN0cm9rZT0iI2QyZGZlOSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxjaXJjbGUgY3g9IjQ3IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxODgiIHI9IjMiIGZpbGw9IiNkMmRmZTkiLz4KPHJlY3QgeD0iMTQzIiB5PSIxNTAiIHdpZHRoPSI4MSIgaGVpZ2h0PSI1NiIgcng9IjEwIiBmaWxsPSIjNDk2MDc0IiBzdHJva2U9IiNhZmM0ZDQiIHN0cm9rZS13aWR0aD0iMiIvPgo8cGF0aCBkPSJNMTU1IDE2Nmg0NSIgc3Ryb2tlPSIjZDJkZmU5IiBzdHJva2Utd2lkdGg9IjMiLz4KPGNpcmNsZSBjeD0iMTU4IiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZmY5MDNmIi8+PGNpcmNsZSBjeD0iMTcwIiBjeT0iMTg4IiByPSIzIiBmaWxsPSIjZDJkZmU5Ii8+CjxwYXRoIGQ9Ik03MiAxMzQgTDE1NSAxMzQgTDE1NSAxMjQgTDE4MCAxNDEgTDE1NSAxNTggTDE1NSAxNDggTDcyIDE0OCBaIiBmaWxsPSIjZmY5MDNmIi8+CjxwYXRoIGQ9Ik0xOTggMTc0IEwyMjQgMTg0IEwyMjIgMjExIEwyMTQgMjI1IEwxOTggMjM2IEwxODIgMjI1IEwxNzQgMjExIEwxNzIgMTg0IFoiIGZpbGw9IiM1NWQ2YTAiLz4KPHBhdGggZD0iTTE4MyAyMDJsMTEgMTEgMTktMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI4Mzc0NyIgc3Ryb2tlLXdpZHRoPSI2Ii8+Cjwvc3ZnPgo=";document.head.appendChild(link);})();</script>
+]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.19.1/FejesMoverStatistics.php"><INLINE><![CDATA[<?php
+/* Read-only summary. No network requests, scheduling, or mover control here. */
+$statRead = static function(string $name) use ($fmc) {
+    if (($fmc['mode']??'demo')==='demo') return null;
+    $path='/boot/config/plugins/fejes.mover.monitor/'.$name;
+    if (is_link($path) || !is_file($path) || filesize($path)>262144) return null;
+    $data=@file_get_contents($path);
+    return is_string($data) ? json_decode($data,true) : null;
+};
+$statLast=$statRead('selective-last.json');
+$statAudit=$statRead('completed-seed-events.json');
+$statHistory=$statRead('github-download-history.json');
+$statCounter=$statRead('github-downloads.json');
+$statRows=[];
+if (is_array($statHistory) && count($statHistory)<=4000) {
+    $previous='';
+    foreach ($statHistory as $row) {
+        if (!is_array($row) || !is_string($row['date']??null) || !preg_match('/^\d{4}-\d{2}-\d{2}$/D',$row['date']) || !is_int($row['total']??null) || $row['total']<0 || $row['date']<=$previous) { $statRows=[]; break; }
+        $previous=$row['date']; $statRows[]=$row;
+    }
+}
+$statRows=array_slice($statRows,-31);
+$statTotal=$statRows ? end($statRows)['total'] : (is_array($statCounter)&&is_int($statCounter['total']??null)&&$statCounter['total']>=0?$statCounter['total']:null);
+$statEvents=is_array($statAudit)&&($statAudit['version']??null)===1&&is_array($statAudit['events']??null)?array_slice($statAudit['events'],-5):[];
+$statFiles=is_array($statLast)&&is_int($statLast['moved_files']??null)&&$statLast['moved_files']>=0?$statLast['moved_files']:null;
+$statBytes=is_array($statLast)&&is_int($statLast['moved_bytes']??null)&&$statLast['moved_bytes']>=0?$statLast['moved_bytes']:null;
+$statOrigin=['manual'=>$fmT('Kézi','Manual','Manuell'),'scheduled'=>$fmT('Ütemezett','Scheduled','Geplant'),'pilot'=>$fmT('Diagnosztikai','Diagnostic','Diagnose')];
+?>
+<details class="fm-card" id="fm-statistics">
+<summary><?=$fmEsc($fmT('Statisztika','Statistics','Statistik'))?></summary>
+<h3><?=$fmEsc($fmT('Utolsó szelektív futás','Last selective run','Letzter selektiver Lauf'))?></h3>
+<?php if ($statFiles!==null && $statBytes!==null): ?>
+<p><?=$fmEsc($fmT('Ellenőrzött fájlok','Verified files','Geprüfte Dateien'))?>: <strong><?=$fmEsc($statFiles)?></strong> · <?=$fmEsc(number_format($statBytes/1073741824,2))?> GiB</p>
+<?php else: ?><p><?=$fmEsc($fmT('Nincs ellenőrizhető futási adat.','No verified run data available.','Keine geprüften Laufdaten verfügbar.'))?></p><?php endif ?>
+<p><?=$fmEsc($fmT('A legutóbbi letöltés utáni futás indítása','Latest completed-download run origin','Startquelle des letzten Abschlusslaufs'))?>: <?=$fmEsc($statOrigin[$statAudit['origin']??'']??$fmT('Ismeretlen','Unknown','Unbekannt'))?></p>
+<?php if($statEvents): ?><ul><?php foreach($statEvents as $event): if(!is_array($event))continue; $tm=$event['time']??null; $name=$event['event']??null; if(!is_numeric($tm)||!is_string($name)||!preg_match('/^[a-z_]{1,50}$/D',$name))continue; ?><li><?=$fmEsc(date('Y-m-d H:i',(int)$tm))?> · <?=$fmEsc($name)?><?php if(is_string($event['reason']??null)&&preg_match('/^[a-z0-9_]{1,80}$/D',$event['reason'])&&$event['reason']!=='none'): ?> · <?=$fmEsc($event['reason'])?><?php endif ?></li><?php endforeach ?></ul><?php endif ?>
+<p class="fm-note"><?=$fmEsc($fmT('Csak a legutóbbi rendelkezésre álló jelentés és események; nem teljes 30 napos előzmény.','Only the latest available report and events; not a complete 30-day history.','Nur der letzte verfügbare Bericht und Ereignisse; kein vollständiger 30-Tage-Verlauf.'))?> <a href="/Tools/FejesMoverSelective#fms-last"><?=$fmEsc($fmT('Futási napló','Run log','Laufprotokoll'))?></a></p>
+<h3><?=$fmEsc($fmT('GitHub-telepítő letöltései','GitHub installer downloads','GitHub-Installerdownloads'))?></h3>
+<p><?=$fmEsc($fmT('Legutóbbi mért összesen','Last measured total','Zuletzt gemessene Gesamtzahl'))?>: <strong><?=$statTotal===null?$fmEsc($fmT('Nincs mérés','No measurement','Keine Messung')):$fmEsc($statTotal)?></strong></p>
+<?php if(count($statRows)>1): $max=max(1,max(array_column($statRows,'total'))); $count=count($statRows);$points=[];foreach($statRows as $i=>$row){$points[]=number_format(10+($i*280/($count-1)),2,'.','').','.number_format(90-($row['total']*75/$max),2,'.','');} ?>
+<svg viewBox="0 0 300 110" style="width:100%;max-width:700px;height:auto" role="img" aria-label="<?=$fmEsc($fmT('GitHub-letöltések időbeli alakulása','GitHub downloads over time','GitHub-Downloads im Zeitverlauf'))?>"><line x1="10" y1="90" x2="290" y2="90" stroke="currentColor" opacity=".3"/><polyline points="<?=$fmEsc(implode(' ',$points))?>" fill="none" stroke="#ef7d00" stroke-width="2"/></svg>
+<p class="fm-note"><?=$fmEsc($statRows[0]['date'])?> – <?=$fmEsc(end($statRows)['date'])?> (UTC)</p>
+<?php else: ?><p><?=$fmEsc($fmT('A grafikonhoz legalább két külön napi mérés szükséges.','At least two daily observations are needed for the graph.','Für das Diagramm sind mindestens zwei tägliche Messungen nötig.'))?></p><?php endif ?>
+<p class="fm-note"><?=$fmEsc($fmT('Csak a GitHub-kiadások telepítőfájljainak letöltései. Nem egyedi telepítések; a Community Applications és más források nem szerepelnek.','GitHub release installer assets only. Not unique installs; Community Applications and other sources are excluded.','Nur GitHub-Installationsdateien. Keine eindeutigen Installationen; Community Applications und andere Quellen fehlen.'))?></p>
+</details>
 ]]></INLINE></FILE>
 <FILE Name="/tmp/fejes-mover-monitor-2026.11.19.1/cache_hysteresis.py"><INLINE><![CDATA["""Pure start/stop policy for completed-seed cache draining; no I/O."""
 
@@ -6569,6 +6618,194 @@ def preview(report, update=False):
         n.atomic_json(n.FORECAST, forecast)
     return report
 ]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.19.1/github_downloads.py"><INLINE><![CDATA["""Owner-side GitHub release asset counter. No public NAS endpoint or secrets."""
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+import urllib.request
+
+REPO = 'fejesgabortorrent-dot/unraid-fejes-mover-monitor'
+ASSET = 'fejes.mover.monitor.plg'
+
+
+def fetch_page(page):
+    request = urllib.request.Request(
+        f'https://api.github.com/repos/{REPO}/releases?per_page=100&page={page}',
+        headers={'Accept':'application/vnd.github+json','User-Agent':'FejesMover-download-counter'})
+    with urllib.request.urlopen(request, timeout=15) as response:
+        body = response.read(2_000_001)
+        if len(body)>2_000_000:
+            raise ValueError('Response too large')
+        return json.loads(body)
+
+
+def snapshot(fetch=fetch_page):
+    assets = {}
+    for page in range(1,11):
+        releases = fetch(page)
+        if not isinstance(releases,list):
+            raise ValueError('Invalid releases')
+        for release in releases:
+            if release.get('draft'):
+                continue
+            for asset in release.get('assets',[]):
+                if asset.get('name') != ASSET:
+                    continue
+                ident,count = asset.get('id'),asset.get('download_count')
+                if type(ident) is not int or type(count) is not int or count<0:
+                    raise ValueError('Invalid asset count')
+                assets[str(ident)] = count
+        if len(releases)<100:
+            return {'assets':assets,'total':sum(assets.values())}
+    raise ValueError('Pagination limit reached; refusing partial total')
+
+
+def notify(total, delta, test=False, run=subprocess.run):
+    subject = 'Fejes Mover: letöltésszámláló próba' if test else 'Fejes Mover: új GitHub-letöltés'
+    description = f'Összes telepítőletöltés: {total}; növekedés: +{delta}. Letöltések, nem egyedi telepítések.'
+    run(['/usr/local/emhttp/plugins/dynamix/scripts/notify', '-e','FejesMover GitHub Downloads',
+         '-s',subject,'-d',description,'-i','normal 4'], check=True,timeout=45,capture_output=True)
+
+
+def update(state_path, fetch=fetch_page, send=notify, test=False):
+    import fcntl
+    path=Path(state_path)
+    path.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+    with open(str(path)+'.lock','a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        current=snapshot(fetch)
+        try:
+            previous=json.loads(path.read_text())
+            if not isinstance(previous,dict) or type(previous.get('total')) is not int:
+                raise ValueError('Invalid saved baseline')
+        except FileNotFoundError:
+            previous=None
+        delta=max(0,current['total']-previous['total']) if previous else 0
+        if test or delta:
+            send(current['total'],delta,test=test)
+        # On API/notify failure keep baseline unchanged, so the next run retries.
+        fd,tmp=tempfile.mkstemp(prefix='.downloads-',dir=path.parent)
+        try:
+            with os.fdopen(fd,'w') as out:
+                json.dump(current,out)
+                out.flush()
+                os.fsync(out.fileno())
+            os.replace(tmp,path)
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+        return dict(current,delta=delta,baseline=previous is None)
+
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--state',default='/boot/config/plugins/fejes.mover.monitor/github-downloads.json')
+    parser.add_argument('--test',action='store_true',help='Send one clearly labelled test notice')
+    args=parser.parse_args()
+    try:
+        result=update(args.state,test=args.test)
+        print('GitHub installer downloads:',result['total'],'change:',result['delta'])
+    except Exception:
+        raise SystemExit('Download counter failed; baseline not advanced. Check connectivity/configuration.')
+]]></INLINE></FILE>
+<FILE Name="/tmp/fejes-mover-monitor-2026.11.19.1/download_trends.py"><INLINE><![CDATA["""Build a private, offline HTML report from owner-collected GitHub snapshots.
+
+Counts only release assets named fejes.mover.monitor.plg. The first observation is
+an unknown historical baseline; monthly changes become available over time.
+"""
+import argparse
+from datetime import datetime, timezone
+import html
+import json
+from pathlib import Path
+import tempfile
+import os
+from github_downloads import snapshot
+
+
+def record(history, current, now):
+    if not isinstance(history, list):
+        raise ValueError('Invalid history')
+    total = current['total']
+    if type(total) is not int or total < 0:
+        raise ValueError('Invalid total')
+    day = now.astimezone(timezone.utc).date().isoformat()
+    out = list(history)
+    if out and day < out[-1]['date']:
+        raise ValueError('Clock moved backwards')
+    row = {'date': day, 'total': total}
+    if out and out[-1]['date'] == day:
+        out[-1] = row
+    else:
+        out.append(row)
+    return out
+
+
+def render(history):
+    rows = []
+    for item in history:
+        d, n = item['date'], item['total']
+        datetime.strptime(d, '%Y-%m-%d')
+        if type(n) is not int or n < 0:
+            raise ValueError('Invalid history value')
+        rows.append((d, n))
+    if any(rows[i][0] >= rows[i+1][0] for i in range(len(rows)-1)):
+        raise ValueError('History dates must increase')
+    latest = rows[-1][1] if rows else '–'
+    ymax = max((n for _, n in rows), default=0) or 1
+    points = ' '.join(f'{30 + i*700/max(len(rows)-1,1):.1f},{185 - n*145/ymax:.1f}' for i,(_,n) in enumerate(rows))
+    table = ''.join(f'<tr><td>{html.escape(d)}</td><td>{n}</td></tr>' for d,n in reversed(rows))
+    chart = f'<svg viewBox="0 0 760 220" role="img" aria-label="Összes letöltés időbeli alakulása"><line x1="30" y1="185" x2="730" y2="185" stroke="currentColor" opacity=".3"/><polyline points="{points}" fill="none" stroke="#ff8c24" stroke-width="4"/><text x="30" y="210" fill="currentColor">{html.escape(rows[0][0])}</text><text x="730" y="210" text-anchor="end" fill="currentColor">{html.escape(rows[-1][0])}</text></svg>' if rows else '<p>Még nincs adat.</p>'
+    monthly = []
+    for i in range(1, len(rows)):
+        # Only compare actual observations; no claim of a full calendar month.
+        start, end = rows[i-1], rows[i]
+        monthly.append(f'<tr><td>{html.escape(start[0])} – {html.escape(end[0])}</td><td>{end[1]-start[1]:+d}</td></tr>')
+    intervals = ''.join(reversed(monthly)) or '<tr><td colspan="2">Legalább két külön napi mérés szükséges.</td></tr>'
+    return f'''<!doctype html><html lang="hu"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fejes Mover · Letöltési trend</title><style>:root{{color-scheme:light dark;font-family:system-ui,sans-serif}}body{{max-width:900px;margin:2rem auto;padding:0 1rem}}section{{border:1px solid #8886;border-radius:14px;padding:1.2rem;margin:1rem 0}}strong{{font-size:2.4rem;color:#e87300}}svg{{width:100%;height:auto}}table{{border-collapse:collapse;width:100%}}td,th{{padding:.5rem;text-align:left;border-bottom:1px solid #8885}}.muted{{opacity:.8}}</style><h1>Fejes Mover · Letöltési trend</h1><p class="muted">GitHub-kiadások telepítőfájljai · privát, helyi jelentés</p><section><div>Összes mért telepítőletöltés</div><strong>{latest}</strong><p>Letöltések, nem egyedi telepítések. A Community Applications és más források adatai nem szerepelnek itt.</p></section><section><h2>Összes letöltés alakulása</h2>{chart}<p>Az első mérés a korábbi összesítés; a korábbi hónapok nem állíthatók vissza ebből. Csökkenés lehetséges, ha egy kiadási fájlt törölnek.</p></section><section><h2>Változás a mérések között</h2><p>Az időszakok a tényleges mérési napokhoz igazodnak; nem jelentenek teljes naptári hónapot.</p><table><thead><tr><th>Időszak (UTC)</th><th>Változás</th></tr></thead><tbody>{intervals}</tbody></table></section><section><h2>Mérések</h2><table><thead><tr><th>Dátum (UTC)</th><th>Összesen</th></tr></thead><tbody>{table}</tbody></table></section></html>'''
+
+
+def atomic(path, text):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix='.trends-')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--history', type=Path, required=True)
+    p.add_argument('--output', type=Path, required=True)
+    args = p.parse_args()
+    if args.history.resolve() == args.output.resolve():
+        p.error('History and output must be different files')
+    import fcntl
+    args.history.parent.mkdir(parents=True, exist_ok=True)
+    with open(str(args.history)+'.lock', 'a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            history = json.loads(args.history.read_text(encoding='utf-8'))
+        except FileNotFoundError:
+            history = []
+        updated = record(history, snapshot(), datetime.now(timezone.utc))
+        page = render(updated)
+        atomic(args.history, json.dumps(updated, ensure_ascii=False, indent=2)+'\n')
+        atomic(args.output, page)
+
+
+if __name__ == '__main__':
+    main()
+]]></INLINE></FILE>
 <FILE Run="/bin/bash"><INLINE><![CDATA[#!/bin/bash
 set -euo pipefail
 src=/tmp/fejes-mover-monitor-2026.11.19.1
@@ -6577,22 +6814,22 @@ test -f /etc/unraid-version && test -d /usr/local/emhttp && test -d /boot/config
 php -r '$v=parse_ini_file("/etc/unraid-version")["version"]??""; exit(PHP_VERSION_ID>=80000 && function_exists("ctype_digit") && preg_match("/^7[.]/",$v)?0:1);' || { echo 'Unsupported Unraid/PHP version (requires Unraid 7.x, PHP 8+ and ctype).' >&2; exit 1; }
 tools=/boot/config/plugins/fejes.mover.monitor/tools
 command -v python3 >/dev/null || exit 1
-for name in cache_hysteresis.py torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py active_seed_policy.py active_seed_runner.py active_seed_native.py active_seed_host.py seed_coordination.py qbit_seed_transport.py completed_seed_pilot.py completed_seed_service.py; do
+for name in cache_hysteresis.py torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py active_seed_policy.py active_seed_runner.py active_seed_native.py active_seed_host.py seed_coordination.py qbit_seed_transport.py completed_seed_pilot.py completed_seed_service.py github_downloads.py download_trends.py; do
   python3 -c 'import sys; compile(open(sys.argv[1], "rb").read(), sys.argv[1], "exec")' "$src/$name"
 done
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverScheduleForm.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverScheduleForm.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page FejesMoverStatistics.php; do
   php -l "$src/$name" >/dev/null
  done
 install -d -m 0755 "$dst"
 install -d -m 0700 "$tools"
-for name in cache_hysteresis.py torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py active_seed_policy.py active_seed_runner.py active_seed_native.py active_seed_host.py seed_coordination.py qbit_seed_transport.py completed_seed_pilot.py completed_seed_service.py; do
+for name in cache_hysteresis.py torrent_preflight.py torrent_capacity_guard.py qbit_capacity_adapter.py integrity_preflight.py wire_integrity_cron.py fejes_service.py wire_mover_gate.py selection_policy.py selective_profile.py selective_preview.py selective_mover.py wire_selective.py managed_schedule.py selective_recovery.py active_seed_policy.py active_seed_runner.py active_seed_native.py active_seed_host.py seed_coordination.py qbit_seed_transport.py completed_seed_pilot.py completed_seed_service.py github_downloads.py download_trends.py; do
   if [[ -f "$tools/$name" ]] && ! cmp -s "$src/$name" "$tools/$name"; then
     backup=$(mktemp "$tools/$name.before-XXXXXXXX")
     cp -p -- "$tools/$name" "$backup"
   fi
   install -m 0700 "$src/$name" "$tools/$name"
 done
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverScheduleForm.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverScheduleForm.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page FejesMoverStatistics.php; do
   install -m 0644 "$src/$name" "$dst/$name"
  done
 # Restore only previously configured opt-in scheduling; absent settings stay off.
@@ -6615,7 +6852,7 @@ if command -v update_cron >/dev/null; then
 fi
 # Keep shared helpers and external schedule wiring intact.
 # Remove only runtime files owned by this plugin. Preserve settings and backups.
-for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverScheduleForm.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page; do
+for name in FejesMover.Dashboard.page FejesMover.page FejesMoverAutomation.page FejesMoverProfile.page FejesMoverProtection.page FejesMoverRuntime.php FejesMoverScheduleForm.php FejesMoverSelective.page FejesMoverSettings.page FejesMoverSetup.page FejesMoverStatistics.php; do
   rm -f -- "$dst/$name"
 done
 rmdir "$dst" 2>/dev/null || true
