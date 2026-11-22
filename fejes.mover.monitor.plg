@@ -294,6 +294,16 @@ $fmRaw='';$fmPid=0;$fmRun=false;$fmIds=[];$fmFiles=[];$fmTotal=1073741824000;$fm
 <?=$fmc['banner']?><div id="fm-summary-source" hidden><?=$fmc['summary']?></div>
 <h2>Mover Monitor</h2><p class="fm-sub">FejesNAS · Live status · Monitoring only</p>
 <a href="/Tools/FejesMoverSettings" style="display:inline-block;margin-right:16px;color:#64c7ff">⚙ Settings</a><button type="button" id="fm-toggle">Auto-refresh: ON (5 sec)</button> <span>Data timestamp: <?=date('Y-m-d H:i:s')?></span><div id="fm-error" role="status"></div>
+<?php
+// Read only the locally cached installer counter; never fetch the internet on page load.
+$fmDownloadFile='/boot/config/plugins/fejes.mover.monitor/github-downloads.json';
+$fmDownloadRaw=(!is_link($fmDownloadFile)&&is_file($fmDownloadFile)&&filesize($fmDownloadFile)<=65536)?@file_get_contents($fmDownloadFile):false;
+$fmDownloadData=is_string($fmDownloadRaw)?json_decode($fmDownloadRaw,true):null;
+$fmDownloadTotal=is_array($fmDownloadData)&&is_int($fmDownloadData['total']??null)&&$fmDownloadData['total']>=0?$fmDownloadData['total']:null;
+?>
+<details class="fm-card"><summary><?=$fmEsc($fmT('Fejes Mover · letöltési statisztika','Fejes Mover · download statistics','Fejes Mover · Downloadstatistik'))?></summary>
+<p><?=$fmEsc($fmT('GitHub-kiadások telepítőfájljainak letöltései','GitHub release installer asset downloads','Downloads der GitHub-Installationsdateien'))?>: <strong><?=$fmDownloadTotal===null?$fmEsc($fmT('Nincs elérhető mérés','No measurement available','Keine Messung verfügbar')):$fmEsc((string)$fmDownloadTotal)?></strong></p>
+<p class="fm-note"><?=$fmEsc($fmT('Ez a helyi legutóbbi mérés, nem egyedi telepítések száma. A Community Applications letöltései és más források nem szerepelnek benne. A havi grafikonhoz külön időbeli adatgyűjtés szükséges.','This is the last local measurement, not unique installs. Community Applications and other sources are excluded. Monthly charts require separate historical collection.','Dies ist die letzte lokale Messung, keine Zahl eindeutiger Installationen. Community Applications und andere Quellen sind nicht enthalten. Monatsdiagramme benötigen eine separate Verlaufserfassung.'))?></p></details>
 <div class="fm-flow"><span>▣ CACHE / SSD</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>⇄ MOVER</span><b class="<?=$fmRun?'fm-moving':''?>">➜</b><span>▤ ARRAY</span></div><p class="fm-note">Cache / array illustration; actual direction may vary by share · <?=$fmRun?'Mover is active.':'Currently idle.'?></p><div class="fm-grid">
 <section class="fm-card"><div class="fm-label">MOVER STATUS</div><div class="fm-value" style="color:<?=$fmRun?'#f2b84b':'#64b99b'?>"><?=$fmRun?'● Mover running':($fmRaw?'⚠ Unverified PID':'● Not running')?></div><p><?=$fmRun?count($fmIds).' related processes · PID '.$fmPid:'No active transfer is currently confirmed.'?></p></section>
 <section class="fm-card"><div class="fm-label">CACHE USAGE</div><div class="fm-donut" style="--used:<?=$fmUsed??0?>"><span><?=$fmUsed!==null?$fmUsed.'%':'—'?></span></div><?php if($fmUsed!==null):?><progress max="100" value="<?=$fmUsed?>"></progress><p><?=$fmGiB($fmTotal-$fmFree)?> / <?=$fmGiB($fmTotal)?> GiB<br>Free: <?=$fmGiB($fmFree)?> GiB</p><?php endif?></section>

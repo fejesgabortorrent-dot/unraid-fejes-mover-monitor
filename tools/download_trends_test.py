@@ -12,6 +12,8 @@ class TrendsTests(unittest.TestCase):
         h = [{'date':'2026-11-01','total':10},{'date':'2026-11-02','total':4}]
         self.assertIn('<td>4</td>', render(h))
         self.assertIn('Csökkenés lehetséges', render(h))
+        self.assertIn('2026-11-01 – 2026-11-02', render(h))
+        self.assertIn('>-6</td>', render(h))
     def test_invalid_history_fails_closed(self):
         with self.assertRaises(ValueError):
             render([{'date':'2026-11-01','total':-1}])
