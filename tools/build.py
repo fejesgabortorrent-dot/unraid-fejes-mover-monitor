@@ -7,7 +7,7 @@ BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
 version='2026.11.19.1'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
-helpers=[ROOT/'tools'/name for name in ('cache_hysteresis.py','torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py','managed_schedule.py','selective_recovery.py','active_seed_policy.py','active_seed_runner.py','active_seed_native.py','active_seed_host.py','seed_coordination.py','qbit_seed_transport.py','completed_seed_pilot.py','completed_seed_service.py')]
+helpers=[ROOT/'tools'/name for name in ('cache_hysteresis.py','torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py','managed_schedule.py','selective_recovery.py','active_seed_policy.py','active_seed_runner.py','active_seed_native.py','active_seed_host.py','seed_coordination.py','qbit_seed_transport.py','completed_seed_pilot.py','completed_seed_service.py','github_downloads.py','download_trends.py')]
 
 def cdata(s):
     return '<![CDATA['+s.replace(']]>',']]]]><![CDATA[>')+']]>'

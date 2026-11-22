@@ -64,7 +64,7 @@ with tempfile.TemporaryDirectory(prefix='fejes-mover-check-') as directory:
     assert script('').returncode == 0, 'Clean install failed'
     installed = {p.name: p.read_bytes() for p in destination.iterdir()}
     helper_bytes={p.name:p.read_bytes() for p in helper_destination.iterdir()}
-    assert len(helper_bytes)==23
+    assert len(helper_bytes)==25
     assert {'active_seed_policy.py','active_seed_runner.py','active_seed_native.py',
             'active_seed_host.py','seed_coordination.py','qbit_seed_transport.py',
             'completed_seed_pilot.py','completed_seed_service.py','cache_hysteresis.py'} <= set(helper_bytes)
