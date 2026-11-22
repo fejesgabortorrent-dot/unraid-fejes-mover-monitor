@@ -24,6 +24,7 @@ with tempfile.TemporaryDirectory(prefix='fejes-modes-') as directory:
         (lab/'mountinfo').write_text('1 0 0:1 / /mnt/cache rw - btrfs /dev/a rw\n'+('2 0 0:2 / /mnt/fast rw - btrfs /dev/b rw\n' if fast else ''))
     mount()
     paths={
+        '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverStatistics.php': str(lab/'FejesMoverStatistics.php'),
         '/usr/local/emhttp/plugins/fejes.mover.monitor/FejesMoverRuntime.php':lab/'FejesMoverRuntime.php',
         '/boot/config/plugins/fejes.mover.monitor/settings.json':lab/'config/settings.json',
         '/boot/config/pools/':str(lab/'pools')+'/',
@@ -38,6 +39,7 @@ with tempfile.TemporaryDirectory(prefix='fejes-modes-') as directory:
         '/tmp/user.scripts/tmpScripts/Filmek_Mover_Threshold/log.txt':lab/'script.log',
         '/proc/':str(lab/'proc')+'/',
     }
+    (lab/'FejesMoverStatistics.php').write_text((ROOT/'src/FejesMoverStatistics.php').read_text(encoding='utf-8').replace('/boot/config/plugins/fejes.mover.monitor/',lab.as_posix()+'/'),encoding='utf-8')
     def mapped(source):
         for old,new in paths.items(): source=source.replace(old,str(new).replace('\\','/'))
         return source.replace('/bin/bash -n ','bash -n ') if os.name=='nt' else source
