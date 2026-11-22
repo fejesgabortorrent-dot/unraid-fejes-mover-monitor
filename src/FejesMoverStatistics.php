@@ -1,6 +1,7 @@
 <?php
 /* Read-only summary. No network requests, scheduling, or mover control here. */
-$statRead = static function(string $name) {
+$statRead = static function(string $name) use ($fmc) {
+    if (($fmc['mode']??'demo')==='demo') return null;
     $path='/boot/config/plugins/fejes.mover.monitor/'.$name;
     if (is_link($path) || !is_file($path) || filesize($path)>262144) return null;
     $data=@file_get_contents($path);
