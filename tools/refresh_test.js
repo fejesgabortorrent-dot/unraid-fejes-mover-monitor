@@ -32,12 +32,12 @@ async function main() {
   const e = environment();
   e.elements['fm-toggle'] = {};
   e.elements['fm-error'] = {};
-  e.elements['fm-monitor'] = {replaceWith() {e.elements['fm-toggle'] = {textContent: 'Automatikus frissítés: BE (5 mp)'};}};
+  e.elements['fm-monitor'] = {querySelector() {return null;}, replaceWith() {e.elements['fm-toggle'] = {textContent: 'Automatikus frissítés: BE (5 mp)'};}};
   vm.runInNewContext(script('FejesMover.page'), e.context);
   const pending = e.tick();
   e.elements['fm-toggle'].onclick();
   assert.match(e.elements['fm-toggle'].textContent, /SZÜNET/);
-  e.respond({});
+  e.respond({querySelector() {return null;}});
   await pending;
   assert.match(e.elements['fm-toggle'].textContent, /SZÜNET/);
   e.context.fetch = () => {throw Error('Paused polling must not fetch');};
@@ -45,6 +45,27 @@ async function main() {
   e.elements['fm-toggle'].onclick();
   assert.match(e.elements['fm-toggle'].textContent, /BE/);
   console.log('PASS: in-flight refresh preserves pause label and polling state; resume works');
+
+  const s = environment();
+  let oldStats = {open: false};
+  s.elements['fm-toggle'] = {};
+  s.elements['fm-error'] = {};
+  s.elements['fm-monitor'] = {querySelector() {return oldStats;}, replaceWith() {}};
+  vm.runInNewContext(script('FejesMover.page'), s.context);
+  let inflight = s.tick();
+  oldStats.open = true; // The user opens the panel while the refresh is in flight.
+  let freshStats = {open: false};
+  s.respond({querySelector() {return freshStats;}});
+  await inflight;
+  assert.equal(freshStats.open, true, 'Open state must survive refresh');
+  inflight = s.tick();
+  oldStats.open = false;
+  freshStats = {open: true};
+  s.respond({querySelector() {return freshStats;}});
+  await inflight;
+  assert.equal(freshStats.open, false, 'User closing panel must survive refresh');
+  console.log('PASS: statistics panel open and closed states survive in-flight refresh');
+
 
   const d = environment();
   for (const id of ['fmd-status','fmd-percent','fmd-ring','fmd-free','fmd-updated']) d.elements[id] = {style: {}};
