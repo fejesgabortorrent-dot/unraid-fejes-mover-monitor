@@ -72,6 +72,11 @@ def run_unit(*, snapshot, transport, preflight, move_unit, verify_files,
         return {"state": "deferred", "reason": "pre_native_coordination_failed"}
     if token is None:
         return {"state": "deferred", "reason": "stop_unverified"}
+    totals = {}
+    for source, target in (("files", "moved_files"), ("bytes", "moved_bytes")):
+        value = native_result.get(source)
+        if type(value) is int and value >= 0:
+            totals[target] = value
     try:
         evidence = verify_files()
         peer = verify_peer(hashes)
@@ -83,7 +88,7 @@ def run_unit(*, snapshot, transport, preflight, move_unit, verify_files,
             if not ready['verified']:
                 raise UnitInspectionRequired('post-move seed readiness not verified')
             return {'state': 'completed_seed_ready', 'native_verified': True,
-                    'seed_ready_verified': True, 'peer_upload_verified': False}
+                    'seed_ready_verified': True, 'peer_upload_verified': False, **totals}
         result = validate_transition(
             initial, {"owner_hashes": hashes},
             files_verified=evidence.get("hashes_match"),
@@ -96,4 +101,4 @@ def run_unit(*, snapshot, transport, preflight, move_unit, verify_files,
     if not result["verified"]:
         raise UnitInspectionRequired("peer or file continuity not verified")
     return {"state": "completed", "peer_upload_verified": True,
-            "native_verified": True}
+            "native_verified": True, **totals}

@@ -50,6 +50,27 @@ class RecoveryPolicy(unittest.TestCase):
         self.assertEqual(rows[0]['source_signature'], [1, 2, 100, 3, 4])
         self.assertNotIn('source_signature', report['verified_files'][0])
 
+    def test_stopped_pilot_requires_exact_pre_native_skip_evidence(self):
+        report, unit = self.pilot()
+        report['coordination']['phase'] = 'stopped'
+        report['native_outcome'] = dict(state='skipped', reason='fresh_conditions_changed',
+            admission_reason='owner_not_quiescent_complete_seed')
+        self.assertEqual(len(recovery.validate_pilot_report(report, unit)), 1)
+        report['native_outcome']['reason'] = 'unknown'
+        with self.assertRaises(ValueError):
+            recovery.validate_pilot_report(report, unit)
+
+    def test_stopped_pilot_requires_resumed_running_owners(self):
+        report, unit = self.pilot()
+        report['coordination']['phase'] = 'stopped'
+        owner = {'hash': unit['owners'][0]}
+        for state in ('stoppedUP', 'pausedUP', 'checkingUP', 'unknown'):
+            with self.subTest(state=state):
+                self.assertFalse(recovery.restoration_is_live(report, [dict(owner, state=state)]))
+        for state in ('uploading', 'stalledUP', 'queuedUP'):
+            with self.subTest(state=state):
+                self.assertTrue(recovery.restoration_is_live(report, [dict(owner, state=state)]))
+
     def test_pilot_recovery_rejects_intent_missing_restore_scope_or_hash(self):
         for field in ('intent', 'restore', 'scope', 'hash', 'signature', 'active_moved'):
             report, unit = self.pilot()

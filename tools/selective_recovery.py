@@ -78,7 +78,7 @@ def validate_report(report):
 
 
 def validate_pilot_report(report, unit):
-    """Translate only a fully journaled, restored, pre-native pilot deferral.
+    """Validate a pilot ledger before independent live recovery checks.
 
     Original source signatures and checksums come from the private preparation
     snapshot, never from the current files. Physical verification is separate.
@@ -91,6 +91,12 @@ def validate_pilot_report(report, unit):
             or report.get('active_sha256')):
         raise ValueError('Pilot has unresolved native intent')
     coordination = report.get('coordination', {})
+    outcome = report.get('native_outcome', {})
+    live_restoration_required = (
+        not complete and coordination.get('phase') == 'stopped'
+        and outcome == {'state': 'skipped', 'reason': 'fresh_conditions_changed',
+                        'admission_reason': 'owner_not_quiescent_complete_seed'}
+    )
     paths, owners = unit.get('paths'), unit.get('owners')
     if (not isinstance(paths, list) or not paths or len(paths) > 128
             or len(paths) != len(set(paths)) or set(paths) != set(report.get('scope_paths', []))
@@ -98,7 +104,8 @@ def validate_pilot_report(report, unit):
                    or '..' in p.split('/') or any(c in p for c in ('\n', '\r', '\x00')) for p in paths)
             or not isinstance(owners, list) or not owners or len(owners) != len(set(owners))
             or any(not isinstance(h, str) or not re.fullmatch('[a-fA-F0-9]{40}', h) for h in owners)
-            or coordination.get('phase') != 'restored' or coordination.get('quiesced') is not True
+            or (coordination.get('phase') != 'restored' and not live_restoration_required)
+            or coordination.get('quiesced') is not True
             or sorted(coordination.get('owners', [])) != sorted(owners)
             or sorted(coordination.get('resume', [])) != sorted(owners)):
         raise ValueError('Pilot scope or restoration evidence incomplete')
@@ -315,6 +322,13 @@ def read_report():
     return raw, hashlib.sha256(raw).hexdigest(),json.loads(raw)
 
 
+def restoration_is_live(report, owners):
+    from completed_seed_pilot import RUNNING
+    return (report['coordination']['phase'] != 'stopped'
+            or all(t.get('state') in RUNNING for t in owners
+                   if t['hash'] in report['coordination']['resume']))
+
+
 def inspect_locked(pilot_directory=None):
     raw, digest, report = read_report()
     if pilot_directory is None:
@@ -351,6 +365,9 @@ def inspect_locked(pilot_directory=None):
         items, mounts = mover.torrent_snapshot()
         owners = owners_for(unit['paths'], items, mounts)
         if (sorted(t['hash'] for t in owners) != sorted(unit['owners'])
+                or any(t.get('progress') != 1 or t.get('state') not in SEED_STATES
+                       for t in owners)
+                or not restoration_is_live(report, owners)
                 or any({k: t.get(k) for k in ('content_path', 'save_path')}
                        != unit['logical_paths'].get(t['hash']) for t in owners)
                 or physical_snapshot() != before or not no_writers(set(unit['paths']))):

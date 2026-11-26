@@ -5,15 +5,34 @@ from localize import compile_page
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://raw.githubusercontent.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor/main'
 PROJECT='https://github.com/fejesgabortorrent-dot/unraid-fejes-mover-monitor'
-version='2026.11.19.1'
+version='2026.11.26.2'
 files=sorted([*(ROOT/'src').glob('*.page'),*(ROOT/'src').glob('*.php')])
-helpers=[ROOT/'tools'/name for name in ('cache_hysteresis.py','torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py','managed_schedule.py','selective_recovery.py','active_seed_policy.py','active_seed_runner.py','active_seed_native.py','active_seed_host.py','seed_coordination.py','qbit_seed_transport.py','completed_seed_pilot.py','completed_seed_service.py')]
+helpers=[ROOT/'tools'/name for name in ('cache_hysteresis.py','torrent_preflight.py','torrent_capacity_guard.py','qbit_capacity_adapter.py','integrity_preflight.py','wire_integrity_cron.py','fejes_service.py','wire_mover_gate.py','selection_policy.py','selective_profile.py','selective_preview.py','selective_mover.py','wire_selective.py','managed_schedule.py','selective_recovery.py','active_seed_policy.py','active_seed_runner.py','active_seed_native.py','active_seed_host.py','seed_coordination.py','qbit_seed_transport.py','completed_seed_pilot.py','completed_seed_service.py','statistics_history.py')]
 
 def cdata(s):
     return '<![CDATA['+s.replace(']]>',']]]]><![CDATA[>')+']]>'
 parts=[f'''<?xml version="1.0" encoding="UTF-8"?>
 <PLUGIN name="fejes.mover.monitor" author="FejesNAS" version="{version}" launch="Tools/FejesMover" min="7.0.0" icon="fa-exchange" pluginURL="{BASE}/fejes.mover.monitor.plg" support="{PROJECT}/issues">
 <CHANGES>
+### 2026.11.26.2 (verified torrent movement statistics)
+
+- Preserve verified file and byte totals for completed torrent moves.
+
+### 2026.11.26.1 (statistics panel works under the Unraid page loader)
+
+- Load the statistics panel from the installed plugin directory in every language.
+
+### 2026.11.22.1 (persistent statistics and visible managed threshold)
+- Records aggregate-only Mover run history for daily, weekly and monthly summaries; never stores file names or torrent identifiers.
+- Adds daily GitHub installer download samples and exact MiB display for small transfers.
+- Shows the validated managed-automation threshold when no legacy user script threshold exists.
+
+### 2026.11.20.1 (bounded admission retry and verified recovery)
+- Retry transient completed-seed quiescence rejection up to three times before native intent; keep every guard and never retry ambiguous movement.
+- Preserve inspection protection after a partially verified unit.
+- Display small completed transfers in appropriate byte units instead of rounded zero GiB.
+- Allow explicit recovery of an exact pre-native stopped-pilot deferral only after independent physical and torrent-state checks.
+
 ### 2026.11.19.1 (movement run origin)
 - Show whether completed-download movement started manually, from the schedule, or in diagnostic mode.
 

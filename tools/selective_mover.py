@@ -395,6 +395,7 @@ def execute_completed_seed_file(key, expected, days, before_native=None):
     if before_native is None:
         return _execute_file(key, expected, days, before_native, completed_seed_candidate)
     deadline = time.monotonic() + 120
+    quiescence_retries = 3
     intent = False
     def journal(checksum):
         nonlocal intent
@@ -402,7 +403,15 @@ def execute_completed_seed_file(key, expected, days, before_native=None):
         before_native(checksum)
     while True:
         try:
-            return _execute_file(key, expected, days, journal, completed_seed_candidate)
+            result = _execute_file(key, expected, days, journal, completed_seed_candidate)
+            if (intent or result.get('state') != 'skipped'
+                    or result.get('admission_reason') != 'owner_not_quiescent_complete_seed'
+                    or quiescence_retries == 0 or time.monotonic() >= deadline):
+                return result
+            # Refresh all guards again before native intent. Never resume or
+            # stop a torrent here, and never retry an ambiguous move.
+            quiescence_retries -= 1
+            time.sleep(2)
         except IntegrityBusy:
             # File Integrity's event watcher may start between files despite the
             # shared scheduling lock. Retry only admission, never native intent.
@@ -668,8 +677,18 @@ def run_configured(origin='manual'):
         raise ValueError('Completed seed mode must be explicitly boolean')
     if completed_mode:
         import completed_seed_service
-        return completed_seed_service.run(origin=origin)
-    return run()
+        result=completed_seed_service.run(origin=origin)
+    else:
+        result=run()
+    # Statistics are deliberately secondary: a write failure must never turn a
+    # safely completed or deferred Mover run into a movement failure.
+    if not getattr(os.sys,'_fejes_test_isolation',False):
+        try:
+            from statistics_history import record_run
+            record_run(result,origin)
+        except (OSError, ValueError, TypeError, OverflowError, RuntimeError):
+            pass
+    return result
 
 
 def main():
