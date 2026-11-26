@@ -282,7 +282,7 @@ HTML;
     }
 
     // A saved preference is not proof that cron is active. Observe both.
-    $schedule = ['source'=>'legacy','state'=>'unknown','interval'=>null];
+    $schedule = ['source'=>'legacy','state'=>'unknown','interval'=>null,'threshold_gib'=>null];
     $automationPath = '/boot/config/plugins/fejes.mover.monitor/automation.json';
     if ($mode !== 'demo' && (file_exists($automationPath) || is_link($automationPath))) {
         $schedule['source'] = 'managed';
@@ -297,6 +297,7 @@ HTML;
             is_int($automation['cooldown_minutes'] ?? null) && $automation['cooldown_minutes'] >= 1 && $automation['cooldown_minutes'] <= 10080;
         if ($scheduleValid) {
             $schedule['interval'] = $automation['interval_minutes'];
+            $schedule['threshold_gib'] = $automation['threshold_gib'];
             if (!$automation['enabled']) $schedule['state'] = 'disabled';
             elseif ($mode === 'advanced' && $pool === $scope['pool']) {
                 $activeCron = @file_get_contents('/etc/cron.d/root');

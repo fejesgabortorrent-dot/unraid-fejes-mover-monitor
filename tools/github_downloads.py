@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import urllib.request
 
 REPO = 'fejesgabortorrent-dot/unraid-fejes-mover-monitor'
@@ -50,7 +51,42 @@ def notify(total, delta, test=False, run=subprocess.run):
          '-s',subject,'-d',description,'-i','normal 4'], check=True,timeout=45,capture_output=True)
 
 
-def update(state_path, fetch=fetch_page, send=notify, test=False):
+def atomic_json(path, value, prefix):
+    fd,tmp=tempfile.mkstemp(prefix=prefix,dir=path.parent)
+    try:
+        with os.fdopen(fd,'w') as out:
+            json.dump(value,out,separators=(',',':'))
+            out.flush()
+            os.fsync(out.fileno())
+        os.chmod(tmp,0o600)
+        os.replace(tmp,path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def update_history(path, total, now=None):
+    day=time.strftime('%Y-%m-%d',time.gmtime(time.time() if now is None else now))
+    try:
+        if path.is_symlink() or path.stat().st_size>1_000_000:
+            raise ValueError('Invalid history path')
+        rows=json.loads(path.read_text())
+    except FileNotFoundError:
+        rows=[]
+    if not isinstance(rows,list):
+        raise ValueError('Invalid download history')
+    for row in rows:
+        if (not isinstance(row,dict) or not isinstance(row.get('date'),str) or
+                type(row.get('total')) is not int or row['total']<0):
+            raise ValueError('Invalid download history row')
+    rows=[row for row in rows if row['date']<day]
+    rows.append({'date':day,'total':total})
+    rows=rows[-4000:]
+    atomic_json(path,rows,'.download-history-')
+    return rows
+
+
+def update(state_path, fetch=fetch_page, send=notify, test=False, history_path=None, now=None):
     import fcntl
     path=Path(state_path)
     path.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
@@ -67,26 +103,20 @@ def update(state_path, fetch=fetch_page, send=notify, test=False):
         if test or delta:
             send(current['total'],delta,test=test)
         # On API/notify failure keep baseline unchanged, so the next run retries.
-        fd,tmp=tempfile.mkstemp(prefix='.downloads-',dir=path.parent)
-        try:
-            with os.fdopen(fd,'w') as out:
-                json.dump(current,out)
-                out.flush()
-                os.fsync(out.fileno())
-            os.replace(tmp,path)
-        finally:
-            if os.path.exists(tmp):
-                os.unlink(tmp)
+        history=Path(history_path) if history_path else path.with_name('github-download-history.json')
+        update_history(history,current['total'],now=now)
+        atomic_json(path,current,'.downloads-')
         return dict(current,delta=delta,baseline=previous is None)
 
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--state',default='/boot/config/plugins/fejes.mover.monitor/github-downloads.json')
+    parser.add_argument('--history',default=None,help='Daily history path; defaults beside --state')
     parser.add_argument('--test',action='store_true',help='Send one clearly labelled test notice')
     args=parser.parse_args()
     try:
-        result=update(args.state,test=args.test)
+        result=update(args.state,test=args.test,history_path=args.history)
         print('GitHub installer downloads:',result['total'],'change:',result['delta'])
     except Exception:
         raise SystemExit('Download counter failed; baseline not advanced. Check connectivity/configuration.')

@@ -677,8 +677,18 @@ def run_configured(origin='manual'):
         raise ValueError('Completed seed mode must be explicitly boolean')
     if completed_mode:
         import completed_seed_service
-        return completed_seed_service.run(origin=origin)
-    return run()
+        result=completed_seed_service.run(origin=origin)
+    else:
+        result=run()
+    # Statistics are deliberately secondary: a write failure must never turn a
+    # safely completed or deferred Mover run into a movement failure.
+    if not getattr(os.sys,'_fejes_test_isolation',False):
+        try:
+            from statistics_history import record_run
+            record_run(result,origin)
+        except (OSError, ValueError, TypeError, OverflowError, RuntimeError):
+            pass
+    return result
 
 
 def main():
